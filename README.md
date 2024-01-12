@@ -61,7 +61,7 @@ This defines a wrapper function that encapsulates the HuggingFace implementation
 To get the model, simply run:
 
 ```
-from separability import Model
+from taker import Model
 
 m = Model("facebook/opt-125m", limit=1000)
 ```
