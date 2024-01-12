@@ -1,0 +1,16 @@
+.venv
+.mypy_cache
+__pycache__
+tmp
+examples/wandb
+wandb
+src/wandb
+src/.ipynb_checkpoints
+src/separability/__pycache__
+src/separability/wandb
+tests/__pycache__
+tests/.pytest_cache
+tests/separability
+ansible/hosts.ini
+ansible/env_vars.yml
+dist
