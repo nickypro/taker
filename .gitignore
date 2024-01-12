@@ -14,3 +14,6 @@ tests/separability
 ansible/hosts.ini
 ansible/env_vars.yml
 dist
+
+# Don't allow jupiter notebooks, they take too much space
+*.ipynb
