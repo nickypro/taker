@@ -7,7 +7,9 @@ then
     git config --global user.name "Nicky Pochinkov"
     git config --global user.email "work@nicky.pro"
 
-
+  fi
+  if [ $1 = "-i" ]
+  then	  
     # Weights & Biases
     echo "
     machine api.wandb.ai
