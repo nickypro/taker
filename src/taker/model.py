@@ -1,4 +1,4 @@
-""" Defines the 'Model' class which wraps the Meta OPT model,
+""" Defines the 'Model' class which wraps Transformer models,
 with additional methods for inspecting the activations of the model.
 """
 
@@ -49,7 +49,7 @@ def pad_zeros(number, n_digits=2):
     return "0"*k + s
 
 class Model():
-    """ Wrapper Class for Meta OPT model that allows me to do interpretability
+    """ Wrapper Class for Transformer models that allows me to do interpretability
     work on it's activations and modify it's parameters as needed. """
 
     def __init__( self,
@@ -189,6 +189,18 @@ class Model():
         else:
             self.register_inverse_out_proj()
         return self
+
+    def init_vit(self):
+        from transformers import ViTModel, ViTForImageClassification, AutoConfig
+
+        vit_base_repo = "google/vit-base-patch16-224"
+        vit_cifar_repo = "Ahmed9275/Vit-Cifar100"
+        cfg = AutoConfig.from_pretained("Ahmed9275/Vit-Cifar100")
+        model = ViTForImageClassification(cfg)
+        vit = ViTModel.from_pretrained(vit_base_repo)
+        model.vit = vit
+
+        return model.to(self.device)
 
     def show_details( self, verbose=True ):
         if verbose:
