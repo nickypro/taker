@@ -281,6 +281,11 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_image_label_key = "coarse_label",
             dataset_filter=DatasetFilters.filter_veh2,
         ),
+        EvalConfig("bio",
+            dataset_repo           = "camel-ai/biology",
+            dataset_text_key       = "message_2",
+            dataset_has_test_split = False,
+        ),
     ]
 
     # Convert into searchable dict
