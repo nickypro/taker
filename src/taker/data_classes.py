@@ -73,6 +73,7 @@ class EvalConfig:
     dataset_subset: str = None
     dataset_type: str = "prediction" # ["prediction", "generation", "mmlu"]
     dataset_text_key: str = "text"
+    dataset_text_label_key: str = "label" # for text classification
     dataset_filter: Optional[Callable] = None
     dataset_has_test_split: bool = True
     dataset_split: str = None # "test", "train"

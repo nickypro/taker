@@ -286,6 +286,13 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_text_key       = "message_2",
             dataset_has_test_split = False,
         ),
+        EvalConfig("emotion",
+            dataset_repo = "dair-ai/emotion",
+            dataset_type = "text-classification",
+            dataset_text_key = "text",
+            dataset_text_label_key = "label",
+            dataset_has_test_split = True,
+        )
     ]
 
     # Convert into searchable dict
