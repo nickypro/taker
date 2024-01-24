@@ -246,6 +246,7 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_repo = "cifar100",
             dataset_type = "image-classification",
             dataset_split = "test",
+            streaming = False,
             is_train_mode = False,
             num_texts_to_skip = 1,
             dataset_image_key = "img",
@@ -341,7 +342,6 @@ def prepare_dataset(eval_config: EvalConfig):
     # Apply filter if relevant
     if eval_config.dataset_filter is not None:
         _dataset = eval_config.dataset_filter(_dataset)
-
     # Skip n texts if relevant
     if eval_config.num_texts_to_skip >= 1:
         print(f"skipping {eval_config.num_texts_to_skip} texts in {eval_config.dataset_name}")
@@ -350,7 +350,8 @@ def prepare_dataset(eval_config: EvalConfig):
         if hasattr(_dataset, "skip"):
             _dataset = _dataset.skip(eval_config.num_texts_to_skip) # Conservative skip limit
         else:
-            _dataset = _dataset[eval_config.num_texts_to_skip:]
+            indices = list(range(eval_config.num_texts_to_skip, len(_dataset)))
+            _dataset = _dataset.select(indices)
 
     # Skip tokens is no split
     if split == "train" and not eval_config.is_train_mode:
