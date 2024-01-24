@@ -149,8 +149,7 @@ class Model():
         if self.cfg.model_modality == "vision":
             from transformers import AutoImageProcessor, AutoModelForImageClassification
             self.tokenizer = None,
-            self.processor = AutoImageProcessor.from_pretrained(
-                self.model_repo, device_map=device_map, **self.dtype_args)
+            self.init_image_processor(device_map)
             self.predictor = AutoModelForImageClassification.from_pretrained(
                 self.model_repo, device_map=device_map, **self.dtype_args)
         elif self.cfg.model_modality == "language":
@@ -189,6 +188,18 @@ class Model():
         else:
             self.register_inverse_out_proj()
         return self
+
+    def init_image_processor(self, device_map):
+        """ Initialize processor from raw pixel values to normalised tensors"""
+        try:
+            from transformers import AutoImageProcessor
+            self.processor = AutoImageProcessor.from_pretrained(
+                self.model_repo, device_map=device_map, **self.dtype_args)
+
+        except:
+            from .vit_processor import SsdVitProcessor
+            self.processor = SsdVitProcessor()
+
 
     def init_vit(self):
         from transformers import ViTModel, ViTForImageClassification, AutoConfig
