@@ -3,8 +3,8 @@ import torch
 
 # pylint: disable=import-error
 import pytest
-from separability.model_repos import test_model_repos
-from separability import Model
+from taker.model_repos import test_model_repos
+from taker import Model
 
 test_model_repos = ["facebook/opt-125m"]
 

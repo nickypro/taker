@@ -2,10 +2,10 @@
 
 # pylint: disable=import-error
 import pytest
-from separability.data_classes import EvalConfig
-from separability.model_repos import test_model_repos
-from separability import Model
-from separability.eval import evaluate_all, run_evaluation
+from taker.data_classes import EvalConfig
+from taker.model_repos import test_model_repos
+from taker import Model
+from taker.eval import evaluate_all, run_evaluation
 
 class TestEvaluate:
     @pytest.mark.parametrize("model_repo", test_model_repos)

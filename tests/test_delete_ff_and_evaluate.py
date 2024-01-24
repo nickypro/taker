@@ -1,11 +1,11 @@
 
 # pylint: disable=import-error
 import pytest
-from separability.model_repos import test_model_repos
-from separability.data_classes import ActivationSummary
-from separability import Model
-from separability.activations import count_ff_key_activations
-from separability.eval import evaluate_all
+from taker.model_repos import test_model_repos
+from taker.data_classes import ActivationSummary
+from taker import Model
+from taker.activations import count_ff_key_activations
+from taker.eval import evaluate_all
 
 class TestDeleteFFKeys:
     @pytest.mark.parametrize("model_repo", test_model_repos)

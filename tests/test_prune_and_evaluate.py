@@ -3,10 +3,10 @@ import torch
 
 # pylint: disable=import-error
 import pytest
-from separability.model_repos import test_model_repos
-from separability import Model
-from separability.data_classes import PruningConfig
-from separability.prune import prune_and_evaluate
+from taker.model_repos import test_model_repos
+from taker import Model
+from taker.data_classes import PruningConfig
+from taker.prune import prune_and_evaluate
 
 class TestPruneAndEvaluate:
     pruning_config = PruningConfig("nickypro/tinyllama-15m",

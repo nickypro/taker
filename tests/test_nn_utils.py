@@ -3,7 +3,7 @@
 # pylint: disable=import-error
 import pytest
 import torch
-from separability.nn import mlp_svd_two_layer, mlp_delete_columns, mlp_delete_rows, \
+from taker.nn import mlp_svd_two_layer, mlp_delete_columns, mlp_delete_rows, \
     mlp_adjust_biases, InverseLinear
 
 def not_equal(t0, t1):
