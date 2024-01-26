@@ -53,7 +53,7 @@ class Model():
     work on it's activations and modify it's parameters as needed. """
 
     def __init__( self,
-            model_repo: str  = "facebook/opt-125m",
+            model_repo: str  = "nickypro/tinyllama-15m",
             limit: int = None,
             model_device: str = None,
             output_device: str = None,
