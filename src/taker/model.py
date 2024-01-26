@@ -78,13 +78,7 @@ class Model():
         self.dtype = dtype
         self.svd_attn = svd_attn
 
-        # Handle dtype
-        if dtype is None and torch_dtype is None:
-            dtype = "fp16"
-        self.dtype_map = DtypeMap(dtype, torch_dtype)
-        self.dtype = self.dtype_map._dtype
-        self.dtype_args = self.dtype_map._dtype_args
-
+        # Handle multi-gpu stuff
         if self.use_accelerator:
             self.accelerator = Accelerator()
             self.device = self.accelerator.device
@@ -94,6 +88,16 @@ class Model():
             self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
             self.device = model_device if model_device else self.device
             self.output_device = output_device if output_device else self.device
+
+        # Handle dtype
+        if dtype is None and torch_dtype is None:
+            dtype = "fp16"
+        if self.device == "cpu":
+            dtype = "fp32"
+        self.dtype_map = DtypeMap(dtype, torch_dtype)
+        self.dtype = self.dtype_map._dtype
+        self.dtype_args = self.dtype_map._dtype_args
+
 
         # Define the model repo
         self.model_size: str = None
