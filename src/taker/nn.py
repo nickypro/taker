@@ -171,7 +171,10 @@ class NeuronPostBias(torch.nn.Module):
         bias  = self.param
         if self.shape == shape:
             return bias
-        bias = bias.view(shape[-1])
+        try:
+            bias = bias.view(shape[-1]) # normal shape
+        except:
+            bias = bias.view(-1, shape[-1]) # multi head attention shape
         return bias
 
     def forward(self, x):

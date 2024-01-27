@@ -264,7 +264,7 @@ class Model():
     def register_activations( self ):
         # Configure what to hook
         self.attn_pre_out_mode = "hook" if "attn.out_proj" in self.layers[0] else "calc"
-        self.mlp_pre_out_mode  = "hook" if "fc2" in self.layers[0] else "calc"
+        self.mlp_pre_out_mode  = "hook" if "mlp.out_proj" in self.layers[0] else "calc"
 
         # register the forward hook to attention outputs
         for layer_index, layer in enumerate(self.layers):
@@ -275,7 +275,7 @@ class Model():
 
             # Listen to inputs for FF_out
             if self.mlp_pre_out_mode == "hook":
-                fc2 = layer["fc2"]
+                fc2 = layer["mlp.out_proj"]
                 name = pad_zeros( layer_index ) + "-mlp-pre-out"
                 fc2.register_forward_pre_hook(self.build_input_hook("mlp_pre_out", name))
 
@@ -321,7 +321,7 @@ class Model():
 
         for layer_index, layer in enumerate(self.layers):
             # Listen to inputs for FF_out
-            fc2 = layer["fc2"]
+            fc2 = layer["mlp.out_proj"]
             self.register_input_mask(fc2, "mlp_pre_out", layer_index)
 
             # Optionally, build pre_out hook if possible
@@ -339,7 +339,7 @@ class Model():
         if component not in self.post_biases:
             self.post_biases[component] = [None for _ in range(self.cfg.n_layers)]
         if self.post_biases[component][layer_index] is not None:
-            print(f"WARNING: {component} {layer_index} already has a mask!")
+            print(f"WARNING: {component} {layer_index} already has a post bias!")
 
         shape = (self.cfg.d_model,)
         if component == "attn_v":
@@ -349,8 +349,8 @@ class Model():
 
         post_bias = NeuronPostBias(shape)
         dtype, device = self.dtype, module.weight.device
-        mask = post_bias.to(dtype=dtype, device=device)
-        self.post_biases[component][layer_index] = mask
+        post_bias = post_bias.to(dtype=dtype, device=device)
+        self.post_biases[component][layer_index] = post_bias
 
         # Register the post-hook for biasing
         def post_hook_bias(_module, _input, _output):
@@ -377,9 +377,17 @@ class Model():
             self.post_biases["attn_v"] = NeuronFunctionList(self.post_biases["attn_v"])
             self.post_biases["attn_o"] = NeuronFunctionList(self.post_biases["attn_o"])
 
+        if "mlp.out_proj" in self.layers[0]:
+            for layer_index, layer in enumerate(self.layers):
+                mlp_out = layer["mlp.out_proj"]
+                self.register_output_bias(mlp_out, "mlp_out", layer_index)
+
+            self.post_biases["mlp_out"] = NeuronFunctionList(self.post_biases["mlp_out"])
+
+
     def list_masks(self, mask_labels=None):
         if isinstance(mask_labels, str):
-            mask_labels = []
+            mask_labels = [mask_labels]
         if mask_labels is None:
             mask_labels = self.masks.keys()
         masks_list = []
@@ -387,6 +395,17 @@ class Model():
             for mask in self.masks[label]:
                 masks_list.append(mask)
         return masks_list
+
+    def list_post_biases(self, post_bias_labels=None):
+        if isinstance(post_bias_labels, str):
+            post_bias_labels = [post_bias_labels]
+        if post_bias_labels is None:
+            post_bias_labels = self.post_biases.keys()
+        post_biases_list = []
+        for label in post_bias_labels:
+            for post_bias in self.post_biases[label]:
+                post_biases_list.append(post_bias)
+        return post_biases_list
 
     def register_inverse_out_proj( self ):
         # Make it possible to get the output right before out_proj
@@ -963,7 +982,7 @@ class Model():
         ):
         u = self.layers[ layer ]
         _x = u["ln2"]( ff_in )
-        x_in = u["fc1"]( _x )
+        x_in = u["mlp.in_proj"]( _x )
         if not use_activation_function:
             return x_in
 
@@ -989,9 +1008,9 @@ class Model():
     def calculate_ff_out_layer( self, ff_in: Tensor, layer: int):
         u = self.layers[ layer ]
         x = u["ln2"]( ff_in )
-        x = u["fc1"]( x )
+        x = u["mlp.in_proj"]( x )
         x = u["activation_fn"]( x )
-        x = u["fc2"]( x )
+        x = u["mlp.out_proj"]( x )
         return x
 
     def calculate_ff_out( self, ff_in: Tensor, add_residual: bool = False ):

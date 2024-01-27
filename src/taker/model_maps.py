@@ -391,13 +391,13 @@ def build_opt_layer_map(cfg: ConfigClass):
         "ln2.w"         : "final_layer_norm.weight",
         "ln2.b"         : "final_layer_norm.bias",
 
-        "fc1"           : "fc1",
+        "mlp.in_proj"   : "fc1",
         "mlp.W_in"      : "fc1.weight",
         "mlp.b_in"      : "fc1.bias",
 
         "activation_fn" : "activation_fn",
 
-        "fc2"           : "fc2",
+        "mlp.out_proj"  : "fc2",
         "mlp.W_out"     : "fc2.weight",
         "mlp.b_out"     : "fc2.bias",
     }
@@ -421,7 +421,7 @@ llama_model_map = {
 
 def build_llama_layer_map(cfg: ConfigClass):
     attn_proj_map = {"q": "q_proj", "k": "k_proj", "v": "v_proj", "o": "o_proj"}
-    mlp_proj_map = {"fc1": "up_proj", "fc2": "down_proj", "fc3": "gate_proj"}
+    mlp_proj_map = {"mlp.in_proj": "up_proj", "mlp.out_proj": "down_proj", "mlp.gate_proj": "gate_proj"}
 
     def llama_qkv_weight(layer, key: str, inpt: Optional[Any]=None):
         # Prepare shape changing
@@ -489,18 +489,18 @@ def build_llama_layer_map(cfg: ConfigClass):
         "ln2.w"         : "post_attention_layernorm.weight",
         "ln2.b"         : None,
 
-        "fc1"           : "mlp.up_proj",
-        "fc3"           : "mlp.gate_proj",
+        "mlp.in_proj"   : "mlp.up_proj",
+        "mlp.gate_proj" : "mlp.gate_proj",
         "mlp.W_in"      : "mlp.up_proj.weight",
         "mlp.W_gate"    : "mlp.gate_proj.weight",
-        "mlp.b_in"      : lambda layer, _inpt=None: llama_mlp_bias(layer, "fc1", _inpt),
-        "mlp.b_gate"    : lambda layer, _inpt=None: llama_mlp_bias(layer, "fc3", _inpt),
+        "mlp.b_in"      : lambda layer, _inpt=None: llama_mlp_bias(layer, "mlp.in_proj", _inpt),
+        "mlp.b_gate"    : lambda layer, _inpt=None: llama_mlp_bias(layer, "mlp.out_proj", _inpt),
 
         "activation_fn" : "mlp.act_fn",
 
-        "fc2"           : "mlp.down_proj",
-        "mlp.W_out"     : "fc2.weight",
-        "mlp.b_out"     : lambda layer, _inpt=None: llama_mlp_bias(layer, "fc2", _inpt),
+        "mlp.out_proj"  : "mlp.down_proj",
+        "mlp.W_out"     : "mlp.down_proj.weight",
+        "mlp.b_out"     : lambda layer, _inpt=None: llama_mlp_bias(layer, "mlp.gate_proj", _inpt),
     }
     return llama_layer_map
 
@@ -589,8 +589,8 @@ def build_gpt_neox_layer_map(cfg: ConfigClass):
         "ln2.w"     : "post_attention_layernorm.weight",
         "ln2.b"     : "post_attention_layernorm.bias",
 
-        "fc1"       : "mlp.dense_h_to_4h",
-        "fc2"       : "mlp.dense_4h_to_h",
+        "mlp.in_proj" : "mlp.dense_h_to_4h",
+        "mlp.out_proj": "mlp.dense_4h_to_h",
         "mlp.W_in"  : "mlp.dense_h_to_4h.weight",
         "mlp.W_out" : "mlp.dense_4h_to_h.weight",
         "mlp.b_in"  : "mlp.dense_h_to_4h.bias",
@@ -694,8 +694,8 @@ def build_gpt2_layer_map(cfg: ConfigClass):
         "ln2"       : "ln_2",
         "ln2.w"     : "ln_2.weight",
         "ln2.b"     : "ln_2.bias",
-        "fc1"       : "mlp.c_fc",
-        "fc2"       : "mlp.c_proj",
+        "mlp.in_proj" : "mlp.c_fc",
+        "mlp.out_proj": "mlp.c_proj",
         "mlp.W_in"  : lambda layer, inpt=None: gpt2_mlp_in_weight(layer, inpt),
         "mlp.W_out" : lambda layer, inpt=None: gpt2_mlp_out_weight(layer, inpt),
         "mlp.b_in"  : "mlp.c_fc.bias",
@@ -798,13 +798,13 @@ def build_roberta_layer_map(cfg: ConfigClass):
         "ln2.w"         : "output.LayerNorm.weight",
         "ln2.b"         : "output.LayerNorm.bias",
 
-        "fc1"           : "intermediate.dense",
+        "mlp.in_proj"   : "intermediate.dense",
         "mlp.W_in"      : "intermediate.dense.weight",
         "mlp.b_in"      : "intermediate.dense.bias",
 
         "activation_fn" : "intermediate.intermediate_act_fn",
 
-        "fc2"           : "output.dense",
+        "mlp.out_proj"  : "output.dense",
         "mlp.W_out"     : "output.dense.weight",
         "mlp.b_out"     : "output.dense.bias",
     }
@@ -904,13 +904,13 @@ def build_vit_layer_map(cfg: ConfigClass):
         "ln2.w"         : "layernorm_after.weight",
         "ln2.b"         : "layernorm_after.bias",
 
-        "fc1"           : "intermediate.dense",
+        "mlp.in_proj"   : "intermediate.dense",
         "mlp.W_in"      : "intermediate.dense.weight",
         "mlp.b_in"      : "intermediate.dense.bias",
 
         "activation_fn" : "intermediate.intermediate_act_fn",
 
-        "fc2"           : "output.dense",
+        "mlp.out_proj"  : "output.dense",
         "mlp.W_out"     : "output.dense.weight",
         "mlp.b_out"     : "output.dense.bias",
     }
