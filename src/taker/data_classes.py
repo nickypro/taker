@@ -557,6 +557,8 @@ class PruningConfig:
     wandb_run_name: Optional[str] = None
     misc: dict = None
 
+    save: bool = False
+
     @property
     def model_size(self): # legacy code
         return self.model_repo

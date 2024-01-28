@@ -57,9 +57,8 @@ def prune_and_evaluate(
         c["attn_frac"] = min( 1.0, c["attn_frac"]*(iteration+1) )
         assert not (focus_out is None or cripple_out is None or iteration is None), \
             "Must provide focus_out and cripple_out if not recalculate_activations"
-
     # Prune the model using the activation data
-    data = score_and_prune(opt, focus_out, cripple_out, c)
+    data = score_and_prune(opt, focus_out, cripple_out, c, c.save)
 
     # Evaluate the model
     with torch.no_grad():
@@ -132,6 +131,7 @@ def score_and_prune( opt: Model,
         "ff_criteria": ff_criteria if do_ff else None,
         "attn_criteria": attn_criteria if do_attn else None,
     }
+    print(f"*** Checking if save, save={save}")
     if save:
         save_timestamped_tensor_dict( opt, tensor_data, "activation_metrics" )
 
