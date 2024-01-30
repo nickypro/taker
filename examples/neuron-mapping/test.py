@@ -10,13 +10,13 @@ c = PruningConfig(
     model_repo   = "nickypro/tinyllama-15M",
     token_limit  = 1000,  # trim the input to this max length
     run_pre_test = True,  # evaluate the unpruned model 
-    eval_sample_size = 1e4,
-    collection_sample_size = 1e4,
+    eval_sample_size = 1e3,
+    collection_sample_size = 1e3,
     # Removals parameters
     ff_frac   = 0.2,     # % of feed forward neurons to prune
     attn_frac = 0.00,     # % of attention neurons to prune
-    focus     = "pile_codeless", # the “reference” dataset
-    cripple   = "code",          # the “unlearned” dataset
+    focus     = "pile", # the “reference” dataset
+    cripple   = "physics",          # the “unlearned” dataset
     additional_datasets=tuple(), # any extra datasets to evaluate on
     recalculate_activations = False, # iterative vs non-iterative
 )
