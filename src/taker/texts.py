@@ -100,14 +100,22 @@ class DatasetFilters:
             return str(example["fine_label"]) not in rocket_ids
         rocketless_dataset = _dataset.filter(filter_rocket_out_example)
         return rocketless_dataset
+    
+    @staticmethod
+    def filter_veh1(_dataset):
+        veh1_ids = set([ "18" ])
+        def filter_veh1_example(example):
+            return str(example["coarse_label"]) in veh1_ids
+        veh1_dataset = _dataset.filter(filter_veh1_example)
+        return veh1_dataset
 
     @staticmethod
     def filter_veh2(_dataset):
-        rocket_ids = set([ "19" ])
-        def filter_rocket_example(example):
-            return str(example["coarse_label"]) in rocket_ids
-        rocket_dataset = _dataset.filter(filter_rocket_example)
-        return rocket_dataset
+        veh2_ids = set([ "19" ])
+        def filter_veh2_example(example):
+            return str(example["coarse_label"]) in veh2_ids
+        veh2_dataset = _dataset.filter(filter_veh2_example)
+        return veh2_dataset
 
 def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
     eval_configs = [
@@ -272,6 +280,23 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_type = "image-classification",
             dataset_image_key = "img",
             dataset_image_label_key = "coarse_label",
+        ),
+        EvalConfig("cifar20-split",
+            dataset_repo = "cifar100",
+            dataset_type = "image-classification",
+            dataset_split = ["train", "test"],
+            is_train_mode = True,
+            dataset_image_key = "img",
+            dataset_image_label_key = "coarse_label",
+        ),
+        EvalConfig("cifar20-veh1",
+            dataset_repo = "cifar100",
+            dataset_type = "image-classification",
+            dataset_split = ["train", "test"],
+            is_train_mode = True,
+            dataset_image_key = "img",
+            dataset_image_label_key = "coarse_label",
+            dataset_filter=DatasetFilters.filter_veh1,
         ),
         EvalConfig("cifar20-veh2",
             dataset_repo = "cifar100",
