@@ -388,6 +388,9 @@ class RunDataHistory:
             areas[k] = area / total_area
         self.history[-1].areas = areas
 
+    def length(self):
+        return len(self.history)
+
 ######################################################################################
 # Activation Collector Data Class
 ######################################################################################

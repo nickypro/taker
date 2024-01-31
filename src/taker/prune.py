@@ -131,7 +131,7 @@ def score_and_prune( opt: Model,
         "ff_criteria": ff_criteria if do_ff else None,
         "attn_criteria": attn_criteria if do_attn else None,
     }
-    print(f"*** Checking if save, save={save}")
+    
     if save:
         save_timestamped_tensor_dict( opt, tensor_data, "activation_metrics" )
 
