@@ -559,9 +559,6 @@ class Model():
         if inputs_embeds is None:
             raise ValueError( "must provide data: inputs_embeds | input_ids | text" )
 
-        if text or (not input_ids is None):
-            inputs_embeds = self.get_inputs_embeds( text, input_ids, limit )
-
         # run the model
         outputs = self.model( inputs_embeds=inputs_embeds,
                               output_hidden_states=True, **kwargs )
