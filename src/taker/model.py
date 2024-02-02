@@ -397,6 +397,12 @@ class Model():
                 masks_list.append(mask)
         return masks_list
 
+    def update_mask_offsets(self, mask_label: str, mask_offsets: Tensor):
+        for layer in range(self.cfg.n_layers):
+            params = self.masks[mask_label][layer].state_dict()
+            params["offset"] = mask_offsets[layer]
+            self.masks[mask_label][layer].load_state_dict(params)
+
     def list_post_biases(self, post_bias_labels=None):
         if isinstance(post_bias_labels, str):
             post_bias_labels = [post_bias_labels]
