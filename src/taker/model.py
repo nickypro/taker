@@ -369,12 +369,13 @@ class Model():
 
         if do_attn_vo_biases:
             for layer_index, layer in enumerate(self.layers):
-                attn_v = layer["attn.v_proj"]
-                self.register_output_bias(attn_v, "attn_v", layer_index)
+                # TODO: fix when cfg.n_key_value_heads != cfg.n_heads
+                # attn_v = layer["attn.v_proj"]
+                # self.register_output_bias(attn_v, "attn_v", layer_index)
                 attn_o = layer["attn.out_proj"]
                 self.register_output_bias(attn_o, "attn_o", layer_index)
 
-            self.post_biases["attn_v"] = NeuronFunctionList(self.post_biases["attn_v"])
+            # self.post_biases["attn_v"] = NeuronFunctionList(self.post_biases["attn_v"])
             self.post_biases["attn_o"] = NeuronFunctionList(self.post_biases["attn_o"])
 
         if "mlp.out_proj" in self.layers[0]:
