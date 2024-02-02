@@ -550,7 +550,13 @@ class Model():
             output = residual_stream[-1]
             return inpt, attention_out, ff_out, output
 
-        if inputs_embeds is None and input_ids is None and text is None:
+        if text is not None and input_ids is None:
+            input_ids = self.get_ids(text, limit=limit)
+
+        if input_ids is not None and inputs_embeds is None:
+            inputs_embeds = self.get_inputs_embeds( input_ids=input_ids, limit=limit )
+
+        if inputs_embeds is None:
             raise ValueError( "must provide data: inputs_embeds | input_ids | text" )
 
         if text or (not input_ids is None):
