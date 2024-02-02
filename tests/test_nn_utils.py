@@ -4,7 +4,7 @@
 import pytest
 import torch
 from taker.nn import mlp_svd_two_layer, mlp_delete_columns, mlp_delete_rows, \
-    mlp_adjust_biases, InverseLinear
+    mlp_adjust_biases, InverseLinear, NeuronMask
 
 def not_equal(t0, t1):
     return not torch.equal(t0, t1)
@@ -128,4 +128,30 @@ class TestNNUtils:
                                original_biases=ff.bias)
         in_2 = ff_inv(out_0)
         assert torch.allclose(in_0, in_2, 1e-3)
+
+    def test_mask(self):
+        dim = 32
+        mask = NeuronMask([dim], act_fn="step")
+
+        # Check first that the mask does nothing by default
+        v = torch.randn([dim])
+        expected_v = v.clone()
+        assert torch.allclose(mask(v), expected_v)
+
+        # Check next that the mask can mask
+        neurons = torch.ones([dim])
+        neurons[:10] = 0
+        mask.set_mask(neurons)
+
+        expected_v = v.clone()
+        expected_v[:10] = 0
+        assert torch.allclose(mask(v), expected_v)
+
+        # Check that the mask offsets masked neurons
+        offsets = torch.randn([dim])
+        mask.set_offset(offsets)
+
+        expected_v = v.clone()
+        expected_v[:10] = offsets[:10]
+        assert torch.allclose(mask(v), expected_v)
 

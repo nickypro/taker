@@ -1,7 +1,7 @@
 """ This file contains utils for working with single layers of dense neural networks.
 """
 
-from typing import Any, Mapping, Optional, Union
+from typing import Any, Mapping, Optional, Union, Dict
 from torch import Tensor
 import torch.nn.functional as F
 import torch
@@ -127,6 +127,7 @@ class NeuronMask(torch.nn.Module):
         if self.act_fn == "sigmoid":
             _vec[...] = torch.inf
         self.param = torch.nn.Parameter(_vec)
+        self.offset = torch.nn.Parameter(torch.zeros_like(_vec))
 
     def get_mask(self):
         # if step, we want heaviside step function. ie: mask = mask > 0
@@ -142,19 +143,31 @@ class NeuronMask(torch.nn.Module):
             return self.act_fn(self.param)
         raise ValueError(f"Unknown activation function: {self.act_fn}")
 
+    def get_offset(self, x):
+        mask = self.get_mask().to(x.dtype)
+        inv_mask = 1 - mask
+        offset = self.offset * inv_mask
+        return offset
+
     def set_mask(self, new_mask: Tensor):
-        params: dict = self.state_dict()
+        params: Dict[str, Tensor] = self.state_dict()
         params["param"] = new_mask.view(self.shape)
         self.load_state_dict(params)
 
+    def set_offset(self, offset: Tensor):
+        params: Dict[str, Tensor] = self.state_dict()
+        params["offset"] = offset.view(self.shape)
+        self.load_state_dict(params)
+
     def delete_neurons(self, keep_indices: Tensor):
-        params: dict = self.state_dict()
+        params: Dict[str, Tensor] = self.state_dict()
         params["param"] = params["param"] * keep_indices.to(params["param"].device)
         self.load_state_dict(params)
 
     def forward(self, x):
         mask = self.get_mask()
-        return x * mask
+        offset = self.get_offset(x)
+        return x * mask + offset
 
 # Neuron Post Bias (EG: For SVD and stuff) out -> out + bias
 class NeuronPostBias(torch.nn.Module):
