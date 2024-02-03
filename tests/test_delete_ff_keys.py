@@ -63,7 +63,7 @@ class TestDeleteFFKeys:
         def mid_to_out(mid_vec, layer):
             u = opt.layers[layer]
             x = u["activation_fn"](mid_vec)
-            return u["fc2"](x)
+            return u["mlp.out_proj"](x)
 
         # Calculate mid layer vectors for testing
         mid_vecs = []
@@ -128,7 +128,7 @@ class TestDeleteFFKeys:
         print('# Running sanity check')
         for layer in range(opt.cfg.n_layers):
             print('layer', layer)
-            w = opt.layers[layer]["fc1"].weight
+            w = opt.layers[layer]["mlp.in_proj"].weight
             removed_weights = ( torch.sum(w, dim=-1) == 0.0 )
             if mask_fn == "delete":
                 assert torch.equal(

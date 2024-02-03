@@ -7,7 +7,7 @@ from welford_torch import Welford
 from tqdm import tqdm
 from .data_classes import EvalConfig, EvalOutput, EvalAllOutput, RawAccuracyData
 from .model import Model
-from .texts import infer_dataset_config, prepare_dataset
+from .texts import infer_dataset_config, prepare_dataset, prepare
 
 ######################################################################################
 # Code that handles loop of: text -> outputs + expected inputs
@@ -335,6 +335,7 @@ class ImageGenerators(Generators):
 
         for data in dataset:
             # predict next token from text
+            print(data)
             img   = data[eval_config.dataset_image_key]
             label = data[eval_config.dataset_image_label_key]
             with torch.no_grad():
@@ -367,7 +368,7 @@ class LossTracker:
         self.loss = Welford()
         self.log_loss = Welford()
         self.perplexity = Welford()
-    
+
     def add(self, losses):
         self.loss.add(losses.mean())
         self.log_loss.add(torch.log(losses).mean())
@@ -481,6 +482,7 @@ class Evaluator:
         loss_tracker = LossTracker()
 
         # Loop over the dataset
+        print(c.sample_size)
         pbar = tqdm(total=c.sample_size)
         for _item  in generator:
             (logits, expected_ids, _other_data) = _item
@@ -543,13 +545,13 @@ class Evaluator:
             "frac_toxic": frac_toxic,
             "mean_toxicity": mean_toxicity,
         })
-    
+
     def evaluate_mia(self,
             model: Model,
             eval_config: EvalConfig
             ):
         from .mia import get_membership_attack_prob
-        
+
         retain_config = infer_dataset_config(eval_config.mia_retain) # eg: cifar100 no mushrooms train
         retain_config.dataset_split = eval_config.mia_retain_split or retain_config.dataset_split
         retain_config.is_train_mode = True
@@ -595,7 +597,7 @@ def choose_functions(eval_config):
         generator = ImageGenerators.get_image_classification_generator
         evaluator = Evaluator().evaluate_dataset
         return generator, evaluator
-    
+
     if eval_config.dataset_type == "image-membership-inference-attack":
         generator = ImageGenerators.return_model_as_generator
         evaluator = Evaluator().evaluate_mia
@@ -940,7 +942,7 @@ def evaluate_wikitext(opt: Model,
         sample_size: int = 1024,
         topk: int = 10,
     ):
-    _dataset, _label, skip_eval = prepare('wiki', test=1)
+    _dataset, _label, skip_eval = prepare('wiki')
     wiki_id_generator = sliding_window_dataset(opt.tokenizer, _dataset,
         buffer_size=1024, step_size=512)
         #, max_tokens=sample_size)
@@ -1098,13 +1100,13 @@ def get_generator( opt: Model,
                                           masked=masked, verbose=verbose)
         return generator, None, n
 
-    dataset, label, skip_eval = prepare( dataset_name, test=dataset_tokens_to_skip )
+    dataset, label, skip_eval = prepare(dataset_name)
 
     if masked:
         generator = masked_generator(opt, dataset, label)
         return generator, skip_eval, sample_size
 
-    generator = opt.default_generator(dataset, label)
+    generator = Generators.get_next_token_generator(dataset, label)
     return generator, skip_eval, sample_size
 
 def evaluate( opt: Model,
