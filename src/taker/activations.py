@@ -38,8 +38,15 @@ def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dic
 
         img = opt.processor(raw_img, return_tensors="pt")
         pixel_values = img["pixel_values"].to(opt.device)
-
+        
+        print("PIXEL VALUES")
+        print(pixel_values)
+        
         embeddings = opt["embed"](pixel_values)
+        
+        print("EMBEDDINGS")
+        print(embeddings)
+        
         _n_texts, _n_tokens, _d_model = embeddings.shape
         input_ids = torch.zeros([1, _n_tokens], dtype=int)
         input_ids[0, 0]  = label
@@ -177,7 +184,6 @@ def get_midlayer_activations( opt: Model,
             texts_viewed += 1
             # Get all necessary activations
             with torch.no_grad():
-
                 try:
                     input_ids, text_activations, residual_stream = \
                         get_input_activations(opt, eval_config, data)

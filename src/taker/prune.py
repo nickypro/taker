@@ -255,7 +255,7 @@ def prune_random_and_evaluate( opt: Model,
 ######################################################################################
 
 def run_pruning(c: PruningConfig):
-    # Initilaise Model and show details about model
+    # Initialise Model and show details about model
     opt = Model(
         c.model_size,
         limit=c.token_limit,

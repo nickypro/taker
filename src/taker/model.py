@@ -210,7 +210,7 @@ class Model():
 
         vit_base_repo = "google/vit-base-patch16-224"
         vit_cifar_repo = "Ahmed9275/Vit-Cifar100"
-        cfg = AutoConfig.from_pretained("Ahmed9275/Vit-Cifar100")
+        cfg = AutoConfig.from_pretrained("Ahmed9275/Vit-Cifar100")
         model = ViTForImageClassification(cfg)
         vit = ViTModel.from_pretrained(vit_base_repo)
         model.vit = vit
