@@ -35,30 +35,15 @@ def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dic
     if model_modality == "vision":
         raw_img = dataset_item[eval_config.dataset_image_key]
         label   = dataset_item[eval_config.dataset_image_label_key]
-
+        
         img = opt.processor(raw_img, return_tensors="pt")
-        pixel_values = img["pixel_values"].to(opt.device)
+        pixel_values = img["pixel_values"].to(opt.device).to(opt.dtype)
+        embeddings = opt["embed"](pixel_values).shape[1]
         
-        print("PIXEL VALUES")
-        print(pixel_values)
-        
-        embeddings = opt["embed"](pixel_values)
-        
-        print("EMBEDDINGS")
-        print(embeddings)
-        
-        _n_texts, _n_tokens, _d_model = embeddings.shape
-        input_ids = torch.zeros([1, _n_tokens], dtype=int)
-        input_ids[0, 0]  = label
-        input_ids[0, 1:] = -1
+        image_activations = opt.get_image_activations( pixel_values = pixel_values )
+        residual_stream = opt.get_residual_stream( text_activations=image_activations ).detach()
 
-        # TODO: fix this so that it works for deletion and not just masking
-        output = opt.predictor(pixel_values=pixel_values)
-
-        text_activations = [0,0,0,0]
-        residual_stream  = [0]
-
-        return input_ids, text_activations, residual_stream
+        return embeddings, image_activations, residual_stream
 
     if model_modality == "language":
         text  = dataset_item[eval_config.dataset_text_key]
@@ -214,7 +199,10 @@ def get_midlayer_activations( opt: Model,
                         'layer token pos -> token layer pos')
 
             # Initialize criteria for counting the token activation
-            criteria = torch.ones_like( input_ids[0], dtype=torch.bool ).detach()
+            if opt.cfg.model_modality == "vision":
+                criteria = torch.ones( input_ids, dtype=torch.bool ).detach()
+            elif opt.cfg.modality == "language":
+                criteria = torch.ones_like( input_ids[0], dtype=torch.bool ).detach()
 
             # (Optional) Check if prediction is accurate enough to count
             if check_accuracy or calculate_loss:

@@ -590,7 +590,44 @@ class Model():
         output: Tensor = outputs.last_hidden_state[0].detach()
 
         return inpt, attention_out, ff_out, output
+    
+    def get_image_activations( self,
+                              pixel_values: Optional[Tensor] = None ):
+        """_summary_
+        Gives the output of each major component of the transformer before being
+        added to the residual_stream. i.e: ( input, attention_out, ff_out, output )
 
+        Args:
+            pixel_values (Optional[Tensor], optional): Pixel values to be fed to the model.
+                Defaults to None.
+
+        Returns:
+            ListTensor
+                input: The input tensor with positional encodings.
+                attention_out: Intermedate attention output activations.
+                ff_out: The intermedate ff output activations.
+                output: The final output tensor.
+        """
+        
+        outputs = self.model( pixel_values=pixel_values, output_hidden_states=True )
+        
+        hidden_states = self.out_stack( outputs.hidden_states ).squeeze().detach()
+        inpt = hidden_states[0].detach()
+        
+        attention_out = self.out_stack([
+            a[1] for a in self.get_recent_activations("attn")
+        ])
+        attention_out = attention_out.squeeze().detach()
+        
+        ff_out =  []
+        for i in range(self.cfg.n_layers):
+            ff_out.append( hidden_states[i+1] - attention_out[i] - hidden_states[i] )
+        ff_out = self.out_stack( ff_out ).squeeze().detach().detach()
+        
+        output: Tensor = outputs.last_hidden_state[0].detach()
+        
+        return inpt, attention_out, ff_out, output
+        
     def get_residual_stream( self,
                 text: Optional[str] = None,
                 input_ids: Optional[Tensor] = None,
