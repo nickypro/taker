@@ -54,6 +54,8 @@ def get_shared_pruning_data(
         additional_datasets=tuple(), # any extra datasets to evaluate on
         recalculate_activations = False, # iterative vs non-iterative
         n_steps = 1,
+        save=True,
+        save_subdirectory = "/home/ubuntu/tetra/taker/examples/neuron-mapping"
     )
 
     # Parse CLI for arguments
@@ -79,8 +81,8 @@ def get_shared_pruning_data(
 
 shared_pruning_data = get_shared_pruning_data(
     model_repo="Ahmed9275/Vit-Cifar100",
-    cripple_repos=["cifar20-veh1", "cifar20-veh2"],
-    focus_repo= "cifar20-split")
+    cripple_repos=["cifar20-trees", "cifar20-veh1", "cifar20-veh2"],
+    focus_repo="cifar20-split")
 print(shared_pruning_data)
 
 # shared_pruning_data = get_shared_pruning_data("nickypro/tinyllama-15M")

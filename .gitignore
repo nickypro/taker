@@ -14,6 +14,7 @@ tests/separability
 ansible/hosts.ini
 ansible/env_vars.yml
 dist
+*saved_tensors*
 
 # Don't allow jupiter notebooks, they take too much space
 *.ipynb

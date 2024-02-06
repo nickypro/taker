@@ -133,7 +133,10 @@ def score_and_prune( opt: Model,
     }
     
     if save:
-        save_timestamped_tensor_dict( opt, tensor_data, "activation_metrics" )
+        subdirectory = f"{pruning_config.save_subdirectory}/" or ""
+        path = f"{subdirectory}saved_tensors/{opt.model_size}"
+        filename = f"{pruning_config.cripple}-{pruning_config.focus}-{opt.model_size}-recent.pt"
+        save_timestamped_tensor_dict( opt, tensor_data, "activation_metrics", path, filename )
 
     # Initialize the output dictionary
     data = RunDataItem()
@@ -273,7 +276,7 @@ def run_pruning(c: PruningConfig):
         entity=c.wandb_entity,
         name=c.wandb_run_name,
         )
-    wandb.config.update(c.to_dict())
+    wandb.config.update(c.to_dict(), allow_val_change=True)
 
     # Evaluate model before removal of any neurons
     if c.run_pre_test:

@@ -619,10 +619,13 @@ def choose_attn_heads_by(key: str):
 
 def save_timestamped_tensor_dict( opt: Model,
         data: Dict[str, Tensor],
-        name: str ):
+        name: str,
+        path: str = None,
+        file: str = None ):
     now = datetime.datetime.now().strftime( "%Y-%m-%d_%H:%M:%S" )
-    os.makedirs( f'tmp/{opt.model_size}', exist_ok=True )
-    filename = f'tmp/{opt.model_size}/{opt.model_size}-{name}-{now}.pt'
+    path = path or f'tmp/{opt.model_size}'
+    # os.makedirs( path, exist_ok=True )
+    filename = f'{path}/{file}' or f'{path}/{opt.model_size}-{name}-{now}.pt'
     torch.save( data, filename )
     print( f'Saved {filename} to {opt.model_size}' )
     return filename

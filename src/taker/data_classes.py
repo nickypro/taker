@@ -561,6 +561,7 @@ class PruningConfig:
     misc: dict = None
 
     save: bool = False
+    save_subdirectory: str = None
 
     @property
     def model_size(self): # legacy code
