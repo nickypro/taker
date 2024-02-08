@@ -74,15 +74,15 @@ def get_shared_pruning_data(
             print("running iteration for ", c.cripple, " vs ", c.focus, "with ff_frac: ", ff_frac)
             with torch.no_grad():
                 model, history = run_pruning(c)
-        ratios = compare_pruned_ff_criteria(cripple_repos, model_size)
-        shared_pruning_data[ff_frac] = ratios
+       # ratios = compare_pruned_ff_criteria(cripple_repos, model_size)
+       # shared_pruning_data[ff_frac] = ratios
     
-    return shared_pruning_data
+    return {}
 
 shared_pruning_data = get_shared_pruning_data(
     model_repo="Ahmed9275/Vit-Cifar100",
     cripple_repos=["cifar20-trees", "cifar20-veh1", "cifar20-veh2"],
-    focus_repo="cifar20-split")
+    focus_repo="cifar20-trees")
 print(shared_pruning_data)
 
 # shared_pruning_data = get_shared_pruning_data("nickypro/tinyllama-15M")

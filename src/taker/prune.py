@@ -135,7 +135,7 @@ def score_and_prune( opt: Model,
     if save:
         subdirectory = f"{pruning_config.save_subdirectory}/" or ""
         path = f"{subdirectory}saved_tensors/{opt.model_size}"
-        filename = f"{pruning_config.cripple}-{pruning_config.focus}-{opt.model_size}-recent.pt"
+        filename = f"{pruning_config.cripple}-{pruning_config.focus}-{opt.model_size}-{pruning_config.ff_frac}-recent.pt"
         save_timestamped_tensor_dict( opt, tensor_data, "activation_metrics", path, filename )
 
     # Initialize the output dictionary

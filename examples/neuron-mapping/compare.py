@@ -1,10 +1,9 @@
 import torch
 
-def compare_pruned_ff_criteria(cripple_repos: list[str], model_size: str):
+def compare_pruned_ff_criteria(cripple_repos: list[str], model_size: str, path: str="/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/", focus_repo: str = "pile",):
     # cripple_repos = ["physics", "bio", "code"]
-    directory = "/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/"+model_size+"/"
-    focus_repo = "pile"
-    suffix = "-"+model_size+"-recent.pt"
+    directory = f"{path}{model_size}/"
+    suffix = "-"+model_size+"-0.01-recent.pt"
     ratios = {}
     ratios["model_size"] = model_size
     
@@ -27,4 +26,4 @@ def compare_pruned_ff_criteria(cripple_repos: list[str], model_size: str):
             
     return ratios
     
-print(compare_pruned_ff_criteria(["physics", "bio", "code"], "nickypro/tinyllama-15M"))
+print(compare_pruned_ff_criteria(["cifar20-trees", "cifar20-veh1", "cifar20-veh2"], "Cifar100", path="/home/ubuntu/tetra/taker/examples/neuron-mapping/saved_tensors/", focus_repo="cifar20-split"))
