@@ -55,8 +55,8 @@ c = PruningConfig(
 # c, args = cli_parser(c)
 
 #list of repos to cripple
-cripple_repos = ["physics", "biology","chemistry", "math", "code"]
-ff_frac_to_prune = [0.01,0.02,0.05,0.1,0.2]
+cripple_repos = ["physics", "biology","chemistry", "math", "code", "poems", "civil", "stories"]
+ff_frac_to_prune = [0.01]
 model_size = c.model_repo.split('-')[-1]
 
 # Run the iterated pruning for each cripple repo, for a range of ff_frac pruned
