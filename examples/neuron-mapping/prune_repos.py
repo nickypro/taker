@@ -79,10 +79,14 @@ def get_shared_pruning_data(
     
     return {}
 
+cifar20_datasets = ["aquatic_mammals", "fish", "flowers", "food_containers", "fruit_and_vegetables", "household_electrical_devices", 
+                    "household_furniture", "insects", "large_carnivores", "large_outdoor", "large_omnivores_and_herbivores", "medium_mammals",
+                    "non_insect_invertebrates", "people", "reptiles", "small_mammals"]
+
 shared_pruning_data = get_shared_pruning_data(
     model_repo="Ahmed9275/Vit-Cifar100",
-    cripple_repos=["cifar20-trees", "cifar20-veh1", "cifar20-veh2"],
-    focus_repo="cifar20-trees")
+    cripple_repos=cifar20_datasets,
+    focus_repo="cifar20-split")
 print(shared_pruning_data)
 
 # shared_pruning_data = get_shared_pruning_data("nickypro/tinyllama-15M")
