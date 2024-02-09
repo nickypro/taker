@@ -388,6 +388,9 @@ class RunDataHistory:
             areas[k] = area / total_area
         self.history[-1].areas = areas
 
+    def length(self):
+        return len(self.history)
+
 ######################################################################################
 # Activation Collector Data Class
 ######################################################################################
@@ -556,6 +559,9 @@ class PruningConfig:
     n_steps: int = 1
     wandb_run_name: Optional[str] = None
     misc: dict = None
+
+    save: bool = False
+    save_subdirectory: str = None
 
     @property
     def model_size(self): # legacy code

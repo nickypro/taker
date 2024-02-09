@@ -1,0 +1,3 @@
+[submodule "examples/aisc-neuron-mapping"]
+	path = examples/aisc-neuron-mapping
+	url = https://github.com/nickypro/aisc-neuron-mapping
