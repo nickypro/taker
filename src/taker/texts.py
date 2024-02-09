@@ -36,6 +36,14 @@ most_common_code_tokens          = llama_most_common_tokens["only_code"]["skip50
 
 class DatasetFilters:
     @staticmethod
+    def filter_codeless(_dataset):
+        code_labels = set(["Github"])
+        def filter_codeless_example(example):
+            return str(example["meta"]["pile_set_name"]) not in code_labels
+        rocket_dataset = _dataset.filter(filter_codeless_example)
+        return rocket_dataset
+
+    @staticmethod
     def filter_civil(_dataset):
         def filter_toxicity_example(example):
             return example["toxicity"] <= 0.2
@@ -114,6 +122,7 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
         EvalConfig("pile_codeless",
             dataset_repo = "monology/pile-uncopyrighted",
             skip_token_strings = most_common_pile_codeless_tokens,
+            dataset_filter = DatasetFilters.filter_codeless,
         ),
         EvalConfig("pile",
             dataset_repo = "monology/pile-uncopyrighted",
