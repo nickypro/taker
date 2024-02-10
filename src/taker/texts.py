@@ -108,14 +108,22 @@ class DatasetFilters:
             return str(example["fine_label"]) not in rocket_ids
         rocketless_dataset = _dataset.filter(filter_rocket_out_example)
         return rocketless_dataset
-
+    
     @staticmethod
-    def filter_veh2(_dataset):
-        rocket_ids = set([ "19" ])
-        def filter_rocket_example(example):
-            return str(example["coarse_label"]) in rocket_ids
-        rocket_dataset = _dataset.filter(filter_rocket_example)
-        return rocket_dataset
+    def filter_cifar(id: str):
+        return lambda _dataset: _dataset.filter(lambda example: str(example["coarse_label"]) == id)
+
+def get_cifar_dataset_configs(): 
+    cifar20_datasets = ["aquatic_mammals", "fish", "flowers", "food_containers", "fruit_and_vegetables", "household_electrical_devices", "household_furniture", "insects", "large_carnivores", "large_outdoor", "large_omnivores_and_herbivores", "medium_mammals", "non_insect_invertebrates", "people", "reptiles", "small_mammals", "trees", "veh1", "veh2"]
+    return [EvalConfig(f"cifar20-{dataset}",
+                       dataset_repo = "cifar100",
+                       dataset_type = "image-classification",
+                       dataset_split = ["train", "test"],
+                       is_train_mode = True,
+                       dataset_image_key = "img",
+                       dataset_image_label_key = "coarse_label",
+                       dataset_filter=DatasetFilters.filter_cifar(count),
+                       ) for count, dataset in enumerate(cifar20_datasets)]
 
 def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
     eval_configs = [
@@ -282,14 +290,13 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_image_key = "img",
             dataset_image_label_key = "coarse_label",
         ),
-        EvalConfig("cifar20-veh2",
+        EvalConfig("cifar20-split",
             dataset_repo = "cifar100",
             dataset_type = "image-classification",
             dataset_split = ["train", "test"],
             is_train_mode = True,
             dataset_image_key = "img",
             dataset_image_label_key = "coarse_label",
-            dataset_filter=DatasetFilters.filter_veh2,
         ),
         EvalConfig("bio",
             dataset_repo           = "camel-ai/biology",
@@ -303,7 +310,7 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_text_label_key = "label",
             dataset_has_test_split = True,
         )
-    ]
+    ] + get_cifar_dataset_configs()
 
     # Convert into searchable dict
     labeled_eval_configs = dict([(c.dataset_name, c) for c in eval_configs])

@@ -57,9 +57,8 @@ def prune_and_evaluate(
         c["attn_frac"] = min( 1.0, c["attn_frac"]*(iteration+1) )
         assert not (focus_out is None or cripple_out is None or iteration is None), \
             "Must provide focus_out and cripple_out if not recalculate_activations"
-
     # Prune the model using the activation data
-    data = score_and_prune(opt, focus_out, cripple_out, c)
+    data = score_and_prune(opt, focus_out, cripple_out, c, c.save)
 
     # Evaluate the model
     with torch.no_grad():
@@ -132,8 +131,12 @@ def score_and_prune( opt: Model,
         "ff_criteria": ff_criteria if do_ff else None,
         "attn_criteria": attn_criteria if do_attn else None,
     }
+    
     if save:
-        save_timestamped_tensor_dict( opt, tensor_data, "activation_metrics" )
+        subdirectory = f"{pruning_config.save_subdirectory}/" or ""
+        path = f"{subdirectory}saved_tensors/{opt.model_size}"
+        filename = f"{pruning_config.cripple}-{pruning_config.focus}-{opt.model_size}-{pruning_config.ff_frac}-recent.pt"
+        save_timestamped_tensor_dict( opt, tensor_data, "activation_metrics", path, filename )
 
     # Initialize the output dictionary
     data = RunDataItem()
@@ -255,7 +258,7 @@ def prune_random_and_evaluate( opt: Model,
 ######################################################################################
 
 def run_pruning(c: PruningConfig):
-    # Initilaise Model and show details about model
+    # Initialise Model and show details about model
     opt = Model(
         c.model_size,
         limit=c.token_limit,
@@ -273,7 +276,7 @@ def run_pruning(c: PruningConfig):
         entity=c.wandb_entity,
         name=c.wandb_run_name,
         )
-    wandb.config.update(c.to_dict())
+    wandb.config.update(c.to_dict(), allow_val_change=True)
 
     # Evaluate model before removal of any neurons
     if c.run_pre_test:
