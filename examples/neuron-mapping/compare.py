@@ -27,4 +27,15 @@ def compare_pruned_ff_criteria(cripple_repos: list[str], model_size: str):
             
     return ratios
     
-print(compare_pruned_ff_criteria(["physics", "bio", "code"], "nickypro/tinyllama-15M"))
+
+def load_pt_file(directory: str, filename: str):
+    data = torch.load(directory+filename)
+    for key in data.keys():
+        print(key)
+    return data
+
+# /home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/1.3b/shared_pruning_data-1.3b-recent.pt
+directory = "/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/1.3b/"
+filename = "shared_pruning_data-1.3b-recent.pt"
+data = load_pt_file(directory,filename)
+print(data)

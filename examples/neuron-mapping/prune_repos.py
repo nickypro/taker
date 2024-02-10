@@ -2,7 +2,22 @@
 from taker.data_classes import PruningConfig
 from taker.parser import cli_parser
 from taker.prune import run_pruning
+import os
+import datetime
 import torch
+
+def save_pruning_data_dict( model_size: str,
+        data: any,
+        name: str ):
+    now = datetime.datetime.now().strftime( "%Y-%m-%d_%H:%M:%S" )
+    os.makedirs( f'saved_tensors/{model_size}', exist_ok=True )
+    filename = f'saved_tensors/{model_size}/{name}-{model_size}-recent.pt'
+    torch.save( data, filename )
+    print( f'Saved {filename} to {model_size}' )
+    filename = f'saved_tensors/{model_size}/{name}-{model_size}-{now}.pt'
+    torch.save( data, filename )
+    print( f'Saved {filename} to {model_size}' )
+    return filename
 
 def compare_pruned_ff_criteria(cripple_repos: list[str], model_size: str):
     # cripple_repos = ["physics", "bio", "code"]
@@ -36,9 +51,10 @@ def compare_pruned_ff_criteria(cripple_repos: list[str], model_size: str):
 c = PruningConfig(
     wandb_project = "testing", # repo to push results to
     model_repo   = "nickypro/tinyllama-15M",
-    # "metallama/llama-2-7b"
+    # model_repo   = "facebook/opt-1.3b",
+    # model_repo   = "NousResearch/Llama-2-7b-hf",
     token_limit  = 1000,  # trim the input to this max length
-    run_pre_test = True,  # evaluate the unpruned model
+    run_pre_test = False,  # evaluate the unpruned model
     eval_sample_size = 1e3,
     collection_sample_size = 1e3,
     # Removals parameters
@@ -48,6 +64,7 @@ c = PruningConfig(
     cripple   = "physics",          # the “unlearned” dataset
     additional_datasets=tuple(), # any extra datasets to evaluate on
     recalculate_activations = False, # iterative vs non-iterative
+    dtype = "int8",
     n_steps = 1,
 )
 
@@ -55,8 +72,8 @@ c = PruningConfig(
 # c, args = cli_parser(c)
 
 #list of repos to cripple
-cripple_repos = ["physics", "biology","chemistry", "math", "code", "poems", "civil", "stories"]
-ff_frac_to_prune = [0.01]
+cripple_repos = ["physics", "biology","chemistry", "math", "code", "poems", "civil"]
+ff_frac_to_prune = [0.01,0.02,0.05]
 model_size = c.model_repo.split('-')[-1]
 
 # Run the iterated pruning for each cripple repo, for a range of ff_frac pruned
@@ -70,4 +87,14 @@ for ff_frac in ff_frac_to_prune:
             model, history = run_pruning(c)
     ratios = compare_pruned_ff_criteria(cripple_repos, model_size)
     shared_pruning_data[ff_frac] = ratios
-print(shared_pruning_data)
+
+shared_pruning_data["config"] = {
+    "model_repo": c.model_repo, 
+    "token_limit": c.token_limit, 
+    "eval_sample_size": c.eval_sample_size, 
+    "collection_sample_size": c.collection_sample_size, 
+    "n_steps": c.n_steps, 
+    }
+
+pruning_data_filename = save_pruning_data_dict("7b", shared_pruning_data, "shared_pruning_data")
+print("data saved to: ", pruning_data_filename, "data: ", shared_pruning_data)
