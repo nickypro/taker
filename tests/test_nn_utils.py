@@ -4,7 +4,7 @@
 import pytest
 import torch
 from taker.nn import mlp_svd_two_layer, mlp_delete_columns, mlp_delete_rows, \
-    mlp_adjust_biases, InverseLinear, NeuronMask
+    mlp_adjust_biases, InverseLinear, NeuronMask, NeuronPostBias, NeuronActAdd
 
 def not_equal(t0, t1):
     return not torch.equal(t0, t1)
@@ -154,4 +154,83 @@ class TestNNUtils:
         expected_v = v.clone()
         expected_v[:10] = offsets[:10]
         assert torch.allclose(mask(v), expected_v)
+
+    def test_actadd(self):
+        # Instantiate the module
+        mod = NeuronActAdd("cpu", torch.float32, autoreset=False)
+        dim = 16
+
+        # Verify the original shape
+        print("Original shape:", mod.param.shape)
+        assert len(mod.param)  == 0
+        assert mod.max_tokens  == 0
+        assert mod.tokens_seen == 0
+        assert mod.autoreset   == False
+
+        # Check that the ipnut is unchanged
+        v_in  = torch.zeros([5, dim])
+        v_out = mod(v_in)
+        assert torch.allclose(v_in, v_out)
+
+        # initialise the parameters
+        n_changed = 3
+        rand_bias = torch.randn([n_changed, dim])
+        mod.set_actadd(rand_bias.clone())
+        assert mod.param.shape == torch.Size([n_changed, dim])
+        assert mod.max_tokens == n_changed
+        assert mod.tokens_seen == 0
+        # tokens_seen == 0
+
+        # test that it works
+        v_in    = torch.zeros([1, dim])
+        v_out_0 = mod(v_in.clone())
+        assert torch.allclose(v_out_0, v_in + rand_bias[0])
+        assert mod.tokens_seen == 1
+
+        # test that rolling tokens works
+        v_out_1 = mod(v_in.clone())
+        assert torch.allclose(v_out_1, v_in + rand_bias[1])
+        assert mod.tokens_seen == 2
+
+        # test that operations not done in place
+        v_out_2 = mod(v_in)
+        assert torch.allclose(v_out_2, v_in + rand_bias[2])
+        assert torch.sum(v_in) == 0.0
+        assert mod.tokens_seen == 3
+
+        # test that it runs out of things to change
+        v_out_3 = mod(v_in)
+        assert torch.allclose(v_out_3, v_in)
+        assert torch.sum(v_out_3) == 0.0
+        assert mod.tokens_seen == 3
+
+        # Test that the reset works
+        mod.reset()
+        v_out_0_1 = mod(v_in.clone())
+        assert torch.allclose(v_out_0, v_out_0_1)
+        assert mod.tokens_seen == 1
+
+        # Test that it works for multiple inputs at the same time and keeps track
+        v_in = torch.zeros([10, dim])
+        v_out_10 = mod(v_in)
+        i = n_changed-1
+        assert torch.allclose(v_out_10[:i], v_in[:i] + rand_bias[1:])
+        assert torch.allclose(v_out_10[i:], v_in[i:])
+
+        # Test that the autoreset works
+        mod.autoreset = True
+        assert mod.tokens_seen == n_changed
+        v_in = torch.zeros([10, dim])
+        v_out_10 = mod(v_in)
+        assert torch.allclose(v_out_10[:3], v_in[:3] + rand_bias)
+        assert torch.allclose(v_out_10[3:], v_in[3:])
+
+        # also that autoreset doesn't activate for single vector inputs
+        v_in = torch.zeros([1, dim])
+        v_out = mod(v_in)
+        assert torch.allclose(v_out, v_in)
+
+
+
+
 
