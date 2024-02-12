@@ -92,9 +92,10 @@ class Model():
 
         # Handle dtype
         if dtype is None and torch_dtype is None:
-            dtype = "fp16"
-        if self.device == "cpu":
-            dtype = "fp32"
+            if self.device == "cpu":
+                dtype = "fp32"
+            else:
+                dtype = "fp16"
         self.dtype_map = DtypeMap(dtype, torch_dtype)
         self.dtype = self.dtype_map._dtype
         self.dtype_args = self.dtype_map._dtype_args
