@@ -164,6 +164,16 @@ class NeuronMask(torch.nn.Module):
         params["param"] = params["param"] * keep_indices.to(params["param"].device)
         self.load_state_dict(params)
 
+    def get_inverse_mask(self, x):
+        mask = self.get_mask().to(x.dtype)
+        return 1 - mask
+
+    def inverse_mask(self, x, offset=False):
+        inv_mask = self.get_inverse_mask(x)
+        # TODO: allow inverse mask to work with offset. Not sure when needed though.
+        assert offset == False
+        return x * inv_mask
+
     def forward(self, x):
         mask = self.get_mask()
         offset = self.get_offset(x)
