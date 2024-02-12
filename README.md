@@ -10,12 +10,12 @@ activations.
 
 The currently tested list of models is:
 - EleutherAI's Pythia
-- EleutherAI's GPT-J
+- EleutherAI's GPT-NeoX
 - Meta Opt
 - Meta Galactica
-- Meta Llama (2)
+- Meta Llama / Llama 2
 - MistralAI Mistral 7B
-- GPT2
+- GPT-2
 - RoBERTa
 - Google's Vision Transformer (ViT)
 
@@ -29,7 +29,7 @@ from taker import Model
 
 # choose any model from huggingface, though note that not all will be supported
 # dtype can be anything from int4, int8, fp16, fp32, fp64
-m = Model("nickypro/tinyllama-15m", dtype="fp16") 
+m = Model("nickypro/tinyllama-15m", dtype="fp16")
 
 # You can access different attributes of the model
 print(m.cfg.n_layer) # model has 6 layers
