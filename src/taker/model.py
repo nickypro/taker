@@ -24,7 +24,7 @@ import matplotlib as mpl
 # Import from inside module
 from .model_repos import supported_model_repos
 from .nn import InverseLinear, \
-    NeuronMask, NeuronPostBias, NeuronFunctionList, \
+    NeuronMask, NeuronPostBias, NeuronFunctionList, NeuronActAdd, \
     mlp_delete_rows_raw, mlp_svd_two_layer_raw, mlp_delete_columns_raw
 from .model_maps import convert_hf_model_config, ModelMap, ConfigClass
 from .data_classes import DtypeMap, EvalOutput
@@ -107,9 +107,11 @@ class Model():
         self.tokenizer_repo: str = None
         self.set_repo(model_repo, tokenizer_repo)
 
-        # Add masking parameters
+        # Add hook parameters
         self.mask_fn: str = mask_fn
         self.masking_enabled: bool = True
+        self.actadd_enabled: bool = True
+        self.post_biases_enabled: bool = False
 
         # Initialize model components
         self.cfg: ConfigClass = None
@@ -124,8 +126,8 @@ class Model():
         self.hook_handles = defaultdict(lambda : defaultdict(dict))
         self.activations: dict = None
         self.masks: dict = None
+        self.actadds: dict = None
         self.post_biases: dict = None
-        self.post_biases_enabled: bool = False
         self.attn_pre_out_mode: str = None
         self.mlp_pre_out_mode: str = None
         self.init_model()
@@ -185,11 +187,12 @@ class Model():
             "mlp_pre_out": {}
         }
         self.masks = {}
+        self.actadds = {}
         self.post_biases = {}
 
         self.register_activations()
         self.register_masks()
-        #self.register_actadd()
+        self.register_actadds()
         self.register_post_biases()
         if self.dtype_map.is_low_precision:
             return self
@@ -372,47 +375,60 @@ class Model():
             component: str,
             layer_index: int
             ):
-        if component not in self.masks:
-            self.masks[component] = [None for _ in range(self.cfg.n_layers)]
-        if self.masks[component][layer_index] is not None:
-            print(f"WARNING: {component} {layer_index} already has a mask!")
+        if component not in self.actadds:
+            self.actadds[component] = [None for _ in range(self.cfg.n_layers)]
+        if self.actadds[component][layer_index] is not None:
+            print(f"WARNING: {component} {layer_index} already has ActAdd!")
+
 
         shape = (self.cfg.d_model,)
         if component == "mlp_pre_out":
             shape = (self.cfg.d_mlp,)
 
-        mask = NeuronMask(shape, self.mask_fn)
-        dtype, device = self.dtype, module.weight.device
-        mask = mask.to(dtype=dtype, device=device)
-        self.masks[component][layer_index] = mask
+        actadd = NeuronActAdd(self.device, self.dtype)
+        self.actadds[component][layer_index] = actadd
 
         # Register the pre-hook for masking
         def pre_hook_masking(_module, _input):
-            if not self.masking_enabled:
+            if not self.actadd_enabled:
                 return (_input[0],)
-            return (mask(_input[0]),)
+            return (actadd(_input[0]),)
 
         _handle = module.register_forward_pre_hook(pre_hook_masking)
         return _handle
 
     def register_actadds(self):
         """Register the masks for each layer in the model."""
-        if self.mask_fn == "delete":
-            return
+        if len(list(self.actadds.keys())) > 0:
+            print("WARNING: replacing existing actadds dict")
+            self.actadds = {}
 
         for layer_index, layer in enumerate(self.layers):
             # Listen to inputs for FF_out
             fc2 = layer["mlp.out_proj"]
-            _handle = self.register_input_mask(fc2, "mlp_pre_out", layer_index)
-            self.save_hook_handle(_handle, "input-mask", "mlp.out_proj", layer_index)
+            _handle = self.register_input_actadd(fc2, "mlp_pre_out", layer_index)
+            self.save_hook_handle(_handle, "input-actadd", "mlp.out_proj", layer_index)
 
             # Optionally, build pre_out hook if possible
             attn_o = layer["attn.out_proj"]
-            _handle = self.register_input_mask(attn_o, "attn_pre_out", layer_index)
-            self.save_hook_handle(_handle, "input-mask", "attn.out_proj", layer_index)
+            _handle = self.register_input_actadd(attn_o, "attn_pre_out", layer_index)
+            self.save_hook_handle(_handle, "input-actadd", "attn.out_proj", layer_index)
 
-        self.masks["mlp_pre_out"]  = NeuronFunctionList(self.masks["mlp_pre_out"])
-        self.masks["attn_pre_out"] = NeuronFunctionList(self.masks["attn_pre_out"])
+        self.actadds["mlp_pre_out"]  = NeuronFunctionList(self.actadds["mlp_pre_out"])
+        self.actadds["attn_pre_out"] = NeuronFunctionList(self.actadds["attn_pre_out"])
+
+    def update_actadd(self,
+            params: Tensor, # [n_layers, n_tokens, d_component]
+            component: str,
+            ):
+        """ Update the activation addition neuron functions for component """
+        assert component in self.actadds
+
+        params = params.to(self.device, self.dtype)
+        for layer_index, param in enumerate(params):
+            actadd: NeuronActAdd = self.actadds[component][layer_index]
+            actadd.set_actadd(param)
+
     def register_output_bias(self,
             module: torch.nn.Module,
             component: str,
@@ -605,6 +621,20 @@ class Model():
                 mask(act.view(temp_shape)).view(orig_shape)
             )
         return torch.stack(masked_activations)
+
+    def run_inverse_masking(self, activations:Tensor, component: str):
+        """ Returns activations that were masked, and not the ones that weren't"""
+        masked_activations = []
+        for layer_index in range(self.cfg.n_layers):
+            mask: NeuronMask = self.masks[component][layer_index]
+            act  = activations[layer_index]
+            orig_shape = act.shape
+            temp_shape = (-1, *mask.shape)
+            masked_activations.append(
+                mask.inverse_mask(act.view(temp_shape)).view(orig_shape)
+            )
+        return torch.stack(masked_activations)
+
 
     def get_text_activations( self,
                 text: Optional[str] = None,
