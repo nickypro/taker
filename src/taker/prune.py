@@ -131,7 +131,7 @@ def score_and_prune( opt: Model,
         "ff_criteria": ff_criteria if do_ff else None,
         "attn_criteria": attn_criteria if do_attn else None,
     }
-    
+
     if save:
         subdirectory = f"{pruning_config.save_subdirectory}/" or ""
         path = f"{subdirectory}saved_tensors/{opt.model_size}"
@@ -172,7 +172,13 @@ def prune_random( opt: Model,
         opt (Model): model to prune and evaluate
         ff_frac (float): fraction of FF to prune
         attn_frac (float): fraction of Attention to prune
+        ff_pruned: list of which mlp neurons have already been pruned
+        attn_pruned: list of which attn neurons have already been pruned
 
+    Returns:
+        ff_pruned: updated list of which mlp neurons have already been pruned
+        attn_pruned: updated list of which attn neurons have already been pruned
+        data_out: summary info on which neurons have been pruned
     """
     if ff_pruned is None:
         ff_pruned = np.zeros( (opt.cfg.n_layers, opt.cfg.d_mlp), dtype=np.bool_ )
