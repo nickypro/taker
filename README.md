@@ -67,7 +67,7 @@ import torch
 neurons_to_keep = torch.ones(m.cfg.d_mlp)
 neurons_to_keep[:10] = 0
 
-m.masks["mlp_pre_out"][2].delete(keep_indices=neurons_to_keep)
+m.masks["mlp_pre_out"][2].delete_neurons(keep_indices=neurons_to_keep)
 ```
 
 You can also make it so that the neurons are not set to zero, but rather some other value
