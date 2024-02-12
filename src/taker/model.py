@@ -349,6 +349,10 @@ class Model():
         if self.mask_fn == "delete":
             return
 
+        if len(list(self.masks.keys())) > 0:
+            print("WARNING: replacing existing masks dict")
+            self.masks = {}
+
         for layer_index, layer in enumerate(self.layers):
             # Listen to inputs for FF_out
             fc2 = layer["mlp.out_proj"]
@@ -445,6 +449,10 @@ class Model():
         do_attn_vo_biases = \
             "attn.v_proj" in self.layers[0] and \
             self.layers[0]["attn.v_proj"] is not None
+
+        if len(list(self.post_biases)) >= 1:
+            print("WARNING: Replacing existing post_biases dict")
+            self.post_biases = {}
 
         if do_attn_vo_biases:
             for layer_index, layer in enumerate(self.layers):
