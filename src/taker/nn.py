@@ -169,6 +169,57 @@ class NeuronMask(torch.nn.Module):
         offset = self.get_offset(x)
         return x * mask + offset
 
+# Positional Neuron Activation Addition.
+class NeuronActAdd(torch.nn.Module):
+    """ MVP for Position Dependant Neuron Activation Offseting.
+    Inspired by ActAdd paper.
+    # EG: [[a], [b], [c], [d], ...] -> [[a+x], [b'+y], [c'+z], [d'], ...]
+    # where a,b,c,d are the "real activations", x,y,z are the added vectors.
+
+    the "autoreset" works by assuming the first input is of size > 1 and is cached.
+    """
+    def __init__(self, device, dtype, autoreset: bool=True):
+        super(NeuronActAdd, self).__init__()
+        self.device = device
+        self.dtype = dtype
+
+        # leave as uninitialised initially
+        self.shape = [0]
+        self.param = torch.nn.Parameter(torch.zeros(self.shape))
+        self.max_tokens = 0
+
+        self.tokens_seen = 0
+        self.autoreset = autoreset
+
+    def reset(self):
+        self.tokens_seen = 0
+
+    def set_actadd(self, offset: Tensor):
+        self.shape = offset.shape
+        self.max_tokens = self.shape[0]
+        self.param = torch.nn.Parameter(
+            offset.to(device=self.device, dtype=self.dtype)
+        )
+        self.reset()
+
+    def forward(self, x):
+        # load input vector (do not modify in place)
+        x = x.clone()
+        n_new_tokens = x.shape[0]
+        # autoreset assuming cache goes like [0,1,2,3], [4], [5], ...
+        if self.autoreset and n_new_tokens > 1:
+            self.reset()
+        # if we used up all the add act vectors we can skip
+        if self.tokens_seen >= self.max_tokens:
+            return x
+        # othewise, do the act add stuff with remaining vectors left
+        tokens_left = self.max_tokens - self.tokens_seen
+        n_tokens    = min([tokens_left, n_new_tokens])
+
+        x[:n_tokens]     += self.param[ self.tokens_seen:self.tokens_seen+n_tokens]
+        self.tokens_seen += n_tokens
+        return x
+
 # Neuron Post Bias (EG: For SVD and stuff) out -> out + bias
 class NeuronPostBias(torch.nn.Module):
     """Container for holding after-the-fact biases in the model."""
