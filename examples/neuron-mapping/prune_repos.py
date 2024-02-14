@@ -56,7 +56,7 @@ c = PruningConfig(
     eval_sample_size = 1e5,
     collection_sample_size = 1e5,
     # Removals parameters
-    ff_frac   = 0.2,     # % of feed forward neurons to prune
+    ff_frac   = 0.01,     # % of feed forward neurons to prune
     attn_frac = 0.00,     # % of attention neurons to prune
     focus     = "pile", # the “reference” dataset
     cripple   = "physics",          # the “unlearned” dataset
@@ -70,37 +70,31 @@ c = PruningConfig(
 # c, args = cli_parser(c)
 
 #list of repos to cripple
-cripple_repos = ["math", "code", "poems", "civil"]
-# "physics", "biology","chemistry", 
+cripple_repos = ["emotion", "pile_FreeLaw", "pile_PubMed_Abstracts", "pile_PubMed_Central", "pile_NIH_ExPorter", "pile_Enron_Emails", "pile_Github", "pile_StackExchange", "pile_HackerNews", "pile_ArXiv", "pile_Wikipedia"]
 ff_frac_to_prune = [0.01]
 model_size = c.model_repo.split('-')[-1]
 
 # Run the iterated pruning for each cripple repo, for a range of ff_frac pruned
-shared_pruning_data = {}
+# shared_pruning_data = {}
 for ff_frac in ff_frac_to_prune:
     c.ff_frac = ff_frac
     #only want pretest for each repo once, so running it on first value of ff_frac.
-    if ff_frac == 0.01:
-        c.run_pre_test = True
-    else:
-        c.run_pre_test = False
-    
     for repo in cripple_repos:
         c.cripple = repo
         print("running iteration for ", c.cripple, " vs ", c.focus, "with ff_frac: ", ff_frac)
         with torch.no_grad():
             model, history = run_pruning(c)
-    ratios = compare_pruned_ff_criteria(cripple_repos, model_size)
-    shared_pruning_data[ff_frac] = ratios
+    # ratios = compare_pruned_ff_criteria(cripple_repos, model_size)
+    # shared_pruning_data[ff_frac] = ratios
 
-shared_pruning_data["config"] = {
-    "model_repo": c.model_repo, 
-    "token_limit": c.token_limit, 
-    "eval_sample_size": c.eval_sample_size, 
-    "collection_sample_size": c.collection_sample_size, 
-    "n_steps": c.n_steps, 
-    "dtype": c.dtype,
-    }
+# shared_pruning_data["config"] = {
+#     "model_repo": c.model_repo, 
+#     "token_limit": c.token_limit, 
+#     "eval_sample_size": c.eval_sample_size, 
+#     "collection_sample_size": c.collection_sample_size, 
+#     "n_steps": c.n_steps, 
+#     "dtype": c.dtype,
+#     }
 
-pruning_data_filename = save_pruning_data_dict("hf", shared_pruning_data, "shared_pruning_data")
-print("data saved to: ", pruning_data_filename, "data: ", shared_pruning_data)
+# pruning_data_filename = save_pruning_data_dict(model_size, shared_pruning_data, "shared_pruning_data")
+# print("data saved to: ", pruning_data_filename, "data: ", shared_pruning_data)

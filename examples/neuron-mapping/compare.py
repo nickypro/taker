@@ -35,8 +35,9 @@ def load_pt_file(directory: str, filename: str):
     return data
 
 # /home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/1.3b/shared_pruning_data-1.3b-recent.pt
-directory = "/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/hf/"
-filename = "physics-pile-hf-recent.pt"
+directory = "/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/15M/"
+filename = "shared_pruning_data-15M-recent.pt"
 data = load_pt_file(directory,filename)
-print(data)
-print(data["ff_criteria"].size())
+print(data[0.01]['pile_PubMed_Abstracts'])
+
+#{'emotion': tensor(0.1304), 'pile_FreeLaw': tensor(0.1304), 'pile_PubMed_Central': tensor(0.0870), 'pile_NIH_ExPorter': tensor(0.4130), 'pile_Enron_Emails': tensor(0.1739), 'pile_Github': tensor(0.), 'pile_StackExchange': tensor(0.2174), 'pile_HackerNews': tensor(0.1304), 'pile_ArXiv': tensor(0.2174), 'pile_Wikipedia': tensor(0.1739)}
