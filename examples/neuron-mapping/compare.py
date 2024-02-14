@@ -35,7 +35,8 @@ def load_pt_file(directory: str, filename: str):
     return data
 
 # /home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/1.3b/shared_pruning_data-1.3b-recent.pt
-directory = "/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/1.3b/"
-filename = "shared_pruning_data-1.3b-recent.pt"
+directory = "/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/hf/"
+filename = "physics-pile-hf-recent.pt"
 data = load_pt_file(directory,filename)
 print(data)
+print(data["ff_criteria"].size())
