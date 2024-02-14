@@ -44,6 +44,13 @@ class DatasetFilters:
         return rocket_dataset
 
     @staticmethod
+    def filter_pile_general(_dataset, label):
+        def filter_pile_example(example):
+            return str(example["meta"]["pile_set_name"]) == label
+        pile_filtered_dataset = _dataset.filter(filter_pile_example)
+        return pile_filtered_dataset
+
+    @staticmethod
     def filter_civil(_dataset):
         def filter_toxicity_example(example):
             return example["toxicity"] <= 0.2
@@ -108,12 +115,12 @@ class DatasetFilters:
             return str(example["fine_label"]) not in rocket_ids
         rocketless_dataset = _dataset.filter(filter_rocket_out_example)
         return rocketless_dataset
-    
+
     @staticmethod
     def filter_cifar(id: str):
         return lambda _dataset: _dataset.filter(lambda example: str(example["coarse_label"]) == id)
 
-def get_cifar_dataset_configs(): 
+def get_cifar_dataset_configs():
     cifar20_datasets = ["aquatic_mammals", "fish", "flowers", "food_containers", "fruit_and_vegetables", "household_electrical_devices", "household_furniture", "insects", "large_carnivores", "large_outdoor", "large_omnivores_and_herbivores", "medium_mammals", "non_insect_invertebrates", "people", "reptiles", "small_mammals", "trees", "veh1", "veh2"]
     return [EvalConfig(f"cifar20-{dataset}",
                        dataset_repo = "cifar100",
@@ -131,6 +138,11 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_repo = "monology/pile-uncopyrighted",
             skip_token_strings = most_common_pile_codeless_tokens,
             dataset_filter = DatasetFilters.filter_codeless,
+        ),
+        EvalConfig("pile_freelaw",
+            dataset_repo = "monology/pile-uncopyrighted",
+            skip_token_strings = most_common_pile_codeless_tokens,
+            dataset_filter = lambda __dataset : DatasetFilters.filter_pile_general(__dataset, "FreeLaw"),
         ),
         EvalConfig("pile",
             dataset_repo = "monology/pile-uncopyrighted",
