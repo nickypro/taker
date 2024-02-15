@@ -70,9 +70,13 @@ c = PruningConfig(
 # c, args = cli_parser(c)
 
 #list of repos to cripple
-cripple_repos = ["emotion", "pile_FreeLaw", "pile_PubMed_Abstracts", "pile_PubMed_Central", "pile_NIH_ExPorter", "pile_Enron_Emails", "pile_Github", "pile_StackExchange", "pile_HackerNews", "pile_ArXiv", "pile_Wikipedia"]
+#done
+#"emotion", "pile_FreeLaw", "pile_PubMed_Abstracts", "pile_PubMed_Central", "pile_NIH_ExPorter", "pile_Enron_Emails", "pile_Github", "pile_StackExchange", "pile_HackerNews", "pile_ArXiv", "pile_Wikipedia"
+#not done, to do next
+#, "pile_EuroParl", "pile_Gutenberg"
+cripple_repos = ["pile_Ubuntu_IRC", "pile_USPTO_Backgrounds", "pile_PhilPapers"]
 ff_frac_to_prune = [0.01]
-model_size = c.model_repo.split('-')[-1]
+# model_size = c.model_repo.split('-')[-1]
 
 # Run the iterated pruning for each cripple repo, for a range of ff_frac pruned
 # shared_pruning_data = {}
