@@ -59,7 +59,7 @@ cripple_repos = ["emotion", "pile_FreeLaw", "pile_PubMed_Abstracts", "pile_PubMe
 #prune each repo and save tensors, doing some extra computation but only really need ff_scores for each repo, will do actual pruning for different values of ff_frac in compare.py
 for repo in cripple_repos:
     c.cripple = repo
-    print("running iteration for ", c.cripple, " vs ", c.focus, "with ff_frac: ", ff_frac)
+    print("running iteration for ", c.cripple, " vs ", c.focus, "with ff_frac: ", c.ff_frac)
     with torch.no_grad():
         model, history = run_pruning(c)
 
