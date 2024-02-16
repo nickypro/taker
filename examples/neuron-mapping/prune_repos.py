@@ -2,8 +2,6 @@
 from taker.data_classes import PruningConfig
 from taker.parser import cli_parser
 from taker.prune import run_pruning
-import os
-import datetime
 import torch
 
 def compare_pruned_ff_criteria(cripple_repos: list[str], model_size: str):

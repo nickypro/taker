@@ -45,6 +45,6 @@ def plot_ratios(ratios):
 
     plt.show()
 
-data = load_pt_file()
-ratios = data["ratios"]
-plot_ratios(ratios)
+
+ratios = load_pt_file("/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/hf/","pruning_ratios-hf-recent.pt")
+print(ratios)
