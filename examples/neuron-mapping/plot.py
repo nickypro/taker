@@ -8,13 +8,13 @@ def load_pt_file(directory: str, filename: str):
         print(key)
     return data
 
-cripple_repos = ["biology", "chemistry", "physics", "math", "code", "poems", "civil", "emotion", "pile_FreeLaw", "pile_PubMed_Abstracts", "pile_PubMed_Central", "pile_NIH_ExPorter", "pile_Enron_Emails", "pile_Github", "pile_StackExchange", "pile_HackerNews", "pile_ArXiv", "pile_Wikipedia", "pile_Ubuntu_IRC", "pile_USPTO_Backgrounds", "pile_PhilPapers", "pile_EuroParl", "pile_Gutenberg", "pile_PhilPapers", "pile_EuroParl", "pile_Gutenberg"]
+cripple_repos = ["biology", "chemistry", "physics", "math", "code", "poems", "civil", "emotion", "pile_FreeLaw", "pile_PubMed_Abstracts", "pile_PubMed_Central", "pile_NIH_ExPorter", "pile_Enron_Emails", "pile_Github", "pile_StackExchange", "pile_HackerNews", "pile_ArXiv", "pile_Wikipedia", "pile_Ubuntu_IRC", "pile_USPTO_Backgrounds", "pile_PhilPapers", "pile_EuroParl", "pile_Gutenberg"]
 
-def plot_ratios(ratios):
+def plot_ratios(ratios, ff_frac):
     datasets = cripple_repos
     grid = [
         [
-            ratios[0.01][dataset_a][dataset_b].item() if dataset_a != dataset_b else np.nan
+            ratios[ff_frac][dataset_a][dataset_b].item() if dataset_a != dataset_b else np.nan
             for dataset_b in datasets
         ]
         for dataset_a in datasets
@@ -39,12 +39,14 @@ def plot_ratios(ratios):
     )
     plt.yticks(range(len(datasets)), [dataset for dataset in datasets])
 
-    plt.subplots_adjust(bottom=0.3)
+    plt.subplots_adjust(bottom=0.19, top=0.97)
 
-    plt.title(f"FF Criteria Overlap for Prune Ratio 0.01")
+    plt.title(f"FF Criteria Overlap for Prune Ratio {ff_frac}")
 
     plt.show()
 
 
-ratios = load_pt_file("/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/hf/","pruning_ratios-hf-recent.pt")
-print(ratios)
+ratios = load_pt_file("/home/rashid/ml/trajectories/rash92_fork/taker/examples/neuron-mapping/saved_tensors/hf/","pruning_ratios-hf-recent.pt")
+ff_fracs = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5]
+for ff_frac in ff_fracs:
+    plot_ratios(ratios, ff_frac)
