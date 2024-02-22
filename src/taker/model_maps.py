@@ -1093,6 +1093,108 @@ def build_vit_layer_map(cfg: ConfigClass):
 
     return vit_layer_map
 
+#####################################################################################
+# Encoder + Decoder Models
+#####################################################################################
+
+# T5 Model Map for PyTorch T5 Model
+###################################
+
+t5_model_map = {
+    "model"           : "t5",
+    "layers"          : "encoder.block",
+    "embed"           : "shared",
+    "embed.W_E"       : "shared.weight",
+    "pos_embed.W_pos" : "encoder.embed_tokens.position_embeddings.weight",
+    "ln_final"        : "encoder.final_layer_norm",
+    "ln_final.w"      : "encoder.final_layer_norm.weight",
+    "ln_final.b"      : "encoder.final_layer_norm.bias",
+    "lm_head"         : "lm_head",
+    "unembed.W_U"     : "lm_head.weight",
+    "unembed.b_U"     : None,
+}
+
+def build_t5_layer_map(cfg: ConfigClass):
+    attn_proj_map = {
+        "q": "self_attn.q",
+        "k": "self_attn.k",
+        "v": "self_attn.v",
+        "o": "self_attn.o"
+    }
+
+    def t5_qkv_weight(layer, key: str, inpt: Optional[Any]=None):
+        # Prepare shape changing
+        their_shape = "(n_heads, d_head) d_model"
+        my_shape    = "n_heads, d_head, d_model"
+        sizes = generate_sizes_dict(my_shape, cfg)
+
+        # Get attn proj module
+        attn = layer.self_attn
+        attn_proj = get_attrs(attn, attn_proj_map[key])
+
+        # Get mode
+        if inpt is None:
+            W = attn_proj.weight
+            W = einops.rearrange(W, f"{their_shape} -> {my_shape}", **sizes)
+            return W
+
+        # Set mode
+        W = einops.rearrange(inpt, f"{my_shape} -> {their_shape}", **sizes)
+        update_param(attn_proj, "weight", W)
+
+    def t5_qkv_bias(layer, key: str, inpt: Optional[Any]=None):
+        # Prepare shape changing
+        their_shape = "(n_heads, d_head)"
+        my_shape    = "n_heads, d_head"
+        sizes = generate_sizes_dict(my_shape, cfg)
+
+        # Get attn proj module
+        attn = layer.self_attn
+        attn_proj = get_attrs(attn, attn_proj_map[key])
+
+        if inpt is None:
+            b = attn_proj.bias
+            b = einops.rearrange(b, f"{their_shape} -> {my_shape}", **sizes)
+            return b
+
+        # Set mode
+        b = einops.rearrange(inpt, f"{my_shape} -> {their_shape}", **sizes)
+        update_param(attn_proj, "bias", b)
+
+
+    t5_layer_map = {
+        "ln1"           : "layer_norm",
+        "ln1.w"         : "layer_norm.weight",
+        "ln1.b"         : "layer_norm.bias",
+
+        "attn"          : "self_attn",
+        "attn.q_proj"   : "self_attn.q",
+        "attn.k_proj"   : "self_attn.k",
+        "attn.v_proj"   : "self_attn.v",
+
+        **generate_attn_qkv_functions(t5_qkv_weight, t5_qkv_bias),
+
+        "attn.out_proj" : "self_attn.o",
+        "attn.W_O"      : "self_attn.o.weight",
+        "attn.b_O"      : "self_attn.o.bias",
+
+        "ln2"           : "layer_norm",
+        "ln2.w"         : "layer_norm.weight",
+        "ln2.b"         : "layer_norm.bias",
+
+        "mlp"           : "fc",
+        "mlp.in_proj"   : "fc.DenseReluDense.wi",
+        "mlp.W_in"      : "fc.DenseReluDense.wi.weight",
+        "mlp.b_in"      : "fc.DenseReluDense.wi.bias",
+
+        "activation_fn" : "fc.act",
+
+        "mlp.out_proj"  : "fc.DenseReluDense.wo",
+        "mlp.W_out"     : "fc.DenseReluDense.wo.weight",
+        "mlp.b_out"     : "fc.DenseReluDense.wo.bias",
+    }
+    return t5_layer_map
+
 
 #####################################################################################
 # Build Model Layer Map interfaces
