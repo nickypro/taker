@@ -17,3 +17,5 @@ dist
 
 # Don't allow jupiter notebooks, they take too much space
 *.ipynb
+# Same for saved pytorch tensor dicts
+*.pt

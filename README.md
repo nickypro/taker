@@ -10,12 +10,87 @@ activations.
 
 The currently tested list of models is:
 - EleutherAI's Pythia
+- EleutherAI's GPT-NeoX
 - Meta Opt
 - Meta Galactica
-- GPT2
-- BERT
+- Meta Llama / Llama 2
+- MistralAI Mistral 7B
+- GPT-2
+- RoBERTa
+- Google's Vision Transformer (ViT)
 
 For check out the [examples folder](https://github.com/nickypro/separability/blob/main/examples) to see in more detail how the library can be used.
+
+## Using the Model
+
+To load up the model, simply do:
+```
+from taker import Model
+
+# choose any model from huggingface, though note that not all will be supported
+# dtype can be anything from int4, int8, fp16, fp32, fp64
+m = Model("nickypro/tinyllama-15m", dtype="fp16")
+
+# You can access different attributes of the model
+print(m.cfg.n_layer) # model has 6 layers
+print(m.cfg.d_model) # 288 model width
+print(m.cfg.d_mlp)   # 768 mlp width
+print(m.cfg.n_heads) # 6 heads
+print(m.cfg.d_head)  # 48 head size
+print(m.cfg.d_vocab) # 32000 token options
+```
+
+Once the model is loaded, you can try using it for some generative tasks:
+```
+output = m.generate("I am hungry and want to", num=10)
+print(output)
+# ('I am hungry and want to', ' eat something." I said, "I am sorry')
+```
+
+If you want to inspect the activations, you can try to look at it's residual stream activations:
+```
+m.get_residual_stream("I am hungry")
+print(m.shape)
+# torch.Size([13, 5, 288])
+# formatted as [n_layer, n_tokens, d_model]
+# where n_layers is [input], [attn_0_output], [mlp_0_output], [attn_1_input], ...
+```
+
+If you want to manipulate the model, you can use one of the implemented hooks:
+- `NeuronMask`, used to set neuron activations to zero (or some other constant).
+- `NeuronActAdd`, used to do "activation addition" to different tokens.
+- `NeuronPostBias`, used to add a bias to the ouputs when the huggingface model does not otherwise support it.
+
+For example, you can set the masks of some mlp neurons in layer 2 to zero:
+```
+import torch
+neurons_to_keep = torch.ones(m.cfg.d_mlp)
+neurons_to_keep[:10] = 0
+
+m.masks["mlp_pre_out"][2].delete_neurons(keep_indices=neurons_to_keep)
+```
+
+You can also make it so that the neurons are not set to zero, but rather some other value
+```
+neuron_cenetering_vector = torch.randn(m.cfg.d_mlp)
+
+
+m.masks["mlp_pre_out"][2].set_offset(neuron_centering_vector)
+```
+
+
+## Model Map
+
+Taker works by using a map, `ModelMap` which converts a standardised query like `mlp.W_out` to
+the rekevant saved component. For example:
+```
+mlp_weights = m.layers[2]["mlp.W_out"]
+
+mlp_weights[..., 0] = 3.14159
+
+m.layers[2]["mlp.W_out"] = mlp_weights
+```
+
 
 ## Pruning based on Capabilities
 

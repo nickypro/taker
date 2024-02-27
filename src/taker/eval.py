@@ -335,7 +335,6 @@ class ImageGenerators(Generators):
 
         for data in dataset:
             # predict next token from text
-            print(data)
             img   = data[eval_config.dataset_image_key]
             label = data[eval_config.dataset_image_label_key]
             with torch.no_grad():
