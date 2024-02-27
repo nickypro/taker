@@ -10,6 +10,7 @@ from torch import Tensor
 from accelerate import Accelerator
 from datasets import Dataset
 from collections import defaultdict
+import copy
 
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
@@ -146,30 +147,50 @@ class Model():
         self.model_repo = model_repo
         self.tokenizer_repo = model_repo if tokenizer_repo is None else tokenizer_repo
 
-    def init_model( self, model_repo: Optional[str] = None ):
+    def import_models(self,
+            tokenizer=None,
+            predictor=None,
+            processor=None
+        ):
+        # Import model components (Default: Causal Language Models)
+        device_map = "auto" if self.use_accelerator else None
+
+        if self.cfg.model_modality == "vision":
+            from transformers import AutoImageProcessor, AutoModelForImageClassification
+            self.tokenizer = None \
+                if tokenizer is None else tokenizer
+            self.processor = self.init_image_processor(device_map) \
+                if processor is None else self.processor
+            self.predictor = AutoModelForImageClassification.from_pretrained(
+                self.model_repo, device_map=device_map, **self.dtype_args) \
+                if predictor is None else predictor
+        elif self.cfg.model_modality == "language":
+            self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_repo, legacy=False) \
+                if tokenizer is None else tokenizer
+            self.processor = None \
+                if processor is None else processor
+            self.predictor = AutoModelForCausalLM.from_pretrained(
+                self.model_repo, device_map=device_map, **self.dtype_args) \
+                if predictor is None else predictor
+
+        else:
+            raise NotImplementedError(f"Model modality {self.cfg.model_modality} not implemented.")
+
+    def init_model( self,
+            model_repo: Optional[str] = None,
+            do_model_import: bool = True,
+            **kwargs,
+        ):
         if not model_repo is None:
             self.set_repo(model_repo)
         # Initialize model (with or without accelerator)
-        device_map = "auto" if self.use_accelerator else None
 
         # Import model config
         self.cfg = convert_hf_model_config(self.model_repo)
         self.cfg.is_low_precision = self.dtype_map.is_low_precision
 
-        # Import model components (Default: Causal Language Models)
-        if self.cfg.model_modality == "vision":
-            from transformers import AutoImageProcessor, AutoModelForImageClassification
-            self.tokenizer = None,
-            self.init_image_processor(device_map)
-            self.predictor = AutoModelForImageClassification.from_pretrained(
-                self.model_repo, device_map=device_map, **self.dtype_args)
-        elif self.cfg.model_modality == "language":
-            self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_repo, legacy=False)
-            self.processor = None
-            self.predictor = AutoModelForCausalLM.from_pretrained(
-                self.model_repo, device_map=device_map, **self.dtype_args)
-        else:
-            raise NotImplementedError(f"Model modality {self.cfg.model_modality} not implemented.")
+        if do_model_import:
+            self.import_models(**kwargs)
 
         # Build map for working with model
         self.map = ModelMap(self.predictor, self.cfg)
@@ -213,6 +234,7 @@ class Model():
             from .vit_processor import SsdVitProcessor
             self.processor = SsdVitProcessor()
 
+        return self.processor
 
     def init_vit(self):
         from transformers import ViTModel, ViTForImageClassification, AutoConfig
@@ -225,6 +247,25 @@ class Model():
         model.vit = vit
 
         return model.to(self.device)
+
+    def __deepcopy__(self, memo):
+        m = copy.copy(self)
+        m.import_models(
+            tokenizer = copy.deepcopy(self.tokenizer, memo),
+            processor = copy.deepcopy(self.processor, memo),
+            predictor = copy.deepcopy(self.predictor, memo),
+        )
+        # TODO: support copy of hook parameters
+        m.remove_all_hooks()
+        m.hook_handles = defaultdict(lambda : defaultdict(dict))
+        m.activations = None
+        m.masks = None
+        m.actadds = None
+        m.post_biases = None
+        m.attn_pre_out_mode = None
+        m.mlp_pre_out_mode = None
+        m.init_model(do_model_import=False)
+        return m
 
     def show_details( self, verbose=True ):
         if verbose:
@@ -254,6 +295,18 @@ class Model():
         if self.use_accelerator or self.device != self.output_device:
             tensor_list = [ t.to(self.output_device) for t in tensor_list ]
         return torch.stack( tensor_list )
+
+    def remove_hooks_from(self, submodel):
+        # Recursively visit all modules and submodules
+        for module in submodel.modules():
+            # Hooks are stored in ._forward_pre_hooks and ._forward_hooks
+            hooks = list(module._forward_pre_hooks.keys()) + list(module._forward_hooks.keys())
+            for hook_id in hooks:
+                module._forward_pre_hooks.pop(hook_id, None)
+                module._forward_hooks.pop(hook_id, None)
+
+    def remove_all_hooks(self):
+        self.remove_hooks_from(self.predictor)
 
     def save_hook_handle(self,
             new_hook_handle, # The output handle of register_forward_hook()
