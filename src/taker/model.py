@@ -250,11 +250,15 @@ class Model():
 
     def __deepcopy__(self, memo):
         m = copy.copy(self)
-        m.import_models(
-            tokenizer = copy.deepcopy(self.tokenizer, memo),
-            processor = copy.deepcopy(self.processor, memo),
-            predictor = copy.deepcopy(self.predictor, memo),
-        )
+        try:
+            m.import_models(
+                tokenizer = copy.deepcopy(self.tokenizer, memo),
+                processor = copy.deepcopy(self.processor, memo),
+                predictor = copy.deepcopy(self.predictor, memo),
+            )
+        except:
+            print("Error importing old models, importing fresh models instead")
+            m.import_models()
         # TODO: support copy of hook parameters
         m.remove_all_hooks()
         m.hook_handles = defaultdict(lambda : defaultdict(dict))
