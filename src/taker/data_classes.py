@@ -536,6 +536,9 @@ class PruningConfig:
 
     scoring_normalization: str = "orig" # "original" or "loss_normed"
     ff_scoring: str = "abs"
+    
+    attn_offset_mode: str = "zero"
+    ff_offset_mode:   str = "zero"
 
     attn_scoring: str = "abs"
     attn_mode: str = "pre-out"
