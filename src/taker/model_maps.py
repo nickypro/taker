@@ -85,7 +85,25 @@ def convert_hf_model_config(official_model_name: str):
             "use_local_attn": True,
             "gated_mlp": True,
         }
-
+    elif architecture == "GemmaForCausalLM":
+        cfg_dict = {
+            "d_model": hf_config.hidden_size,
+            "d_head": hf_config.hidden_size // hf_config.num_attention_heads,
+            "n_heads": hf_config.num_attention_heads,
+            "d_mlp": hf_config.intermediate_size,
+            "n_layers": hf_config.num_hidden_layers,
+            "n_ctx": hf_config.max_position_embeddings,
+            "eps": hf_config.rms_norm_eps,
+            "d_vocab": hf_config.vocab_size,
+            "act_fn": hf_config.hidden_act,
+            "normalization_type": "RMS",
+            "positional_embedding_type": "rotary",
+            "eps": hf_config.rms_norm_eps,
+            "n_key_value_heads": hf_config.num_key_value_heads,
+            "rotary_dim": hf_config.hidden_size // hf_config.num_attention_heads, #?
+            "use_local_attn": True,
+            "gated_mlp": True,
+        }
     elif architecture == "GPTNeoForCausalLM":
         cfg_dict = {
             "d_model": hf_config.hidden_size,
@@ -558,6 +576,110 @@ def build_mistral_layer_map(cfg: ConfigClass):
 
     return mistral_layer_map
 
+
+# GEMMA
+#######
+
+gemma_model_map = {
+"model" : "model",
+"layers" : "model.layers",
+"embed" : "model.embed_tokens",
+"embed.W_E" : "model.embed.weights",
+"pos_embed" : "model.embed_positions",
+"pos_embed.W" : "model.embed_positions.weight",
+"ln_final" : "model.norm",
+"ln_final.w" : "model.norm.weight",
+"unembed.W_U" : "model.lm_head.weight.T",
+"unembed.b_U" : None,
+}
+
+def build_gemma_layer_map(cfg: ConfigClass):
+    attn_proj_map = {"q": "q_proj", "k": "k_proj", "v": "v_proj", "o": "o_proj"}
+    mlp_proj_map = {"mlp.in_proj": "up_proj", "mlp.out_proj": "down_proj", "mlp.gate_proj": "gate_proj"}
+
+    def gemma_qkv_weight(layer, key: str, inpt: Optional[Any]=None):
+        # Prepare shape changing
+        their_shape = "(n_heads d_head) d_model"
+        my_shape    = "n_heads d_head d_model"
+        sizes = generate_sizes_dict(my_shape, cfg)
+
+        # Get attn proj module
+        attn = layer.self_attn
+        attn_proj = get_attrs(attn, attn_proj_map[key])
+
+        # Get mode
+        if inpt is None:
+            W = attn_proj.weight
+            W = einops.rearrange(W, f"{their_shape} -> {my_shape}", **sizes)
+            return W
+
+        # Set mode
+        W = einops.rearrange(inpt, f"{my_shape} -> {their_shape}", **sizes)
+        update_param(attn_proj, "weight", W)
+
+    def gemma_attn_bias(layer, key: str, _inpt: Optional[Any]=None):
+        # Create fake bias with zeros because is easier to handle
+        their_shape = "(n_heads d_head)"
+        my_shape    = "n_heads d_head"
+        sizes = generate_sizes_dict(my_shape, cfg)
+
+        attn = layer.self_attn
+        _proj = get_attrs(attn, attn_proj_map[key]).weight
+        b = torch.zeros(
+            _proj.shape[:-1], dtype=_proj.dtype, device=_proj.device
+        )
+        if key == "o":
+            return b
+        return einops.rearrange(b, f"{their_shape} -> {my_shape}", **sizes)
+
+
+    def gemma_mlp_bias(layer, key: str, _inpt: Optional[Any]=None):
+        mlp = layer.mlp
+        _proj = get_attrs(mlp, mlp_proj_map[key]).weight
+        b = torch.zeros(_proj.shape[:-1], dtype=_proj.dtype, device=_proj.device)
+        return b
+
+    gemma_layer_map = {
+        "ln1"           : "input_layernorm",
+        "ln1.w"         : "input_layernorm.weight",
+        "ln1.b"         : None,
+
+        "attn"          : "self_attn",
+        "attn.q_proj"   : "self_attn.q_proj",
+        "attn.k_proj"   : "self_attn.k_proj",
+        "attn.v_proj"   : "self_attn.v_proj",
+
+        **generate_attn_qkv_functions(gemma_qkv_weight, gemma_attn_bias),
+
+        "attn.out_proj" : "self_attn.o_proj",
+        "attn.W_O"      : "self_attn.o_proj.weight",
+        "attn.b_O"      : lambda layer, _inpt=None: gemma_attn_bias(layer, "o", _inpt),
+
+        "attn.inv_out_proj" : "self_attn.inv_out_proj",
+        "attn.W_O_inv"  : "self_attn.inv_out_proj.weight",
+        "attn.b_O_inv"  : "self_attn.inv_out_proj.bias",
+
+        "ln2"           : "post_attention_layernorm",
+        "ln2.w"         : "post_attention_layernorm.weight",
+        "ln2.b"         : None,
+
+        "mlp.in_proj"   : "mlp.up_proj",
+        "mlp.gate_proj" : "mlp.gate_proj",
+        "mlp.W_in"      : "mlp.up_proj.weight",
+        "mlp.W_gate"    : "mlp.gate_proj.weight",
+        "mlp.b_in"      : lambda layer, _inpt=None: gemma_mlp_bias(layer, "mlp.in_proj", _inpt),
+        "mlp.b_gate"    : lambda layer, _inpt=None: gemma_mlp_bias(layer, "mlp.gate_proj", _inpt),
+
+        "activation_fn" : "mlp.act_fn",
+
+        "mlp.out_proj"  : "mlp.down_proj",
+        "mlp.W_out"     : "mlp.down_proj.weight",
+        "mlp.b_out"     : lambda layer, _inpt=None: gemma_mlp_bias(layer, "mlp.out_proj", _inpt),
+    }
+    return gemma_layer_map
+
+
+
 # GPT NEO X and Pythia Models
 #############################
 
@@ -827,7 +949,7 @@ def build_roberta_layer_map(cfg: ConfigClass):
         update_param(attn_proj, "bias", b)
 
 
-    opt_layer_map = {
+    roberta_layer_map = {
         "ln1"           : "attention.output.LayerNorm",
         "ln1.w"         : "attention.output.LayerNorm.weight",
         "ln1.b"         : "attention.output.LayerNorm.bias",
@@ -862,7 +984,7 @@ def build_roberta_layer_map(cfg: ConfigClass):
         "mlp.W_out"     : "output.dense.weight",
         "mlp.b_out"     : "output.dense.bias",
     }
-    return opt_layer_map
+    return roberta_layer_map
 
 #####################################################################################
 # VISION TRANSFORMERS (eg: ViT)
@@ -971,6 +1093,108 @@ def build_vit_layer_map(cfg: ConfigClass):
 
     return vit_layer_map
 
+#####################################################################################
+# Encoder + Decoder Models
+#####################################################################################
+
+# T5 Model Map for PyTorch T5 Model
+###################################
+
+t5_model_map = {
+    "model"           : "t5",
+    "layers"          : "encoder.block",
+    "embed"           : "shared",
+    "embed.W_E"       : "shared.weight",
+    "pos_embed.W_pos" : "encoder.embed_tokens.position_embeddings.weight",
+    "ln_final"        : "encoder.final_layer_norm",
+    "ln_final.w"      : "encoder.final_layer_norm.weight",
+    "ln_final.b"      : "encoder.final_layer_norm.bias",
+    "lm_head"         : "lm_head",
+    "unembed.W_U"     : "lm_head.weight",
+    "unembed.b_U"     : None,
+}
+
+def build_t5_layer_map(cfg: ConfigClass):
+    attn_proj_map = {
+        "q": "self_attn.q",
+        "k": "self_attn.k",
+        "v": "self_attn.v",
+        "o": "self_attn.o"
+    }
+
+    def t5_qkv_weight(layer, key: str, inpt: Optional[Any]=None):
+        # Prepare shape changing
+        their_shape = "(n_heads, d_head) d_model"
+        my_shape    = "n_heads, d_head, d_model"
+        sizes = generate_sizes_dict(my_shape, cfg)
+
+        # Get attn proj module
+        attn = layer.self_attn
+        attn_proj = get_attrs(attn, attn_proj_map[key])
+
+        # Get mode
+        if inpt is None:
+            W = attn_proj.weight
+            W = einops.rearrange(W, f"{their_shape} -> {my_shape}", **sizes)
+            return W
+
+        # Set mode
+        W = einops.rearrange(inpt, f"{my_shape} -> {their_shape}", **sizes)
+        update_param(attn_proj, "weight", W)
+
+    def t5_qkv_bias(layer, key: str, inpt: Optional[Any]=None):
+        # Prepare shape changing
+        their_shape = "(n_heads, d_head)"
+        my_shape    = "n_heads, d_head"
+        sizes = generate_sizes_dict(my_shape, cfg)
+
+        # Get attn proj module
+        attn = layer.self_attn
+        attn_proj = get_attrs(attn, attn_proj_map[key])
+
+        if inpt is None:
+            b = attn_proj.bias
+            b = einops.rearrange(b, f"{their_shape} -> {my_shape}", **sizes)
+            return b
+
+        # Set mode
+        b = einops.rearrange(inpt, f"{my_shape} -> {their_shape}", **sizes)
+        update_param(attn_proj, "bias", b)
+
+
+    t5_layer_map = {
+        "ln1"           : "layer_norm",
+        "ln1.w"         : "layer_norm.weight",
+        "ln1.b"         : "layer_norm.bias",
+
+        "attn"          : "self_attn",
+        "attn.q_proj"   : "self_attn.q",
+        "attn.k_proj"   : "self_attn.k",
+        "attn.v_proj"   : "self_attn.v",
+
+        **generate_attn_qkv_functions(t5_qkv_weight, t5_qkv_bias),
+
+        "attn.out_proj" : "self_attn.o",
+        "attn.W_O"      : "self_attn.o.weight",
+        "attn.b_O"      : "self_attn.o.bias",
+
+        "ln2"           : "layer_norm",
+        "ln2.w"         : "layer_norm.weight",
+        "ln2.b"         : "layer_norm.bias",
+
+        "mlp"           : "fc",
+        "mlp.in_proj"   : "fc.DenseReluDense.wi",
+        "mlp.W_in"      : "fc.DenseReluDense.wi.weight",
+        "mlp.b_in"      : "fc.DenseReluDense.wi.bias",
+
+        "activation_fn" : "fc.act",
+
+        "mlp.out_proj"  : "fc.DenseReluDense.wo",
+        "mlp.W_out"     : "fc.DenseReluDense.wo.weight",
+        "mlp.b_out"     : "fc.DenseReluDense.wo.bias",
+    }
+    return t5_layer_map
+
 
 #####################################################################################
 # Build Model Layer Map interfaces
@@ -994,6 +1218,8 @@ def get_model_key_map(config: ConfigClass):
         return llama_model_map
     if architecture == "MistralForCausalLM":
         return mistral_model_map
+    if architecture == "GemmaForCausalLM":
+        return gemma_model_map
     if architecture == "GPTNeoXForCausalLM":
         return gpt_neox_model_map
     if architecture == "GPT2LMHeadModel":
@@ -1014,6 +1240,8 @@ def get_layer_key_map(config: ConfigClass):
         return build_llama_layer_map(config)
     if architecture == "MistralForCausalLM":
         return build_mistral_layer_map(config)
+    if architecture == "GemmaForCausalLM":
+        return build_gemma_layer_map(config)
     if architecture == "GPTNeoXForCausalLM":
         return build_gpt_neox_layer_map(config)
     if architecture == "GPT2LMHeadModel":
