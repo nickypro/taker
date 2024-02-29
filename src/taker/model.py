@@ -65,6 +65,7 @@ class Model():
             svd_attn: bool = False,
             tokenizer_repo: Optional[str] = None,
             mask_fn: str = "step",
+            use_inverse_out: bool = False,
         ):
         """
         OPT Model with functions for extracting activations.
@@ -124,6 +125,7 @@ class Model():
         self.layers: list = None
 
         # Hooking into the model
+        self.use_inverse_out: bool = use_inverse_out
         self.hook_handles = defaultdict(lambda : defaultdict(dict))
         self.activations: dict = None
         self.masks: dict = None
@@ -219,7 +221,7 @@ class Model():
             return self
         if self.svd_attn:
             self.svd_attention_layers()
-        else:
+        elif self.use_inverse_out:
             self.register_inverse_out_proj()
         return self
 
