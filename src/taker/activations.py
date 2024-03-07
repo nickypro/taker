@@ -83,6 +83,7 @@ def get_midlayer_activations( opt: Model,
         collect_ff: bool = False,
         collect_attn: bool = False,
         use_ff_activation_function: bool = True,
+        dataset_texts_to_skip: int = None,
     ):
     """Gets the number of activations of the midlayer ('key' layer) of MLPs for
     each layer, as well as for the pre_out layer of attention for each layer.
@@ -132,6 +133,8 @@ def get_midlayer_activations( opt: Model,
     eval_config = infer_dataset_config(dataset_name)
     eval_config.dataset_split = "train"
     eval_config.is_train_mode = True
+    if dataset_texts_to_skip is not None:
+        eval_config.num_texts_to_skip = dataset_texts_to_skip
     dataset   = prepare_dataset(eval_config)
     skip_eval = eval_config.skip_token_strings or []
 
@@ -212,7 +215,7 @@ def get_midlayer_activations( opt: Model,
             elif opt.cfg.model_modality == "language":
                 criteria = torch.ones_like( input_ids[0], dtype=torch.bool ).detach()
             else:
-                raise NotImplementedError(f"model_modality not implemented {opt.cfg.model_modality}")
+                raise NotImplementedError(f"Invalid model modality {opt.cfg.model_modality}")
 
             # (Optional) Check if prediction is accurate enough to count
             if check_accuracy or calculate_loss:
