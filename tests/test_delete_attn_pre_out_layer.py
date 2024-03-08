@@ -18,7 +18,8 @@ class TestDeleteAttnPreOutLayer:
         # Test deleting the output of the attention layers
         print("# Running Test: test_delete_attn_pre_out_layer")
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        opt = Model(model_repo, limit=1000, dtype="fp32", mask_fn=mask_fn)
+        opt = Model(model_repo, limit=1000, dtype="fp32", mask_fn=mask_fn,
+                    use_inverse_out=(mask_fn=="delete") )
 
         with torch.no_grad():
             n_heads, d_head, d_model = \
@@ -52,7 +53,8 @@ class TestDeleteAttnPreOutLayer:
             for add_mean in [True, False]:
                 print(f"## Testing outward weight removals - add_mean={add_mean}")
                 opt = Model(model_repo, dtype="fp32", mask_fn=mask_fn,
-                    model_device=device, use_accelerator=False)
+                    model_device=device, use_accelerator=False,
+                    use_inverse_out=(mask_fn=="delete"))
                 LAYER = 0
 
                 out_proj = opt.layers[LAYER]["attn.out_proj"]
@@ -103,7 +105,8 @@ class TestDeleteAttnPreOutLayer:
         LAYER = 0
 
         opt = Model(model_repo, dtype="fp32", mask_fn=mask_fn,
-            model_device=device, use_accelerator=False)
+            model_device=device, use_accelerator=False,
+            use_inverse_out=(mask_fn=="delete") )
         v_proj = opt.layers[LAYER]["attn.v_proj"]
         v_proj_orig_weight = v_proj.weight.detach().clone()
 

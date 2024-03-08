@@ -79,7 +79,9 @@ class TestCollection:
     @pytest.mark.parametrize("mask_fn", ["delete", "step"])
     def test_masked_collection(self, model_repo, mask_fn):
         print( "# Running Test: test_masked_collection" )
-        opt = Model(model_repo, limit=1000, dtype="fp32", mask_fn=mask_fn)
+        use_inverse_out = (mask_fn == "delete")
+        opt = Model(model_repo, limit=1000, dtype="fp32", mask_fn=mask_fn,
+                    use_inverse_out=use_inverse_out)
         n_samples = 1e3
 
         data_pile = get_midlayer_activations(opt, "pile", n_samples)

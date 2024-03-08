@@ -54,7 +54,7 @@ class TestAttnUtils:
             n_tokens = 3
 
             opt = Model(model_repo, dtype="fp32", mask_fn=mask_fn,
-                use_accelerator=False, svd_attn=False)
+                use_accelerator=False, svd_attn=False, use_inverse_out=True)
             d_model, d_head, n_heads = \
                 opt.cfg.d_model, opt.cfg.d_head, opt.cfg.n_heads
             device, dtype = opt.device, opt.dtype
@@ -119,7 +119,7 @@ class TestAttnUtils:
             n_tokens = 1
 
             opt = Model(model_repo, dtype="fp32",
-                use_accelerator=False, svd_attn=False)
+                use_accelerator=False, svd_attn=False, use_inverse_out=True)
             d_model, d_head, n_heads = \
                 opt.cfg.d_model, opt.cfg.d_head, opt.cfg.n_heads
             device, dtype = opt.device, opt.dtype
