@@ -93,11 +93,10 @@ def find_accuracy(dataset, ff_frac):
 
 #binary search to find ff_frac for a given target accuracy, upto given precision while being below target
 #also check if should compare base accuracy or topk accuracy.
-def find_correct_ff_frac(dataset: str, target_accuracy: float, accuracy_precision: float):
+def find_correct_ff_frac(dataset: str, target_accuracy: float, accuracy_precision: float, lower=0, upper=1):
     print(f"trying to find correct ff_frac for {dataset} with target accuracy {target_accuracy}")
     
-    lower = 0
-    upper = 1
+
     while upper >= lower:
         print(f"binary search with lower {lower} and upper {upper}")
         acc_mid = find_accuracy(dataset, (lower + upper)/2)
@@ -114,9 +113,10 @@ def compareEvaluations(datasets):
     final_data = {}
     for dataset1 in datasets:
         print("for neurons pruned based on: ", dataset1)
-        ff_frac = find_correct_ff_frac(dataset1, 50, 10)
+        unpruned_accuracy = find_accuracy(dataset1, 0)
+        ff_frac = find_correct_ff_frac(dataset1, target_accuracy=(0.8*unpruned_accuracy), accuracy_precision=5, upper=0.2)
         final_data[dataset1] = {}
-
+        final_data[dataset1]['unpruned_accuracy'] = unpruned_accuracy
         for dataset2 in datasets:
             print("finding accuracy for: ", dataset2)
             final_data[dataset1][dataset2] = find_accuracy(dataset2, ff_frac)
