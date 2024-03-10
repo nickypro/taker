@@ -93,7 +93,7 @@ def get_ff_criteria_for_ff_frac(repo, ff_frac):
 
 #pruning dataset is the dataset to use to determine which neurons to prune, target dataset is the dataset to find the accuracy of
 def find_accuracy(pruning_dataset, target_dataset, ff_frac):
-    find_acc_start = datetime.now()
+    # find_acc_start = datetime.now()
     opt = Model(
         c.model_size,
         limit=c.token_limit,
@@ -107,18 +107,18 @@ def find_accuracy(pruning_dataset, target_dataset, ff_frac):
     eval_config: EvalConfig = infer_dataset_config(target_dataset)
     eval_config.num_tokens_to_skip = c.collection_sample_size
     eval_config.sample_size = c.eval_sample_size
-    print(f"checking accuracy for ff_frac: {ff_frac} for pruning dataset: {pruning_dataset} and target_dataset: {target_dataset}")
+    # print(f"checking accuracy for ff_frac: {ff_frac} for pruning dataset: {pruning_dataset} and target_dataset: {target_dataset}")
     if ff_frac == 0:
         unpruned_accuracy = run_evaluation(opt, eval_config)
-        find_acc_mid = datetime.now()
-        print(f"unpruned accuracy is: {unpruned_accuracy.percent}")
-        print(f"time to find unpruned accuracy for dataset: {target_dataset} is: {find_acc_mid - find_acc_start}")
+        # find_acc_mid = datetime.now()
+        # print(f"unpruned accuracy is: {unpruned_accuracy.percent}")
+        # print(f"time to find unpruned accuracy for dataset: {target_dataset} is: {find_acc_mid - find_acc_start}")
         return unpruned_accuracy.percent["base"]
     ff_criteria = get_ff_criteria_for_ff_frac(pruning_dataset, ff_frac)
     opt.delete_ff_keys(ff_criteria)
     eval_data = run_evaluation(opt, eval_config)
-    find_acc_end = datetime.now()
-    print(f"time to find accuracy for pruning dataset: {pruning_dataset} and target_dataset: {target_dataset} with ff_frac: {ff_frac} is: {find_acc_end - find_acc_start} and has accuracy: {eval_data.percent}")
+    # find_acc_end = datetime.now()
+    # print(f"time to find accuracy for pruning dataset: {pruning_dataset} and target_dataset: {target_dataset} with ff_frac: {ff_frac} is: {find_acc_end - find_acc_start} and has accuracy: {eval_data.percent}")
     return eval_data.percent["base"]
 
 
@@ -154,6 +154,7 @@ def find_correct_ff_frac(dataset: str, target_accuracy: float, accuracy_precisio
 def compareEvaluations(datasets):
     final_data = {}
     for dataset1 in datasets:
+        dataset_start = datetime.now()
         final_data[dataset1] = {}
         unpruned_accuracy = find_accuracy(dataset1, dataset1, 0)
         target_accuracy=0.8*unpruned_accuracy
@@ -172,6 +173,8 @@ def compareEvaluations(datasets):
             final_data[dataset1][dataset2]["pruned_accuracy"] = pruned_accuracy
             final_data[dataset1][dataset2]["accuracy_difference"] = unpruned_accuracy - pruned_accuracy
             final_data[dataset1][dataset2]["accuracy_ratio"] = pruned_accuracy/unpruned_accuracy
+        dataset_end = datetime.now()
+        print("time to get data for one dataset: ", dataset_end - dataset_start, "results: ", final_data[dataset1])
 
     return final_data
 
