@@ -1,10 +1,11 @@
+import torch
+import numpy as np
 from taker.eval import run_evaluation
 from taker.data_classes import PruningConfig, EvalConfig
 from taker.activations import get_top_frac
 from taker.model import Model
 from taker.texts import infer_dataset_config
-import torch
-import numpy as np
+
 
 #filepath hardcoded, can't get relative path to work. may need to be edited based on where stuff is cloned
 def load_tensors_for_repo(repo, model_size="hf", timestamp="recent"):
@@ -39,7 +40,7 @@ c = PruningConfig(
     n_steps = 1,
 )
 
-datasets = ["biology", 
+all_datasets = ["biology",
             "chemistry", 
             "civil", 
             "code", 
@@ -63,9 +64,9 @@ datasets = ["biology",
             "pile_Wikipedia",
             "poems"]
 
-test_datasets = ["biology", "chemistry", "physics"]
+test_datasets = ["biology", "chemistry"]
 
-def find_accuracy(dataset, ff_criteria):
+def find_accuracy(dataset, ff_frac):
     opt = Model(
         c.model_size,
         limit=c.token_limit,
@@ -76,36 +77,50 @@ def find_accuracy(dataset, ff_criteria):
         mask_fn=c.mask_fn,
         )
     
-    opt.delete_ff_keys(ff_criteria)
-
     eval_config: EvalConfig = infer_dataset_config(dataset)
     eval_config.num_tokens_to_skip = c.collection_sample_size
     eval_config.sample_size = c.eval_sample_size
-   
+    print(f"ff_frac is: {ff_frac}")
+    if ff_frac == 0:
+        base_accuracy = run_evaluation(opt, eval_config)
+        print(f"base accuracy is: {base_accuracy}")
+        return base_accuracy.percent["base"]
+    ff_criteria = get_ff_criteria_for_ff_frac(dataset, ff_frac)
+    opt.delete_ff_keys(ff_criteria)
     eval_data = run_evaluation(opt, eval_config)
-    return eval_data["percent"]
+    print(f"accuracy for ff_frac {ff_frac} is {eval_data.percent}")
+    return eval_data.percent["base"]
 
-
-def find_correct_ff_frac(dataset: str, target_accuracy: float, ff_frac_step_size: float):
-    for ff_frac in np.arange(1-ff_frac_step_size, ff_frac_step_size):
-        ff_criteria = get_ff_criteria_for_ff_frac(dataset, ff_frac)
-        accuracy = find_accuracy(dataset, ff_criteria)
-        if accuracy < target_accuracy:
-            return ff_frac
-    return 1
+#binary search to find ff_frac for a given target accuracy, upto given precision while being below target
+#also check if should compare base accuracy or topk accuracy.
+def find_correct_ff_frac(dataset: str, target_accuracy: float, accuracy_precision: float):
+    print(f"trying to find correct ff_frac for {dataset} with target accuracy {target_accuracy}")
+    
+    lower = 0
+    upper = 1
+    while upper >= lower:
+        print(f"binary search with lower {lower} and upper {upper}")
+        acc_mid = find_accuracy(dataset, (lower + upper)/2)
+        if acc_mid >= target_accuracy-accuracy_precision and acc_mid <= target_accuracy:
+            return (lower + upper)/2
+        elif acc_mid < target_accuracy:
+            upper = (lower + upper)/2
+        else:
+            lower = (lower + upper)/2
+    
+    return lower
 
 def compareEvaluations(datasets):
     final_data = {}
     for dataset1 in datasets:
-        ff_frac = find_correct_ff_frac(dataset1, 0.5, 0.02)
-        ff_criteria = get_ff_criteria_for_ff_frac(dataset1, ff_frac)
+        print("for neurons pruned based on: ", dataset1)
+        ff_frac = find_correct_ff_frac(dataset1, 50, 10)
         final_data[dataset1] = {}
 
         for dataset2 in datasets:
-            final_data[dataset1][dataset2] = find_accuracy(dataset2, ff_criteria)
-    
+            print("finding accuracy for: ", dataset2)
+            final_data[dataset1][dataset2] = find_accuracy(dataset2, ff_frac)
     return final_data
-
 
 answer = compareEvaluations(test_datasets)
 print(answer)
