@@ -8,19 +8,6 @@ from taker.model import Model
 from taker.texts import infer_dataset_config
 
 
-#filepath hardcoded, can't get relative path to work. may need to be edited based on where stuff is cloned
-def load_tensors_for_repo(repo, model_size="hf", timestamp="recent"):
-    directory = "/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/"+model_size+"/"
-    filename = repo+"-pile-"+model_size+"-"+timestamp+".pt"
-    data = torch.load(directory+filename)
-    return data["ff_scores"], data["ff_criteria"]
-
-
-def get_ff_criteria_for_ff_frac(repo, ff_frac):
-    ff_scores, _ = load_tensors_for_repo(repo)
-    criteria, _ = get_top_frac(ff_scores, ff_frac)
-    return criteria
-
 #most of pruningconfig is not used, but some eval functions use this as copied from elsewhere.
 c = PruningConfig(
     wandb_project = "testing", # repo to push results to
@@ -66,7 +53,31 @@ all_datasets = ["biology",
             "pile_Wikipedia",
             "poems"]
 
-test_datasets = ["biology", "chemistry", "physics", "code", "pile_Github", "pile"]
+test_datasets = ["biology", "chemistry", "physics", "code", "pile_Github"]
+
+file_load_counter = 0
+
+#filepath hardcoded, can't get relative path to work. may need to be edited based on where stuff is cloned
+def load_tensors_for_repo(repo, model_size="hf", timestamp="recent"):
+    directory = "/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/"+model_size+"/"
+    filename = repo+"-pile-"+model_size+"-"+timestamp+".pt"
+    data = torch.load(directory+filename)
+    return data["ff_scores"], data["ff_criteria"]
+
+
+def get_ff_criteria_for_ff_frac(repo, ff_frac):
+    startTime = datetime.now()
+    ff_scores, _ = load_tensors_for_repo(repo)
+    midTime = datetime.now()
+    criteria, _ = get_top_frac(ff_scores, ff_frac)
+    endTime = datetime.now()
+    global file_load_counter
+    file_load_counter += 1
+    print("Time taken to load tensors for ff_scores: ", midTime - startTime, "total loads so far: ", file_load_counter)
+    print("Time taken to get ff_criteria from ff_scores: ", endTime - midTime)
+    print("Total Time taken to get ff_criteria from ff_frac: ", endTime - startTime)
+    return criteria
+
 
 #pruning dataset is the dataset to use to determine which neurons to prune, target dataset is the dataset to find the accuracy of
 def find_accuracy(pruning_dataset, target_dataset, ff_frac):
@@ -135,7 +146,13 @@ def compareEvaluations(datasets):
 
         for dataset2 in datasets:
             print("finding accuracy for: ", dataset2, "with neurons pruned based on: ", dataset1)
-            final_data[dataset1][dataset2] = find_accuracy(dataset1, dataset2, ff_frac)
+            unpruned_accuracy = find_accuracy(dataset1, dataset2, 0)
+            pruned_accuracy = find_accuracy(dataset1, dataset2, ff_frac)
+            final_data[dataset1][dataset2]["unpruned_accuracy"] = unpruned_accuracy
+            final_data[dataset1][dataset2]["pruned_accuracy"] = pruned_accuracy
+            final_data[dataset1][dataset2]["accuracy_difference"] = unpruned_accuracy - pruned_accuracy
+            final_data[dataset1][dataset2]["accuracy_ratio"] = pruned_accuracy/unpruned_accuracy
+
     return final_data
 
 startTime = datetime.now()
