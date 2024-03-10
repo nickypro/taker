@@ -1,4 +1,5 @@
 import torch
+import os
 from datetime import datetime
 from taker.eval import run_evaluation
 from taker.data_classes import PruningConfig, EvalConfig
@@ -77,6 +78,19 @@ def load_tensors_for_repo(repo, model_size="hf", timestamp="recent"):
     data = torch.load(directory+filename)
     return data["ff_scores"], data["ff_criteria"]
 
+def save_data_dict( model_size: str,
+        data: any,
+        name: str ):
+    now = datetime.datetime.now().strftime( "%Y-%m-%d_%H:%M:%S" )
+    os.makedirs( f'saved_tensors/{model_size}', exist_ok=True )
+    filename = f'saved_tensors/{model_size}/{name}-{model_size}-recent.pt'
+    torch.save( data, filename )
+    print( f'Saved {filename} to {model_size}' )
+    filename = f'saved_tensors/{model_size}/{name}-{model_size}-{now}.pt'
+    torch.save( data, filename )
+    print( f'Saved {filename} to {model_size}' )
+    return filename
+
 
 def get_ff_criteria_for_ff_frac(repo, ff_frac):
     # ff_start_time = datetime.now()
@@ -153,6 +167,7 @@ def find_correct_ff_frac(dataset: str, target_accuracy: float, accuracy_precisio
 
 def compareEvaluations(datasets):
     final_data = {}
+    final_data["sample_size"] = c.eval_sample_size
     for dataset1 in datasets:
         dataset_start = datetime.now()
         final_data[dataset1] = {}
@@ -181,6 +196,7 @@ def compareEvaluations(datasets):
 startTime = datetime.now()
 print("run started at: ", startTime)
 answer = compareEvaluations(pile_datasets)
-print(answer)
+filename = save_data_dict("hf", answer, "cross_pruning_accuracy")
+print("saved to: ", filename, "data: ", answer)
 endTime = datetime.now()
 print("run ended at: ", endTime, "time elapsed: ", endTime - startTime)
