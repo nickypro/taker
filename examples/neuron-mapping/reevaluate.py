@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 from datetime import datetime
 from taker.eval import run_evaluation
 from taker.data_classes import PruningConfig, EvalConfig
@@ -16,8 +15,8 @@ c = PruningConfig(
     model_repo   = "NousResearch/Llama-2-7b-hf",
     token_limit  = 1000,  # trim the input to this max length
     run_pre_test = False,  # evaluate the unpruned model
-    eval_sample_size = 1e3,
-    collection_sample_size = 1e3,
+    eval_sample_size = 1e4,
+    collection_sample_size = 1e4,
     # Removals parameters
     ff_frac   = 0.01,     # % of feed forward neurons to prune
     attn_frac = 0.00,     # % of attention neurons to prune
@@ -55,7 +54,21 @@ all_datasets = ["biology",
 
 test_datasets = ["biology", "chemistry", "physics", "code", "pile_Github"]
 
-file_load_counter = 0
+pile_datasets = ["pile_ArXiv", 
+                "pile_Enron", 
+                "pile_EuroParl", 
+                "pile_FreeLaw",
+                "pile_Github",
+                "pile_Gutenberg",
+                "pile_HackerNews",
+                "pile_NIH_ExPorter",
+                "pile_PhilPapers",
+                "pile_PubMed_Abstracts",
+                "pile_PubMed_Central",
+                "pile_StackExchange",
+                "pile_Ubuntu",
+                "pile_USPTO_Backgrounds",
+                "pile_Wikipedia"]
 
 #filepath hardcoded, can't get relative path to work. may need to be edited based on where stuff is cloned
 def load_tensors_for_repo(repo, model_size="hf", timestamp="recent"):
@@ -66,21 +79,21 @@ def load_tensors_for_repo(repo, model_size="hf", timestamp="recent"):
 
 
 def get_ff_criteria_for_ff_frac(repo, ff_frac):
-    startTime = datetime.now()
+    # ff_start_time = datetime.now()
     ff_scores, _ = load_tensors_for_repo(repo)
-    midTime = datetime.now()
+    # ff_mid_time = datetime.now()
     criteria, _ = get_top_frac(ff_scores, ff_frac)
-    endTime = datetime.now()
-    global file_load_counter
-    file_load_counter += 1
-    print("Time taken to load tensors for ff_scores: ", midTime - startTime, "total loads so far: ", file_load_counter)
-    print("Time taken to get ff_criteria from ff_scores: ", endTime - midTime)
-    print("Total Time taken to get ff_criteria from ff_frac: ", endTime - startTime)
+    # ff_end_time = datetime.now()
+
+    # print("Time taken to load tensors for ff_scores: ", ff_mid_time - ff_start_time)
+    # print("Time taken to get ff_criteria from ff_scores: ", ff_end_time - ff_mid_time)
+    # print("Time taken to get ff_criteria from ff_frac: ", ff_end_time - ff_start_time)
     return criteria
 
 
 #pruning dataset is the dataset to use to determine which neurons to prune, target dataset is the dataset to find the accuracy of
 def find_accuracy(pruning_dataset, target_dataset, ff_frac):
+    find_acc_start = datetime.now()
     opt = Model(
         c.model_size,
         limit=c.token_limit,
@@ -94,15 +107,18 @@ def find_accuracy(pruning_dataset, target_dataset, ff_frac):
     eval_config: EvalConfig = infer_dataset_config(target_dataset)
     eval_config.num_tokens_to_skip = c.collection_sample_size
     eval_config.sample_size = c.eval_sample_size
-    print(f"checking accuracy for ff_frac: {ff_frac}")
+    print(f"checking accuracy for ff_frac: {ff_frac} for pruning dataset: {pruning_dataset} and target_dataset: {target_dataset}")
     if ff_frac == 0:
         unpruned_accuracy = run_evaluation(opt, eval_config)
+        find_acc_mid = datetime.now()
         print(f"unpruned accuracy is: {unpruned_accuracy.percent}")
+        print(f"time to find unpruned accuracy for dataset: {target_dataset} is: {find_acc_mid - find_acc_start}")
         return unpruned_accuracy.percent["base"]
     ff_criteria = get_ff_criteria_for_ff_frac(pruning_dataset, ff_frac)
     opt.delete_ff_keys(ff_criteria)
     eval_data = run_evaluation(opt, eval_config)
-    print(f"accuracy for ff_frac {ff_frac} is {eval_data.percent}")
+    find_acc_end = datetime.now()
+    print(f"time to find accuracy for pruning dataset: {pruning_dataset} and target_dataset: {target_dataset} with ff_frac: {ff_frac} is: {find_acc_end - find_acc_start} and has accuracy: {eval_data.percent}")
     return eval_data.percent["base"]
 
 
@@ -112,6 +128,7 @@ def find_accuracy(pruning_dataset, target_dataset, ff_frac):
 def find_correct_ff_frac(dataset: str, target_accuracy: float, accuracy_precision: float, ff_frac_precision=1e-5, lower=0, upper=1):
     print(f"trying to find correct ff_frac for {dataset} with target accuracy {target_accuracy}")
     #check if upper and lower are reasonable, if not default to 1 and 0.
+    ff_start = datetime.now()
     if upper < 1:
         acc_upper = find_accuracy(dataset, dataset, upper)
         if acc_upper > target_accuracy:
@@ -124,6 +141,8 @@ def find_correct_ff_frac(dataset: str, target_accuracy: float, accuracy_precisio
     while upper >= lower + ff_frac_precision:
         acc_mid = find_accuracy(dataset, dataset, (lower + upper)/2)
         if acc_mid >= target_accuracy-accuracy_precision and acc_mid <= target_accuracy:
+            ff_end = datetime.now()
+            print(f"time to find correct ff_frac for target accuracy is: {ff_end - ff_start}")
             return (lower + upper)/2
         elif acc_mid < target_accuracy:
             upper = (lower + upper)/2
@@ -141,10 +160,11 @@ def compareEvaluations(datasets):
         final_data[dataset1]["unpruned_accuracy"] = unpruned_accuracy
         final_data[dataset1]["target_accuracy"] = target_accuracy
 
-        ff_frac = find_correct_ff_frac(dataset1, target_accuracy=target_accuracy, accuracy_precision=5, upper=0.128)
+        ff_frac = find_correct_ff_frac(dataset1, target_accuracy=target_accuracy, accuracy_precision=2, upper=0.128)
         final_data[dataset1]["ff_frac"] = ff_frac
 
         for dataset2 in datasets:
+            final_data[dataset1][dataset2] = {}
             print("finding accuracy for: ", dataset2, "with neurons pruned based on: ", dataset1)
             unpruned_accuracy = find_accuracy(dataset1, dataset2, 0)
             pruned_accuracy = find_accuracy(dataset1, dataset2, ff_frac)
@@ -157,7 +177,7 @@ def compareEvaluations(datasets):
 
 startTime = datetime.now()
 print("run started at: ", startTime)
-answer = compareEvaluations(test_datasets)
+answer = compareEvaluations(pile_datasets)
 print(answer)
 endTime = datetime.now()
 print("run ended at: ", endTime, "time elapsed: ", endTime - startTime)
