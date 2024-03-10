@@ -134,7 +134,6 @@ def get_midlayer_activations( opt: Model,
     eval_config.dataset_split = "train"
     eval_config.is_train_mode = True
     if dataset_texts_to_skip is not None:
-        eval_config.is_train_mode = False
         eval_config.num_texts_to_skip = dataset_texts_to_skip
     dataset   = prepare_dataset(eval_config)
     skip_eval = eval_config.skip_token_strings or []
