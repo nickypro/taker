@@ -8,7 +8,7 @@ def load_pt_file(directory: str, filename: str):
         print(key)
     return data
 
-cripple_repos = ["biology", "chemistry", "physics", "math", "code", "poems", "civil", "emotion", "pile_FreeLaw", "pile_PubMed_Abstracts", "pile_PubMed_Central", "pile_NIH_ExPorter", "pile_Enron_Emails", "pile_Github", "pile_StackExchange", "pile_HackerNews", "pile_ArXiv", "pile_Wikipedia", "pile_Ubuntu_IRC", "pile_USPTO_Backgrounds", "pile_PhilPapers", "pile_EuroParl", "pile_Gutenberg"]
+cripple_repos = ["pile_FreeLaw", "biology", "chemistry", "pile_PubMed_Abstracts", "pile_PubMed_Central", "pile_NIH_ExPorter", "pile_Enron_Emails", "code", "pile_Github",  "pile_StackExchange", "pile_Ubuntu_IRC", "pile_HackerNews", "poems", "civil", "emotion", "physics", "math", "pile_ArXiv", "pile_Wikipedia", "pile_USPTO_Backgrounds", "pile_PhilPapers", "pile_EuroParl", "pile_Gutenberg"]
 
 def plot_ratios(ratios, ff_frac):
     datasets = cripple_repos
