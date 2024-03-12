@@ -212,7 +212,7 @@ def get_midlayer_activations( opt: Model,
 
             # Initialize criteria for counting the token activation
             if opt.cfg.model_modality == "vision":
-                criteria = torch.ones( input_ids, dtype=torch.bool ).detach()
+                criteria = torch.ones_like( input_ids[0], dtype=torch.bool ).detach()
             elif opt.cfg.model_modality == "language":
                 criteria = torch.ones_like( input_ids[0], dtype=torch.bool ).detach()
             else:
