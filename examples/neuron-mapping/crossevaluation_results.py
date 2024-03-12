@@ -1,5 +1,9 @@
 #raw results pasted from console, forgot to save data to file before running. sample of 10k on llama-2-7b, targetting accuracy of 80% of unpruned for each pile related dataset.
 
+from datetime import datetime
+import torch
+import os
+
 answer = {
     'pile_ArXiv': 
         {'unpruned_accuracy': 56.328302259051, 'target_accuracy': 45.0626418072408, 'ff_frac': 0.096, 
@@ -272,3 +276,18 @@ answer = {
          'pile_Wikipedia': {'unpruned_accuracy': 64.863523573201, 'pruned_accuracy': 51.32506203473945, 'accuracy_difference': 13.53846153846154, 'accuracy_ratio': 0.7912777352716144}
          }
         }
+
+def save_data_dict( model_size: str,
+        data: any,
+        name: str ):
+    now = datetime.now().strftime( "%Y-%m-%d_%H:%M:%S" )
+    os.makedirs( f'saved_tensors/{model_size}', exist_ok=True )
+    filename = f'saved_tensors/{model_size}/{name}-{model_size}-recent.pt'
+    torch.save( data, filename )
+    print( f'Saved {filename} to {model_size}' )
+    filename = f'saved_tensors/{model_size}/{name}-{model_size}-{now}.pt'
+    torch.save( data, filename )
+    print( f'Saved {filename} to {model_size}' )
+    return filename
+
+filename = save_data_dict("hf", answer, "crossevaluation_results")

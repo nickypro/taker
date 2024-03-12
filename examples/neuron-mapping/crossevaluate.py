@@ -81,7 +81,7 @@ def load_tensors_for_repo(repo, model_size="hf", timestamp="recent"):
 def save_data_dict( model_size: str,
         data: any,
         name: str ):
-    now = datetime.datetime.now().strftime( "%Y-%m-%d_%H:%M:%S" )
+    now = datetime.now().strftime( "%Y-%m-%d_%H:%M:%S" )
     os.makedirs( f'saved_tensors/{model_size}', exist_ok=True )
     filename = f'saved_tensors/{model_size}/{name}-{model_size}-recent.pt'
     torch.save( data, filename )
@@ -195,7 +195,7 @@ def compareEvaluations(datasets):
 
 startTime = datetime.now()
 print("run started at: ", startTime)
-answer = compareEvaluations(all_datasets)
+answer = compareEvaluations(pile_datasets)
 saved_file_name = save_data_dict("hf", answer, "cross_pruning_accuracy")
 print("saved to: ", saved_file_name, "data: ", answer)
 endTime = datetime.now()
