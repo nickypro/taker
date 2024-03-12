@@ -139,10 +139,10 @@ def find_accuracy(pruning_dataset, target_dataset, ff_frac):
 #binary search to find ff_frac for a given target accuracy,
 #upto given precision while being below target
 #also check if should compare base accuracy or topk accuracy.
-def find_correct_ff_frac(dataset: str, target_accuracy: float, accuracy_precision: float, ff_frac_precision=1e-5, lower=0, upper=1):
+def find_correct_ff_frac(dataset: str, target_accuracy: float, accuracy_precision: float, ff_frac_precision=1e-6, lower=0, upper=1):
     print(f"trying to find correct ff_frac for {dataset} with target accuracy {target_accuracy}")
     #check if upper and lower are reasonable, if not default to 1 and 0.
-    ff_start = datetime.now()
+    # ff_start = datetime.now()
     if upper < 1:
         acc_upper = find_accuracy(dataset, dataset, upper)
         if acc_upper > target_accuracy:
@@ -155,8 +155,8 @@ def find_correct_ff_frac(dataset: str, target_accuracy: float, accuracy_precisio
     while upper >= lower + ff_frac_precision:
         acc_mid = find_accuracy(dataset, dataset, (lower + upper)/2)
         if acc_mid >= target_accuracy-accuracy_precision and acc_mid <= target_accuracy:
-            ff_end = datetime.now()
-            print(f"time to find correct ff_frac for target accuracy is: {ff_end - ff_start}")
+            # ff_end = datetime.now()
+            # print(f"time to find correct ff_frac for target accuracy is: {ff_end - ff_start}")
             return (lower + upper)/2
         elif acc_mid < target_accuracy:
             upper = (lower + upper)/2
@@ -181,7 +181,7 @@ def compareEvaluations(datasets):
 
         for dataset2 in datasets:
             final_data[dataset1][dataset2] = {}
-            print("finding accuracy for: ", dataset2, "with neurons pruned based on: ", dataset1)
+            # print("finding accuracy for: ", dataset2, "with neurons pruned based on: ", dataset1)
             unpruned_accuracy = find_accuracy(dataset1, dataset2, 0)
             pruned_accuracy = find_accuracy(dataset1, dataset2, ff_frac)
             final_data[dataset1][dataset2]["unpruned_accuracy"] = unpruned_accuracy
@@ -189,14 +189,14 @@ def compareEvaluations(datasets):
             final_data[dataset1][dataset2]["accuracy_difference"] = unpruned_accuracy - pruned_accuracy
             final_data[dataset1][dataset2]["accuracy_ratio"] = pruned_accuracy/unpruned_accuracy
         dataset_end = datetime.now()
-        print("time to get data for one dataset: ", dataset_end - dataset_start, "results: ", final_data[dataset1])
+        print("time to get data for dataset: ", dataset1, "is ", dataset_end - dataset_start, "results: ", final_data[dataset1])
 
     return final_data
 
 startTime = datetime.now()
 print("run started at: ", startTime)
-answer = compareEvaluations(pile_datasets)
-filename = save_data_dict("hf", answer, "cross_pruning_accuracy")
-print("saved to: ", filename, "data: ", answer)
+answer = compareEvaluations(all_datasets)
+saved_file_name = save_data_dict("hf", answer, "cross_pruning_accuracy")
+print("saved to: ", saved_file_name, "data: ", answer)
 endTime = datetime.now()
 print("run ended at: ", endTime, "time elapsed: ", endTime - startTime)
