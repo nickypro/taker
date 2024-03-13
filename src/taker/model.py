@@ -128,6 +128,7 @@ class Model():
         self.use_inverse_out: bool = use_inverse_out
         self.hook_handles = defaultdict(lambda : defaultdict(dict))
         self.activations: dict = None
+        self.do_activations: dict = None
         self.masks: dict = None
         self.actadds: dict = None
         self.post_biases: dict = None
@@ -208,6 +209,12 @@ class Model():
             "attn_pre_out": {},
             "ff": {},
             "mlp_pre_out": {}
+        }
+        self.do_activations = {
+            "attn": True,
+            "attn_pre_out": True,
+            "ff": True,
+            "mlp_pre_out": True
         }
         self.masks = {}
         self.actadds = {}
@@ -339,12 +346,16 @@ class Model():
         def hook(_model, _input, output):
             if not isinstance(output, tuple):
                 return
+            if not self.do_activations[component]:
+                return
             self.activations[component][name] = detached(output)
         return hook
 
     def build_input_hook(self, component: str, name: str):
         def hook(_module, _input):
             if not isinstance(_input, tuple):
+                return
+            if not self.do_activations[component]:
                 return
             self.activations[component][name] = detached(_input)
         return hook
@@ -364,8 +375,10 @@ class Model():
             # Listen to inputs for FF_out
             if self.mlp_pre_out_mode == "hook":
                 fc2 = layer["mlp.out_proj"]
+                component_name = "mlp_pre_out"
                 name = pad_zeros( layer_index ) + "-mlp-pre-out"
-                _handle = fc2.register_forward_pre_hook(self.build_input_hook("mlp_pre_out", name))
+                self.do_activations[component_name] = True
+                _handle = fc2.register_forward_pre_hook(self.build_input_hook(component_name, name))
                 self.save_hook_handle(_handle, "input-read", "mlp.out_proj", layer_index)
 
 
@@ -373,7 +386,9 @@ class Model():
             if self.attn_pre_out_mode == "hook":
                 attn_o = layer["attn.out_proj"]
                 name = pad_zeros( layer_index ) + "-attention-out"
-                _handle = attn_o.register_forward_pre_hook(self.build_input_hook("attn_pre_out", name))
+                component_name = "attn_pre_out"
+                self.do_activations[component_name] = True
+                _handle = attn_o.register_forward_pre_hook(self.build_input_hook(component_name, name))
                 self.save_hook_handle(_handle, "input-read", "attn.out_proj", layer_index)
 
         print( f" - Registered {layer_index+1} Attention Layers" )
