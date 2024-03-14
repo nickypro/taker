@@ -1,7 +1,7 @@
 """ This file contains utils for working with single layers of dense neural networks.
 """
 
-from typing import Any, Mapping, Optional, Union
+from typing import Any, Mapping, Optional, Union, Dict
 from torch import Tensor
 import torch.nn.functional as F
 import torch
@@ -127,6 +127,7 @@ class NeuronMask(torch.nn.Module):
         if self.act_fn == "sigmoid":
             _vec[...] = torch.inf
         self.param = torch.nn.Parameter(_vec)
+        self.offset = torch.nn.Parameter(torch.zeros_like(_vec))
 
     def get_mask(self):
         # if step, we want heaviside step function. ie: mask = mask > 0
@@ -142,19 +143,92 @@ class NeuronMask(torch.nn.Module):
             return self.act_fn(self.param)
         raise ValueError(f"Unknown activation function: {self.act_fn}")
 
+    def get_offset(self, x):
+        mask = self.get_mask().to(x.dtype)
+        inv_mask = 1 - mask
+        offset = self.offset * inv_mask
+        return offset
+
     def set_mask(self, new_mask: Tensor):
-        params: dict = self.state_dict()
+        params: Dict[str, Tensor] = self.state_dict()
         params["param"] = new_mask.view(self.shape)
         self.load_state_dict(params)
 
+    def set_offset(self, offset: Tensor):
+        params: Dict[str, Tensor] = self.state_dict()
+        params["offset"] = offset.view(self.shape)
+        self.load_state_dict(params)
+
     def delete_neurons(self, keep_indices: Tensor):
-        params: dict = self.state_dict()
+        params: Dict[str, Tensor] = self.state_dict()
         params["param"] = params["param"] * keep_indices.to(params["param"].device)
         self.load_state_dict(params)
 
+    def get_inverse_mask(self, x):
+        mask = self.get_mask().to(x.dtype)
+        return 1 - mask
+
+    def inverse_mask(self, x, offset=False):
+        inv_mask = self.get_inverse_mask(x)
+        # TODO: allow inverse mask to work with offset. Not sure when needed though.
+        assert offset == False
+        return x * inv_mask
+
     def forward(self, x):
         mask = self.get_mask()
-        return x * mask
+        offset = self.get_offset(x)
+        return x * mask + offset
+
+# Positional Neuron Activation Addition.
+class NeuronActAdd(torch.nn.Module):
+    """ MVP for Position Dependant Neuron Activation Offseting.
+    Inspired by ActAdd paper.
+    # EG: [[a], [b], [c], [d], ...] -> [[a+x], [b'+y], [c'+z], [d'], ...]
+    # where a,b,c,d are the "real activations", x,y,z are the added vectors.
+
+    the "autoreset" works by assuming the first input is of size > 1 and is cached.
+    """
+    def __init__(self, device, dtype, autoreset: bool=True):
+        super(NeuronActAdd, self).__init__()
+        self.device = device
+        self.dtype = dtype
+
+        # leave as uninitialised initially
+        self.shape = [0]
+        self.param = torch.nn.Parameter(torch.zeros(self.shape))
+        self.max_tokens = 0
+
+        self.tokens_seen = 0
+        self.autoreset = autoreset
+
+    def reset(self):
+        self.tokens_seen = 0
+
+    def set_actadd(self, offset: Tensor):
+        self.shape = offset.shape
+        self.max_tokens = self.shape[0]
+        self.param = torch.nn.Parameter(
+            offset.to(device=self.device, dtype=self.dtype)
+        )
+        self.reset()
+
+    def forward(self, x):
+        # load input vector (do not modify in place)
+        x = x.clone()
+        n_new_tokens = x.shape[0]
+        # autoreset assuming cache goes like [0,1,2,3], [4], [5], ...
+        if self.autoreset and n_new_tokens > 1:
+            self.reset()
+        # if we used up all the add act vectors we can skip
+        if self.tokens_seen >= self.max_tokens:
+            return x
+        # othewise, do the act add stuff with remaining vectors left
+        tokens_left = self.max_tokens - self.tokens_seen
+        n_tokens    = min([tokens_left, n_new_tokens])
+
+        x[:n_tokens]     += self.param[ self.tokens_seen:self.tokens_seen+n_tokens]
+        self.tokens_seen += n_tokens
+        return x
 
 # Neuron Post Bias (EG: For SVD and stuff) out -> out + bias
 class NeuronPostBias(torch.nn.Module):
@@ -171,7 +245,10 @@ class NeuronPostBias(torch.nn.Module):
         bias  = self.param
         if self.shape == shape:
             return bias
-        bias = bias.view(shape[-1])
+        try:
+            bias = bias.view(shape[-1]) # normal shape
+        except:
+            bias = bias.view(-1, shape[-1]) # multi head attention shape
         return bias
 
     def forward(self, x):
