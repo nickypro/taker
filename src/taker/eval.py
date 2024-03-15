@@ -116,7 +116,7 @@ class Generators:
 
         if c.masked_token_id is None:
             c.masked_token_id = \
-                model.get_ids(text=c.masked_token_string)[0, 1].item()
+                model.get_ids(text=c.masked_token_str)[0, 1].item()
 
         def run_random_masking(orig_ids):
             # Number of random elements to select
@@ -151,7 +151,7 @@ class Generators:
             expected_ids = orig_ids[..., indices_chosen]
             logits = logits[..., indices_chosen, :]
 
-            yield (logits, expected_ids)
+            yield (logits, expected_ids, {})
 
     @staticmethod
     def get_many_generated_texts_generator(model, eval_config):
