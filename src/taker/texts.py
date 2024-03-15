@@ -118,7 +118,11 @@ class DatasetFilters:
 
     @staticmethod
     def filter_cifar(id: str):
-        return lambda _dataset: _dataset.filter(lambda example: str(example["coarse_label"]) == id)
+        def filter_example(example):
+            return str(example["coarse_label"]) == str(id)
+        def filter_dataset(_dataset):
+            return _dataset.filter(filter_example)
+        return filter_dataset
 
 def get_cifar_dataset_configs():
     cifar20_datasets = ["aquatic_mammals", "fish", "flowers", "food_containers", "fruit_and_vegetables", "household_electrical_devices", "household_furniture", "insects", "large_carnivores", "large_outdoor", "large_omnivores_and_herbivores", "medium_mammals", "non_insect_invertebrates", "people", "reptiles", "small_mammals", "trees", "veh1", "veh2"]
@@ -128,6 +132,7 @@ def get_cifar_dataset_configs():
                        dataset_split = ["train", "test"],
                        is_train_mode = True,
                        dataset_image_key = "img",
+                       streaming = False,
                        dataset_image_label_key = "coarse_label",
                        dataset_filter=DatasetFilters.filter_cifar(count),
                        ) for count, dataset in enumerate(cifar20_datasets)]
@@ -357,7 +362,6 @@ def prepare_dataset(eval_config: EvalConfig):
         eval_config.dataset_subset,
         streaming=eval_config.streaming,
     )
-
 
     # Post-split processing
     if isinstance(split, list) or isinstance(split, tuple):
