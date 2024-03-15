@@ -612,6 +612,9 @@ def run_evaluation(model: Model,
         get_generator: Callable = None,
         dataset_evaluator: Callable = None,
         ):
+    # TODO: make more general for other masked models
+    if model.cfg.architecture == 'RobertaForMaskedLM':
+        eval_config.masked_model = True
 
     auto_generator, auto_evaluator = choose_functions(eval_config)
     if get_generator is None:
