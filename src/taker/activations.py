@@ -79,7 +79,6 @@ def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dic
 def get_midlayer_activations( opt: Model,
         dataset_name: str = None,
         sample_size: int = 10000,
-        eval_config: EvalConfig = None,
         attn_mode: str = "pre-out",
         check_accuracy: bool = False,
         calculate_loss: bool = False,
@@ -95,6 +94,7 @@ def get_midlayer_activations( opt: Model,
         use_ff_activation_function: bool = True,
         dataset_texts_to_skip: int = None,
         random_subset_frac: float = None,
+        eval_config: EvalConfig = None,
     ):
     """Gets the number of activations of the midlayer ('key' layer) of MLPs for
     each layer, as well as for the pre_out layer of attention for each layer.
