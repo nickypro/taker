@@ -5,6 +5,7 @@ references to functions from texts.py, so is not included in model.py Model.
 
 import os
 import datetime
+import math
 # Import types for typed python
 from typing import Optional, Union, Dict, Tuple, List, Callable
 from torch import Tensor
@@ -31,6 +32,7 @@ from .eval import evaluate_all
 def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dict):
     """ dataset_item --> opt --> (input_ids, text_activations, residual_stream) """
     model_modality = opt.cfg.model_modality
+    other_data = {}
 
     if model_modality == "vision":
         raw_img = dataset_item[eval_config.dataset_image_key]
@@ -51,12 +53,16 @@ def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dic
         text_activations = [0,0,0,0]
         residual_stream  = [0]
 
-        return input_ids, text_activations, residual_stream
+        return input_ids, text_activations, residual_stream, other_data
 
     if model_modality == "language":
         text  = dataset_item[eval_config.dataset_text_key]
 
         input_ids = opt.get_ids(text).detach()
+
+        if eval_config.masked_model:
+            orig_ids, input_ids, indices = opt.roberta_masked_ids(input_ids)
+            other_data["expected_ids"] = orig_ids
 
         # Skip if there is only 1 token
         if len(input_ids.flatten().shape) == 0:
@@ -66,24 +72,29 @@ def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dic
         residual_stream = opt.get_residual_stream(
             text_activations=text_activations ).detach()
 
-        return input_ids, text_activations, residual_stream
+        return input_ids, text_activations, residual_stream, other_data
 
     raise NotImplementedError(f"Invalid model modality {model_modality}")
 
 def get_midlayer_activations( opt: Model,
-        dataset_name: str,
+        dataset_name: str = None,
         sample_size: int = 10000,
+        eval_config: EvalConfig = None,
         attn_mode: str = "pre-out",
         check_accuracy: bool = False,
         calculate_loss: bool = False,
         k: int = 10,
         check_skips: bool = False,
+        skip_ids: set = None,
+        skip_type: str = "blacklist",
+        skip_input_or_output: str = "output",
         calculate_ff: bool = True,
         calculate_attn: bool = True,
         collect_ff: bool = False,
         collect_attn: bool = False,
         use_ff_activation_function: bool = True,
         dataset_texts_to_skip: int = None,
+        random_subset_frac: float = None,
     ):
     """Gets the number of activations of the midlayer ('key' layer) of MLPs for
     each layer, as well as for the pre_out layer of attention for each layer.
@@ -130,11 +141,13 @@ def get_midlayer_activations( opt: Model,
         "neg_var": Tensor[shape]
         "pos_count": Tensor[shape]
     """
-    eval_config = infer_dataset_config(dataset_name)
-    eval_config.dataset_split = "train"
-    eval_config.is_train_mode = True
-    if dataset_texts_to_skip is not None:
-        eval_config.num_texts_to_skip = dataset_texts_to_skip
+    if eval_config is None:
+        assert dataset_name is not None, "Must provide either an EvalConfig or a dataset name"
+        eval_config = infer_dataset_config(dataset_name)
+        eval_config.dataset_split = "train"
+        eval_config.is_train_mode = True
+        if dataset_texts_to_skip is not None:
+            eval_config.num_texts_to_skip = dataset_texts_to_skip
     dataset   = prepare_dataset(eval_config)
     skip_eval = eval_config.skip_token_strings or []
 
@@ -165,7 +178,7 @@ def get_midlayer_activations( opt: Model,
                         + "Otherwise, use evaluate_all() instead")
 
     # Prepare skip ids if they are being used
-    if check_skips:
+    if check_skips and skip_ids is None:
         skip_ids = set()
         for skip_string in skip_eval:
             skip_id = int( opt.get_ids( skip_string ).squeeze()[-1] )
@@ -181,7 +194,7 @@ def get_midlayer_activations( opt: Model,
             # Get all necessary activations
             with torch.no_grad():
                 try:
-                    input_ids, text_activations, residual_stream = \
+                    input_ids, text_activations, residual_stream, other_data = \
                         get_input_activations(opt, eval_config, data)
                 except ValueError:
                     print(f"Could not process an input of {dataset_name}")
@@ -231,8 +244,25 @@ def get_midlayer_activations( opt: Model,
 
             # (Optional) Choose a set of token ids to skip
             if check_skips:
-                for index in range(len(input_ids[0])-1):
-                    criteria[index] *= (input_ids[0, index+1] in skip_ids)
+                n_plus_one = int(skip_input_or_output == "output")
+                for index in range(len(input_ids[0])-n_plus_one):
+                    pos = index + n_plus_one
+                    if skip_type == "whitelist":
+                        criteria[index] *= (input_ids[0, pos].item() in skip_ids)
+                    if skip_type == "blacklist":
+                        criteria[index] *= (input_ids[0, pos].item() not in skip_ids)
+
+            if criteria[..., :-1].sum() == 0:
+                print("WARNING: skipping text entirely due to criteria")
+                continue
+
+            if random_subset_frac:
+                ones_indices = torch.nonzero(criteria).reshape([-1])
+                num_to_select = math.ceil( len(ones_indices) *  random_subset_frac )
+                random_indices = torch.randperm(len(ones_indices))[:num_to_select]
+                new_ones = torch.zeros_like(criteria)
+                new_ones[ ones_indices[random_indices] ] = True
+                criteria = new_ones
 
             # Count the number of activations in FF
             if do_ff:
@@ -392,7 +422,7 @@ def get_midlayer_activations_old( opt: Model,
                         + "Otherwise, use evaluate_all() instead")
 
     # Prepare skip ids if they are being used
-    if check_skips:
+    if check_skips and skip_ids is None:
         skip_ids = set()
         for skip_string in skip_eval:
             skip_id = int( opt.get_ids( skip_string ).squeeze()[-1] )

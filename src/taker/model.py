@@ -1464,7 +1464,8 @@ class Model():
             input_ids: Masked tokenized IDs
             indices: Indices of tokens modified
         """
-        mask_id  = self.get_ids("<mask>")[0, 1].item()
+        #mask_id  = self.get_ids("<mask>")[0, 1].item()
+        mask_id = self.tokenizer.mask_token_id
 
         # get initial input ids
         orig_ids = self.get_ids(text) if input_ids is None else input_ids
