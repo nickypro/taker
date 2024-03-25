@@ -17,8 +17,8 @@ c = PruningConfig(
     model_repo   = "nickypro/llama-7b-hf-rand",
     token_limit  = 1000,  # trim the input to this max length
     run_pre_test = False,  # evaluate the unpruned model
-    eval_sample_size = 1e5,
-    collection_sample_size = 1e5,
+    eval_sample_size = 1e3,
+    collection_sample_size = 1e3,
     # Removals parameters
     ff_frac   = 0.01,     # % of feed forward neurons to prune
     attn_frac = 0.00,     # % of attention neurons to prune
@@ -26,7 +26,7 @@ c = PruningConfig(
     cripple   = "physics",          # the “unlearned” dataset
     additional_datasets=tuple(), # any extra datasets to evaluate on
     recalculate_activations = False, # iterative vs non-iterative
-    dtype = "int4",
+    dtype = "int8",
     n_steps = 1,
 )
 
@@ -53,13 +53,13 @@ def get_activations(c: PruningConfig, datasets: list[str]):
     results = {}
     for dataset in datasets:
         midlayer_activations = get_midlayer_activations(
-            opt, 
+            opt,
             dataset,
             c.collection_sample_size,
             c.attn_mode,
             collect_attn=True
             )
-        
+
         results[dataset] = midlayer_activations
 
     return results
@@ -88,7 +88,7 @@ all_datasets = ["biology",
             "pile_Wikipedia",
             "poems"]
 
-test_datasets = ["physics", "code", "pile_Github"]
+test_datasets = ["physics"]
 
 data = get_activations(c, test_datasets)
 print(data)

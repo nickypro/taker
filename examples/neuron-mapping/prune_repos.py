@@ -35,7 +35,8 @@ c = PruningConfig(
     wandb_project = "testing", # repo to push results to
     # model_repo   = "nickypro/tinyllama-15M",
     # model_repo   = "facebook/opt-1.3b",
-    model_repo   = "nickypro/llama-7b-hf-rand",
+    # model_repo   = "nickypro/llama-7b-hf-rand",
+    model_repo   = "nickypro/mistral-7b-rand",
     token_limit  = 1000,  # trim the input to this max length
     run_pre_test = False,  # evaluate the unpruned model
     eval_sample_size = 1e5,
@@ -52,8 +53,8 @@ c = PruningConfig(
 )
 
 #list of repos to cripple
-#cripple_repos = ["emotion", "pile_FreeLaw", "pile_PubMed_Abstracts", "pile_PubMed_Central", "pile_NIH_ExPorter", "pile_Enron_Emails", "pile_Github", "pile_StackExchange", "pile_HackerNews", "pile_ArXiv", "pile_Wikipedia", "pile_Ubuntu_IRC", "pile_USPTO_Backgrounds", "pile_PhilPapers", "pile_EuroParl", "pile_Gutenberg", "pile_PhilPapers", "pile_EuroParl", "pile_Gutenberg", 'code', 'poems', 'civil', 'chemistry']
-cripple_repos = ['physics', 'biology', 'math']
+cripple_repos = ["emotion", "pile_FreeLaw", "pile_PubMed_Abstracts", "pile_PubMed_Central", "pile_NIH_ExPorter", "pile_Enron_Emails", "pile_Github", "pile_StackExchange", "pile_HackerNews", "pile_ArXiv", "pile_Wikipedia", "pile_Ubuntu_IRC", "pile_USPTO_Backgrounds", "pile_PhilPapers", "pile_EuroParl", "pile_Gutenberg", "pile_PhilPapers", "pile_EuroParl", "pile_Gutenberg", 'code', 'poems', 'civil', 'chemistry']
+#cripple_repos = ['physics', 'biology', 'math']
 
 #prune each repo and save tensors, doing some extra computation but only really need ff_scores for each repo, will do actual pruning for different values of ff_frac in compare.py
 for repo in cripple_repos:
