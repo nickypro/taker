@@ -38,6 +38,26 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True  # To ensure that CUDA selects deterministic algorithms.
     torch.backends.cudnn.benchmark = False
 
+def save_data_dict( model_size: str,
+        data: any,
+        name: str ):
+    now = datetime.now().strftime( "%Y-%m-%d_%H:%M:%S" )
+    os.makedirs( f'saved_tensors/{model_size}', exist_ok=True )
+    filename = f'saved_tensors/{model_size}/{name}-{model_size}-recent.pt'
+    torch.save( data, filename )
+    print( f'Saved {filename} to {model_size}' )
+    filename = f'saved_tensors/{model_size}/{name}-{model_size}-{now}.pt'
+    torch.save( data, filename )
+    print( f'Saved {filename} to {model_size}' )
+    return filename
+
+def load_pt_file(directory: str, filename: str):
+    data = torch.load(directory+filename)
+    for key in data.keys():
+        print(key)
+    return data
+
+
 def get_activations(c: PruningConfig, datasets: list[str]):
     # Initilaise Model and show details about model
     opt = Model(
@@ -91,4 +111,5 @@ all_datasets = ["biology",
 test_datasets = ["physics"]
 
 data = get_activations(c, test_datasets)
-print(data)
+filename = save_data_dict(c.model_size, data, "test_activations")
+print("file saved to: ", filename)
