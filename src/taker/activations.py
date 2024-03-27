@@ -43,9 +43,13 @@ def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dic
 
         embeddings = opt["embed"](pixel_values)
         _n_texts, _n_tokens, _d_model = embeddings.shape
-        input_ids = torch.zeros([1, _n_tokens], dtype=int)
-        input_ids[0, 0]  = label
-        input_ids[0, 1:] = -1
+        expected_ids = torch.zeros([1, _n_tokens], dtype=int)
+        expected_ids[0, 0]  = label
+        expected_ids[0, 1:] = -1
+        other_data["expected_ids"] = expected_ids
+
+        input_ids = torch.ones_like(expected_ids)
+        input_ids[...] = label
 
         # TODO: fix this so that it works for deletion and not just masking
         output = opt.predictor(pixel_values=pixel_values)
@@ -61,8 +65,11 @@ def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dic
         input_ids = opt.get_ids(text).detach()
 
         if eval_config.masked_model:
-            orig_ids, input_ids, indices = opt.roberta_masked_ids(input_ids)
+            orig_ids, input_ids, indices = opt.roberta_masked_ids(input_ids=input_ids)
             other_data["expected_ids"] = orig_ids
+
+        else:
+            other_data["expected_ids"] = input_ids[..., 1:]
 
         # Skip if there is only 1 token
         if len(input_ids.flatten().shape) == 0:
@@ -91,10 +98,12 @@ def get_midlayer_activations( opt: Model,
         calculate_attn: bool = True,
         collect_ff: bool = False,
         collect_attn: bool = False,
+        collect_ids: bool = True,
         use_ff_activation_function: bool = True,
         dataset_texts_to_skip: int = None,
         random_subset_frac: float = None,
         eval_config: EvalConfig = None,
+        masked_mode: bool = False
     ):
     """Gets the number of activations of the midlayer ('key' layer) of MLPs for
     each layer, as well as for the pre_out layer of attention for each layer.
@@ -148,6 +157,8 @@ def get_midlayer_activations( opt: Model,
         eval_config.is_train_mode = True
         if dataset_texts_to_skip is not None:
             eval_config.num_texts_to_skip = dataset_texts_to_skip
+    if "MaskedLM" in opt.cfg.architecture and masked_mode:
+        eval_config.masked_model = True
     dataset   = prepare_dataset(eval_config)
     skip_eval = eval_config.skip_token_strings or []
 
@@ -155,6 +166,12 @@ def get_midlayer_activations( opt: Model,
     do_attn = calculate_attn or collect_attn
     if attn_mode not in ["pre-out", "value"]:
         raise NotImplementedError("attn_mode must be 'pre-out' or 'value'")
+
+    if collect_ids:
+        input_id_data = []
+        output_id_data = []
+
+    do_collect = collect_ff or collect_attn or collect_ids
 
     # ff activation collector
     if do_ff:
@@ -170,7 +187,7 @@ def get_midlayer_activations( opt: Model,
         attn_data_loss_normed = ActivationCollector( attn_shape, opt.output_device, collect_ff )
         attn_data_log_loss_normed = ActivationCollector( attn_shape, opt.output_device, collect_ff )
 
-    if collect_ff or collect_attn:
+    if do_collect:
         criteria_raw = []
 
     if not (calculate_ff or calculate_attn or collect_ff or collect_attn):
@@ -193,12 +210,8 @@ def get_midlayer_activations( opt: Model,
             texts_viewed += 1
             # Get all necessary activations
             with torch.no_grad():
-                try:
-                    input_ids, text_activations, residual_stream, other_data = \
-                        get_input_activations(opt, eval_config, data)
-                except ValueError:
-                    print(f"Could not process an input of {dataset_name}")
-                    continue
+                input_ids, text_activations, residual_stream, other_data = \
+                    get_input_activations(opt, eval_config, data)
 
                 # Get activations of self attention
                 if do_attn and attn_mode == "pre-out":
@@ -264,6 +277,19 @@ def get_midlayer_activations( opt: Model,
                 new_ones[ ones_indices[random_indices] ] = True
                 criteria = new_ones
 
+            if collect_ids:
+                for token_index, input_id in enumerate(input_ids[0]):
+                    if not criteria[token_index]:
+                        continue
+                    input_id_data.append(input_id)
+                    if "expected_ids" in other_data:
+                        expected_ids = other_data["expected_ids"]
+                        if token_index >= len(expected_ids[0]):
+                            output_id_data.append(torch.tensor(-1, dtype=input_ids.dtype))
+                        else:
+                            output_id_data.append(expected_ids[0, token_index])
+
+
             # Count the number of activations in FF
             if do_ff:
                 for token_index, ff_activation in enumerate(ff_keys):
@@ -290,7 +316,7 @@ def get_midlayer_activations( opt: Model,
                     attn_data_loss_normed.add(attn_activation/token_loss)
                     attn_data_log_loss_normed.add(attn_activation/torch.log(token_loss))
 
-            if collect_ff or collect_attn:
+            if do_collect:
                 for criterion in criteria:
                     criteria_raw.append( criterion.cpu() )
 
@@ -321,12 +347,18 @@ def get_midlayer_activations( opt: Model,
         )
 
     # Raw activations of data
-    if collect_ff or collect_attn:
+    if do_collect:
         output["raw"] = { "criteria": torch.stack(criteria_raw) }
     if collect_ff:
         output["raw"]["ff"] = ff_data.get_raw()
     if collect_attn:
         output["raw"]["attn"] = attn_data.get_raw()
+    if collect_ids:
+        output["raw"]["input_ids"] = torch.stack(input_id_data)
+        if len(output_id_data):
+            output["raw"]["expected_ids"] = torch.stack(output_id_data)
+        else:
+            output["raw"]["expected_ids"] = torch.ones_like(output["raw"]["input_ids"]) * -1
 
     return ActivationOverview(**output)
 
