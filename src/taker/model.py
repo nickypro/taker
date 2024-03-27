@@ -156,7 +156,7 @@ class Model():
             processor=None
         ):
         # Import model components (Default: Causal Language Models)
-        device_map = "auto" if self.use_accelerator else None
+        device_map = "auto" if self.use_accelerator else self.device
 
         if self.cfg.model_modality == "vision":
             from transformers import AutoImageProcessor, AutoModelForImageClassification
