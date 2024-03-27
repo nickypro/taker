@@ -43,16 +43,16 @@ def save_data_dict( model_size: str,
         name: str ):
     now = datetime.now().strftime( "%Y-%m-%d_%H:%M:%S" )
     os.makedirs( f'saved_tensors/{model_size}', exist_ok=True )
-    filename = f'saved_tensors/{model_size}/{name}-{model_size}-recent.pt'
-    torch.save( data, filename )
-    print( f'Saved {filename} to {model_size}' )
-    filename = f'saved_tensors/{model_size}/{name}-{model_size}-{now}.pt'
-    torch.save( data, filename )
-    print( f'Saved {filename} to {model_size}' )
-    return filename
+    filepath = f'saved_tensors/{model_size}/{name}-{model_size}-recent.pt'
+    torch.save( data, filepath )
+    print( f'Saved {filepath} to {model_size}' )
+    filepath = f'saved_tensors/{model_size}/{name}-{model_size}-{now}.pt'
+    torch.save( data, filepath )
+    print( f'Saved {filepath} to {model_size}' )
+    return filepath
 
-def load_pt_file(directory: str, filename: str):
-    data = torch.load(directory+filename)
+def load_pt_file(filepath: str):
+    data = torch.load(filepath)
     for key in data.keys():
         print(key)
     return data
@@ -80,7 +80,7 @@ def get_activations(c: PruningConfig, datasets: list[str]):
             collect_attn=True
             )
 
-        results[dataset] = midlayer_activations
+        results[dataset] = midlayer_activations.attn.orig
 
     return results
 
@@ -111,5 +111,9 @@ all_datasets = ["biology",
 test_datasets = ["physics"]
 
 data = get_activations(c, test_datasets)
-filename = save_data_dict(c.model_size, data, "test_activations")
-print("file saved to: ", filename)
+
+filepath = save_data_dict("llama-7b", data, "test_activations")
+print("file saved to: ", filepath)
+loaded_data = load_pt_file(filepath)["physics"]
+
+print(loaded_data)
