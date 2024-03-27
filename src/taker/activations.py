@@ -177,15 +177,15 @@ def get_midlayer_activations( opt: Model,
     if do_ff:
         ff_shape = (opt.cfg.n_layers, opt.cfg.d_mlp)
         ff_data = ActivationCollector( ff_shape, opt.output_device, collect_ff )
-        ff_data_loss_normed = ActivationCollector( ff_shape, opt.output_device, collect_ff )
-        ff_data_log_loss_normed = ActivationCollector( ff_shape, opt.output_device, collect_ff )
+        ff_data_loss_normed = ActivationCollector( ff_shape, opt.output_device)
+        ff_data_log_loss_normed = ActivationCollector( ff_shape, opt.output_device)
 
     # self-attention activation collector
     if do_attn:
         attn_shape = (opt.cfg.n_layers, opt.cfg.n_heads, opt.cfg.d_head)
         attn_data = ActivationCollector( attn_shape, opt.output_device, collect_attn )
-        attn_data_loss_normed = ActivationCollector( attn_shape, opt.output_device, collect_ff )
-        attn_data_log_loss_normed = ActivationCollector( attn_shape, opt.output_device, collect_ff )
+        attn_data_loss_normed = ActivationCollector( attn_shape, opt.output_device)
+        attn_data_log_loss_normed = ActivationCollector( attn_shape, opt.output_device)
 
     if do_collect:
         criteria_raw = []
