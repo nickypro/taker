@@ -77,25 +77,43 @@ class Model():
         """
 
         # Initialize model differently depending on accelerator use
-        self.use_accelerator = use_accelerator and torch.cuda.device_count() > 1
+        self.use_accelerator = False
+        if (model_device is None) \
+                and (use_accelerator) \
+                and (torch.cuda.device_count() > 1):
+            self.use_accelerator = True
         self.dtype = dtype
         self.svd_attn = svd_attn
 
-        # Handle multi-gpu stuff
-        if self.use_accelerator:
-            self.accelerator = Accelerator()
-            self.device = self.accelerator.device
-            self.output_device = output_device if output_device else 'cuda:1'
+        # Handle devices and multi-gpu stuff.
+        self.device = model_device
+        if self.device is None:
+            if self.use_accelerator: # auto "multigpu"
+                self.accelerator = Accelerator()
+                self.device = self.accelerator.device
+            elif torch.cuda.is_available(): # nvidia
+                self.device = "cuda"
+            elif torch.backends.mps.is_available(): # apple silicon
+                self.device = "mps"
+            else:
+                self.device = "cpu"
 
-        else:
-            self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-            self.device = model_device if model_device else self.device
-            self.output_device = output_device if output_device else self.device
+        # model device mapping for HuggingFace transformers
+        self.device_map = "auto" if self.use_accelerator else self.device
+
+        # move model outputs to this device_output
+        self.output_device = output_device
+        if self.output_device is None:
+            self.output_device = self.device # make output same as device
+            if self.use_accelerator:
+                # TODO: torch.stack() doesn't work with accelerator
+                # for now, just use this instead
+                self.output_device = "cuda:1"
 
         # Handle dtype
         if dtype is None and torch_dtype is None:
             if self.device == "cpu":
-                dtype = "fp32"
+                dtype = "bfp16" # needed for CPU compatibility
             else:
                 dtype = "fp16"
         self.dtype_map = DtypeMap(dtype, torch_dtype)
@@ -156,7 +174,7 @@ class Model():
             processor=None
         ):
         # Import model components (Default: Causal Language Models)
-        device_map = "auto" if self.use_accelerator else self.device
+        device_map = self.device_map
 
         if self.cfg.model_modality == "vision":
             from transformers import AutoImageProcessor, AutoModelForImageClassification
