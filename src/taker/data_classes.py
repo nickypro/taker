@@ -31,6 +31,7 @@ class DtypeMap():
             "fp16": torch.float16,
             "fp32": torch.float32,
             "fp64": torch.float64,
+            "bfp16": torch.bfloat16,
         }
         return dtype_map[self.str_dtype]
 
