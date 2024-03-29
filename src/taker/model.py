@@ -101,7 +101,9 @@ class Model():
                 self.device = "cpu"
 
         # model device mapping for HuggingFace transformers
-        self.device_map = "auto" if self.use_accelerator else self.device
+        self.device_map = "auto"
+        if not self.use_accelerator and self.device != "cuda":
+            self.device_map = self.device
 
         # move model outputs to this device_output
         self.output_device = output_device
