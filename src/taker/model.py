@@ -338,7 +338,10 @@ class Model():
             return
         if self.dtype_map.is_low_precision: # 8bit & 4bit mode handled by accelerator
             return
+        orig_device = self.device
         self.device = device
+        if self.output_device == orig_device:
+            self.output_device = self.device
         for component in self.components_loop():
             component.to(self.device)
         return self

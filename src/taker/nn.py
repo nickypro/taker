@@ -212,6 +212,13 @@ class NeuronActAdd(torch.nn.Module):
         )
         self.reset()
 
+    def to(self, device=None, dtype=None, *args, **kwargs):
+        super(NeuronActAdd, self).to(device, dtype, *args, **kwargs)
+        if not device is None:
+            self.device = device
+        if not dtype is None:
+            self.dtype = dtype
+
     def forward(self, x):
         # load input vector (do not modify in place)
         x = x.clone()
