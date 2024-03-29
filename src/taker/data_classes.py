@@ -50,6 +50,7 @@ class DtypeMap():
             "fp16": {dtype_key: self._dtype},
             "fp32": {dtype_key: self._dtype},
             "fp64": {dtype_key: self._dtype},
+            "bfp16": {dtype_key: self._dtype},
         }
         return args[self.str_dtype]
 
