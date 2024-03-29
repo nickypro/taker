@@ -66,6 +66,7 @@ class Model():
             tokenizer_repo: Optional[str] = None,
             mask_fn: str = "step",
             use_inverse_out: bool = False,
+            eval_mode: bool = True,
         ):
         """
         OPT Model with functions for extracting activations.
@@ -120,6 +121,8 @@ class Model():
         self.dtype = self.dtype_map._dtype
         self.dtype_args = self.dtype_map._dtype_args
 
+        # eval mode or train mode
+        self.eval_mode = eval_mode
 
         # Define the model repo
         self.model_size: str = None
@@ -307,20 +310,38 @@ class Model():
         else:
             print( f" - n_layers, d_model = {self.cfg.n_layers}, {self.cfg.d_model}" )
 
+    def components_loop(self):
+        yield self.predictor
+        yield self.model
+        if self.masks is not None:
+            for key in self.masks.keys():
+                yield self.masks[key]
+        if self.post_biases is not None:
+            for key in self.post_biases.keys():
+                yield self.post_biases[key]
+        if self.actadds is not None:
+            for key in self.actadds.keys():
+                yield self.actadds[key]
+
+    def eval(self):
+        self.eval_mode = True
+        for component in self.components_loop():
+            component.eval()
+
+    def train(self):
+        self.eval_mode = False
+        for component in self.components_loop():
+            component.eval()
+
     def to( self, device ):
         if self.use_accelerator: # If using accelerator, init handles multi-device
             return
         if self.dtype_map.is_low_precision: # 8bit & 4bit mode handled by accelerator
             return
         self.device = device
-        self.predictor.to( device )
-        self.model.to( device )
-        if self.masks is not None:
-            for key in self.masks.keys():
-                self.masks[key] = self.masks[key].to( device )
-        if self.post_biases is not None:
-            for key in self.post_biases.keys():
-                self.post_biases[key] = self.post_biases[key].to( device )
+        for component in self.components_loop():
+            component.to(self.device)
+        return self
 
     def out_stack(self, tensor_list: List[Tensor]) -> Tensor:
         if self.use_accelerator or self.device != self.output_device:
