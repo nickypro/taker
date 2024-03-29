@@ -7,6 +7,8 @@ from torch import Tensor
 import pandas as pd
 import wandb
 from welford_torch import Welford
+from transformers import BitsAndBytesConfig
+
 
 ######################################################################################
 # Functional Conversion Data Classes
@@ -45,8 +47,8 @@ class DtypeMap():
 
         # Auto type from string
         args = {
-            "int4": {dtype_key: self._dtype, "load_in_4bit": True},
-            "int8": {dtype_key: self._dtype, "load_in_8bit": True},
+            "int4": {dtype_key: self._dtype, "quantization_config": BitsAndBytesConfig(load_in_4bit=True)},
+            "int8": {dtype_key: self._dtype, "quantization_config": BitsAndBytesConfig(load_in_8bit=True)},
             "fp16": {dtype_key: self._dtype},
             "fp32": {dtype_key: self._dtype},
             "fp64": {dtype_key: self._dtype},
