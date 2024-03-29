@@ -67,6 +67,7 @@ class Model():
             mask_fn: str = "step",
             use_inverse_out: bool = False,
             eval_mode: bool = True,
+            collect_midlayers: bool = True,
         ):
         """
         OPT Model with functions for extracting activations.
@@ -157,6 +158,10 @@ class Model():
         self.mlp_pre_out_mode: str = None
         self.init_model()
         self.limit = limit
+
+        if not collect_midlayers:
+            self.do_activations["mlp_pre_out"] = False
+            self.do_activations["attn_pre_out"] = False
 
         # Indices of outputs for reference
         self.layer_index     = -3
