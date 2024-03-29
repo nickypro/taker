@@ -285,7 +285,9 @@ def get_midlayer_activations( opt: Model,
                     if "expected_ids" in other_data:
                         expected_ids = other_data["expected_ids"]
                         if token_index >= len(expected_ids[0]):
-                            output_id_data.append(torch.tensor(-1, dtype=input_ids.dtype))
+                            output_id_data.append(
+                                torch.tensor(-1, dtype=input_ids.dtype, device=input_ids.device)
+                            )
                         else:
                             output_id_data.append(expected_ids[0, token_index])
 
