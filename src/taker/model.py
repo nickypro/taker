@@ -66,6 +66,8 @@ class Model():
             tokenizer_repo: Optional[str] = None,
             mask_fn: str = "step",
             use_inverse_out: bool = False,
+            eval_mode: bool = True,
+            collect_midlayers: bool = True,
         ):
         """
         OPT Model with functions for extracting activations.
@@ -77,31 +79,53 @@ class Model():
         """
 
         # Initialize model differently depending on accelerator use
-        self.use_accelerator = use_accelerator and torch.cuda.device_count() > 1
+        self.use_accelerator = False
+        if (model_device is None) \
+                and (use_accelerator) \
+                and (torch.cuda.device_count() > 1):
+            self.use_accelerator = True
         self.dtype = dtype
         self.svd_attn = svd_attn
 
-        # Handle multi-gpu stuff
-        if self.use_accelerator:
-            self.accelerator = Accelerator()
-            self.device = self.accelerator.device
-            self.output_device = output_device if output_device else 'cuda:1'
+        # Handle devices and multi-gpu stuff.
+        self.device = model_device
+        if self.device is None:
+            if self.use_accelerator: # auto "multigpu"
+                self.accelerator = Accelerator()
+                self.device = self.accelerator.device
+            elif torch.cuda.is_available(): # nvidia
+                self.device = "cuda"
+            elif torch.backends.mps.is_available(): # apple silicon
+                self.device = "mps"
+            else:
+                self.device = "cpu"
 
-        else:
-            self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-            self.device = model_device if model_device else self.device
-            self.output_device = output_device if output_device else self.device
+        # model device mapping for HuggingFace transformers
+        self.device_map = "auto"
+        if not self.use_accelerator and self.device != "cuda":
+            self.device_map = self.device
+
+        # move model outputs to this device_output
+        self.output_device = output_device
+        if self.output_device is None:
+            self.output_device = self.device # make output same as device
+            if self.use_accelerator:
+                # TODO: torch.stack() doesn't work with accelerator
+                # for now, just use this instead
+                self.output_device = "cuda:1"
 
         # Handle dtype
         if dtype is None and torch_dtype is None:
             if self.device == "cpu":
-                dtype = "fp32"
+                dtype = "bfp16" # needed for CPU compatibility
             else:
                 dtype = "fp16"
         self.dtype_map = DtypeMap(dtype, torch_dtype)
         self.dtype = self.dtype_map._dtype
         self.dtype_args = self.dtype_map._dtype_args
 
+        # eval mode or train mode
+        self.eval_mode = eval_mode
 
         # Define the model repo
         self.model_size: str = None
@@ -137,6 +161,10 @@ class Model():
         self.init_model()
         self.limit = limit
 
+        if not collect_midlayers:
+            self.do_activations["mlp_pre_out"] = False
+            self.do_activations["attn_pre_out"] = False
+
         # Indices of outputs for reference
         self.layer_index     = -3
         self.token_index     = -2
@@ -156,7 +184,7 @@ class Model():
             processor=None
         ):
         # Import model components (Default: Causal Language Models)
-        device_map = "auto" if self.use_accelerator else None
+        device_map = self.device_map
 
         if self.cfg.model_modality == "vision":
             from transformers import AutoImageProcessor, AutoModelForImageClassification
@@ -289,20 +317,41 @@ class Model():
         else:
             print( f" - n_layers, d_model = {self.cfg.n_layers}, {self.cfg.d_model}" )
 
+    def components_loop(self):
+        yield self.predictor
+        yield self.model
+        if self.masks is not None:
+            for key in self.masks.keys():
+                yield self.masks[key]
+        if self.post_biases is not None:
+            for key in self.post_biases.keys():
+                yield self.post_biases[key]
+        if self.actadds is not None:
+            for key in self.actadds.keys():
+                yield self.actadds[key]
+
+    def eval(self):
+        self.eval_mode = True
+        for component in self.components_loop():
+            component.eval()
+
+    def train(self):
+        self.eval_mode = False
+        for component in self.components_loop():
+            component.eval()
+
     def to( self, device ):
         if self.use_accelerator: # If using accelerator, init handles multi-device
             return
         if self.dtype_map.is_low_precision: # 8bit & 4bit mode handled by accelerator
             return
+        orig_device = self.device
         self.device = device
-        self.predictor.to( device )
-        self.model.to( device )
-        if self.masks is not None:
-            for key in self.masks.keys():
-                self.masks[key] = self.masks[key].to( device )
-        if self.post_biases is not None:
-            for key in self.post_biases.keys():
-                self.post_biases[key] = self.post_biases[key].to( device )
+        if self.output_device == orig_device:
+            self.output_device = self.device
+        for component in self.components_loop():
+            component.to(self.device)
+        return self
 
     def out_stack(self, tensor_list: List[Tensor]) -> Tensor:
         if self.use_accelerator or self.device != self.output_device:
@@ -1464,7 +1513,8 @@ class Model():
             input_ids: Masked tokenized IDs
             indices: Indices of tokens modified
         """
-        mask_id  = self.get_ids("<mask>")[0, 1].item()
+        #mask_id  = self.get_ids("<mask>")[0, 1].item()
+        mask_id = self.tokenizer.mask_token_id
 
         # get initial input ids
         orig_ids = self.get_ids(text) if input_ids is None else input_ids

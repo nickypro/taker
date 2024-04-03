@@ -5,6 +5,7 @@ references to functions from texts.py, so is not included in model.py Model.
 
 import os
 import datetime
+import math
 # Import types for typed python
 from typing import Optional, Union, Dict, Tuple, List, Callable
 from torch import Tensor
@@ -31,6 +32,7 @@ from .eval import evaluate_all
 def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dict):
     """ dataset_item --> opt --> (input_ids, text_activations, residual_stream) """
     model_modality = opt.cfg.model_modality
+    other_data = {}
 
     if model_modality == "vision":
         raw_img = dataset_item[eval_config.dataset_image_key]
@@ -41,9 +43,13 @@ def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dic
 
         embeddings = opt["embed"](pixel_values)
         _n_texts, _n_tokens, _d_model = embeddings.shape
-        input_ids = torch.zeros([1, _n_tokens], dtype=int)
-        input_ids[0, 0]  = label
-        input_ids[0, 1:] = -1
+        expected_ids = torch.zeros([1, _n_tokens], dtype=int)
+        expected_ids[0, 0]  = label
+        expected_ids[0, 1:] = -1
+        other_data["expected_ids"] = expected_ids
+
+        input_ids = torch.ones_like(expected_ids)
+        input_ids[...] = label
 
         # TODO: fix this so that it works for deletion and not just masking
         output = opt.predictor(pixel_values=pixel_values)
@@ -51,12 +57,19 @@ def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dic
         text_activations = [0,0,0,0]
         residual_stream  = [0]
 
-        return input_ids, text_activations, residual_stream
+        return input_ids, text_activations, residual_stream, other_data
 
     if model_modality == "language":
         text  = dataset_item[eval_config.dataset_text_key]
 
         input_ids = opt.get_ids(text).detach()
+
+        if eval_config.masked_model:
+            orig_ids, input_ids, indices = opt.roberta_masked_ids(input_ids=input_ids)
+            other_data["expected_ids"] = orig_ids
+
+        else:
+            other_data["expected_ids"] = input_ids[..., 1:]
 
         # Skip if there is only 1 token
         if len(input_ids.flatten().shape) == 0:
@@ -66,23 +79,31 @@ def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dic
         residual_stream = opt.get_residual_stream(
             text_activations=text_activations ).detach()
 
-        return input_ids, text_activations, residual_stream
+        return input_ids, text_activations, residual_stream, other_data
 
     raise NotImplementedError(f"Invalid model modality {model_modality}")
 
 def get_midlayer_activations( opt: Model,
-        dataset_name: str,
+        dataset_name: str = None,
         sample_size: int = 10000,
         attn_mode: str = "pre-out",
         check_accuracy: bool = False,
         calculate_loss: bool = False,
         k: int = 10,
         check_skips: bool = False,
+        skip_ids: set = None,
+        skip_type: str = "blacklist",
+        skip_input_or_output: str = "output",
         calculate_ff: bool = True,
         calculate_attn: bool = True,
         collect_ff: bool = False,
         collect_attn: bool = False,
+        collect_ids: bool = True,
         use_ff_activation_function: bool = True,
+        dataset_texts_to_skip: int = None,
+        random_subset_frac: float = None,
+        eval_config: EvalConfig = None,
+        masked_mode: bool = False
     ):
     """Gets the number of activations of the midlayer ('key' layer) of MLPs for
     each layer, as well as for the pre_out layer of attention for each layer.
@@ -129,9 +150,15 @@ def get_midlayer_activations( opt: Model,
         "neg_var": Tensor[shape]
         "pos_count": Tensor[shape]
     """
-    eval_config = infer_dataset_config(dataset_name)
-    eval_config.dataset_split = "train"
-    eval_config.is_train_mode = True
+    if eval_config is None:
+        assert dataset_name is not None, "Must provide either an EvalConfig or a dataset name"
+        eval_config = infer_dataset_config(dataset_name)
+        eval_config.dataset_split = "train"
+        eval_config.is_train_mode = True
+        if dataset_texts_to_skip is not None:
+            eval_config.num_texts_to_skip = dataset_texts_to_skip
+    if "MaskedLM" in opt.cfg.architecture and masked_mode:
+        eval_config.masked_model = True
     dataset   = prepare_dataset(eval_config)
     skip_eval = eval_config.skip_token_strings or []
 
@@ -140,21 +167,27 @@ def get_midlayer_activations( opt: Model,
     if attn_mode not in ["pre-out", "value"]:
         raise NotImplementedError("attn_mode must be 'pre-out' or 'value'")
 
+    if collect_ids:
+        input_id_data = []
+        output_id_data = []
+
+    do_collect = collect_ff or collect_attn or collect_ids
+
     # ff activation collector
     if do_ff:
         ff_shape = (opt.cfg.n_layers, opt.cfg.d_mlp)
         ff_data = ActivationCollector( ff_shape, opt.output_device, collect_ff )
-        ff_data_loss_normed = ActivationCollector( ff_shape, opt.output_device, collect_ff )
-        ff_data_log_loss_normed = ActivationCollector( ff_shape, opt.output_device, collect_ff )
+        ff_data_loss_normed = ActivationCollector( ff_shape, opt.output_device)
+        ff_data_log_loss_normed = ActivationCollector( ff_shape, opt.output_device)
 
     # self-attention activation collector
     if do_attn:
         attn_shape = (opt.cfg.n_layers, opt.cfg.n_heads, opt.cfg.d_head)
         attn_data = ActivationCollector( attn_shape, opt.output_device, collect_attn )
-        attn_data_loss_normed = ActivationCollector( attn_shape, opt.output_device, collect_ff )
-        attn_data_log_loss_normed = ActivationCollector( attn_shape, opt.output_device, collect_ff )
+        attn_data_loss_normed = ActivationCollector( attn_shape, opt.output_device)
+        attn_data_log_loss_normed = ActivationCollector( attn_shape, opt.output_device)
 
-    if collect_ff or collect_attn:
+    if do_collect:
         criteria_raw = []
 
     if not (calculate_ff or calculate_attn or collect_ff or collect_attn):
@@ -162,7 +195,7 @@ def get_midlayer_activations( opt: Model,
                         + "Otherwise, use evaluate_all() instead")
 
     # Prepare skip ids if they are being used
-    if check_skips:
+    if check_skips and skip_ids is None:
         skip_ids = set()
         for skip_string in skip_eval:
             skip_id = int( opt.get_ids( skip_string ).squeeze()[-1] )
@@ -177,13 +210,8 @@ def get_midlayer_activations( opt: Model,
             texts_viewed += 1
             # Get all necessary activations
             with torch.no_grad():
-
-                try:
-                    input_ids, text_activations, residual_stream = \
-                        get_input_activations(opt, eval_config, data)
-                except ValueError:
-                    print(f"Could not process an input of {dataset_name}")
-                    continue
+                input_ids, text_activations, residual_stream, other_data = \
+                    get_input_activations(opt, eval_config, data)
 
                 # Get activations of self attention
                 if do_attn and attn_mode == "pre-out":
@@ -208,7 +236,12 @@ def get_midlayer_activations( opt: Model,
                         'layer token pos -> token layer pos')
 
             # Initialize criteria for counting the token activation
-            criteria = torch.ones_like( input_ids[0], dtype=torch.bool ).detach()
+            if opt.cfg.model_modality == "vision":
+                criteria = torch.ones_like( input_ids[0], dtype=torch.bool ).detach()
+            elif opt.cfg.model_modality == "language":
+                criteria = torch.ones_like( input_ids[0], dtype=torch.bool ).detach()
+            else:
+                raise NotImplementedError(f"model_modality not implemented {opt.cfg.model_modality}")
 
             # (Optional) Check if prediction is accurate enough to count
             if check_accuracy or calculate_loss:
@@ -224,8 +257,40 @@ def get_midlayer_activations( opt: Model,
 
             # (Optional) Choose a set of token ids to skip
             if check_skips:
-                for index in range(len(input_ids[0])-1):
-                    criteria[index] *= (input_ids[0, index+1] in skip_ids)
+                n_plus_one = int(skip_input_or_output == "output")
+                for index in range(len(input_ids[0])-n_plus_one):
+                    pos = index + n_plus_one
+                    if skip_type == "whitelist":
+                        criteria[index] *= (input_ids[0, pos].item() in skip_ids)
+                    if skip_type == "blacklist":
+                        criteria[index] *= (input_ids[0, pos].item() not in skip_ids)
+
+            if criteria[..., :-1].sum() == 0:
+                print("WARNING: skipping text entirely due to criteria")
+                continue
+
+            if random_subset_frac:
+                ones_indices = torch.nonzero(criteria).reshape([-1])
+                num_to_select = math.ceil( len(ones_indices) *  random_subset_frac )
+                random_indices = torch.randperm(len(ones_indices))[:num_to_select]
+                new_ones = torch.zeros_like(criteria)
+                new_ones[ ones_indices[random_indices] ] = True
+                criteria = new_ones
+
+            if collect_ids:
+                for token_index, input_id in enumerate(input_ids[0]):
+                    if not criteria[token_index]:
+                        continue
+                    input_id_data.append(input_id)
+                    if "expected_ids" in other_data:
+                        expected_ids = other_data["expected_ids"]
+                        if token_index >= len(expected_ids[0]):
+                            output_id_data.append(
+                                torch.tensor(-1, dtype=input_ids.dtype, device=input_ids.device)
+                            )
+                        else:
+                            output_id_data.append(expected_ids[0, token_index])
+
 
             # Count the number of activations in FF
             if do_ff:
@@ -253,7 +318,7 @@ def get_midlayer_activations( opt: Model,
                     attn_data_loss_normed.add(attn_activation/token_loss)
                     attn_data_log_loss_normed.add(attn_activation/torch.log(token_loss))
 
-            if collect_ff or collect_attn:
+            if do_collect:
                 for criterion in criteria:
                     criteria_raw.append( criterion.cpu() )
 
@@ -284,12 +349,18 @@ def get_midlayer_activations( opt: Model,
         )
 
     # Raw activations of data
-    if collect_ff or collect_attn:
+    if do_collect:
         output["raw"] = { "criteria": torch.stack(criteria_raw) }
     if collect_ff:
         output["raw"]["ff"] = ff_data.get_raw()
     if collect_attn:
         output["raw"]["attn"] = attn_data.get_raw()
+    if collect_ids:
+        output["raw"]["input_ids"] = torch.stack(input_id_data)
+        if len(output_id_data):
+            output["raw"]["expected_ids"] = torch.stack(output_id_data)
+        else:
+            output["raw"]["expected_ids"] = torch.ones_like(output["raw"]["input_ids"]) * -1
 
     return ActivationOverview(**output)
 
@@ -385,7 +456,7 @@ def get_midlayer_activations_old( opt: Model,
                         + "Otherwise, use evaluate_all() instead")
 
     # Prepare skip ids if they are being used
-    if check_skips:
+    if check_skips and skip_ids is None:
         skip_ids = set()
         for skip_string in skip_eval:
             skip_id = int( opt.get_ids( skip_string ).squeeze()[-1] )
@@ -623,19 +694,13 @@ def choose_attn_heads_by(key: str):
 
 def save_timestamped_tensor_dict( opt: Model,
         data: Dict[str, Tensor],
-        name: str ):
+        name: str,
+        path: str = None,
+        file: str = None ):
     now = datetime.datetime.now().strftime( "%Y-%m-%d_%H:%M:%S" )
-    os.makedirs( f'saved_tensors/{opt.model_size}', exist_ok=True )
-    filename = f'saved_tensors/{opt.model_size}/{name}-{opt.model_size}-{now}.pt'
-    torch.save( data, filename )
-    print( f'Saved {filename} to {opt.model_size}' )
-    return filename
-
-def save_tensor_dict( opt: Model,
-        data: Dict[str, Tensor],
-        name: str ):
-    os.makedirs( f'saved_tensors/{opt.model_size}', exist_ok=True )
-    filename = f'saved_tensors/{opt.model_size}/{name}-{opt.model_size}-recent.pt'
+    path = path or f'tmp/{opt.model_size}'
+    # os.makedirs( path, exist_ok=True )
+    filename = f'{path}/{file}' or f'{path}/{opt.model_size}-{name}-{now}.pt'
     torch.save( data, filename )
     print( f'Saved {filename} to {opt.model_size}' )
     return filename

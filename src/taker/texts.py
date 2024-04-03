@@ -36,6 +36,21 @@ most_common_code_tokens          = llama_most_common_tokens["only_code"]["skip50
 
 class DatasetFilters:
     @staticmethod
+    def filter_codeless(_dataset):
+        code_labels = set(["Github"])
+        def filter_codeless_example(example):
+            return str(example["meta"]["pile_set_name"]) not in code_labels
+        rocket_dataset = _dataset.filter(filter_codeless_example)
+        return rocket_dataset
+
+    @staticmethod
+    def filter_pile_general(_dataset, label):
+        def filter_pile_example(example):
+            return str(example["meta"]["pile_set_name"]) == label
+        pile_filtered_dataset = _dataset.filter(filter_pile_example)
+        return pile_filtered_dataset
+
+    @staticmethod
     def filter_civil(_dataset):
         def filter_toxicity_example(example):
             return example["toxicity"] <= 0.2
@@ -102,12 +117,25 @@ class DatasetFilters:
         return rocketless_dataset
 
     @staticmethod
-    def filter_veh2(_dataset):
-        rocket_ids = set([ "19" ])
-        def filter_rocket_example(example):
-            return str(example["coarse_label"]) in rocket_ids
-        rocket_dataset = _dataset.filter(filter_rocket_example)
-        return rocket_dataset
+    def filter_cifar(id: str):
+        def filter_example(example):
+            return str(example["coarse_label"]) == str(id)
+        def filter_dataset(_dataset):
+            return _dataset.filter(filter_example)
+        return filter_dataset
+
+def get_cifar_dataset_configs():
+    cifar20_datasets = ["aquatic_mammals", "fish", "flowers", "food_containers", "fruit_and_vegetables", "household_electrical_devices", "household_furniture", "insects", "large_carnivores", "large_outdoor", "large_omnivores_and_herbivores", "medium_mammals", "non_insect_invertebrates", "people", "reptiles", "small_mammals", "trees", "veh1", "veh2"]
+    return [EvalConfig(f"cifar20-{dataset}",
+                       dataset_repo = "cifar100",
+                       dataset_type = "image-classification",
+                       dataset_split = ["train", "test"],
+                       is_train_mode = True,
+                       dataset_image_key = "img",
+                       streaming = False,
+                       dataset_image_label_key = "coarse_label",
+                       dataset_filter=DatasetFilters.filter_cifar(count),
+                       ) for count, dataset in enumerate(cifar20_datasets)]
     
     @staticmethod
     def filter_pile_FreeLaw(_dataset):
@@ -222,6 +250,12 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
         EvalConfig("pile_codeless",
             dataset_repo = "monology/pile-uncopyrighted",
             skip_token_strings = most_common_pile_codeless_tokens,
+            dataset_filter = DatasetFilters.filter_codeless,
+        ),
+        EvalConfig("pile_freelaw",
+            dataset_repo = "monology/pile-uncopyrighted",
+            skip_token_strings = most_common_pile_codeless_tokens,
+            dataset_filter = lambda __dataset : DatasetFilters.filter_pile_general(__dataset, "FreeLaw"),
         ),
         EvalConfig("pile",
             dataset_repo = "monology/pile-uncopyrighted",
@@ -381,7 +415,7 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_image_key = "img",
             dataset_image_label_key = "coarse_label",
         ),
-        EvalConfig("cifar20-veh2",
+        EvalConfig("cifar20-split",
             dataset_repo = "cifar100",
             dataset_type = "image-classification",
             dataset_split = ["train", "test"],
@@ -497,7 +531,7 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_text_key = "text",
             dataset_filter = DatasetFilters.filter_pile_Gutenberg,
         ),
-    ]
+    ] + get_cifar_dataset_configs()
 
     # Convert into searchable dict
     labeled_eval_configs = dict([(c.dataset_name, c) for c in eval_configs])
@@ -532,7 +566,6 @@ def prepare_dataset(eval_config: EvalConfig):
         eval_config.dataset_subset,
         streaming=eval_config.streaming,
     )
-
 
     # Post-split processing
     if isinstance(split, list) or isinstance(split, tuple):

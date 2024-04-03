@@ -25,6 +25,14 @@ llama_2_model_sizes = [ "7b", "13b", "34b", "70b" ]
 supported_model_repos.extend([
     f"meta-llama/llama-2-{s}-hf" for s in llama_2_model_sizes
 ])
+supported_model_repos.extend([
+    f"meta-llama/llama-2-{s}-chat-hf" for s in llama_2_model_sizes
+])
+
+# Mistral models
+supported_model_repos = [
+    "mistralai/Mistral-7B-Instruct-v0.2"
+]
 
 # Tinyllama models
 tinyllama_model_sizes = [ "15m", "42m", "110m" ]

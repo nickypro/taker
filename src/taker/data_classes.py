@@ -7,6 +7,8 @@ from torch import Tensor
 import pandas as pd
 import wandb
 from welford_torch import Welford
+from transformers import BitsAndBytesConfig
+
 
 ######################################################################################
 # Functional Conversion Data Classes
@@ -31,6 +33,7 @@ class DtypeMap():
             "fp16": torch.float16,
             "fp32": torch.float32,
             "fp64": torch.float64,
+            "bfp16": torch.bfloat16,
         }
         return dtype_map[self.str_dtype]
 
@@ -44,11 +47,12 @@ class DtypeMap():
 
         # Auto type from string
         args = {
-            "int4": {dtype_key: self._dtype, "load_in_4bit": True},
-            "int8": {dtype_key: self._dtype, "load_in_8bit": True},
+            "int4": {dtype_key: self._dtype, "quantization_config": BitsAndBytesConfig(load_in_4bit=True)},
+            "int8": {dtype_key: self._dtype, "quantization_config": BitsAndBytesConfig(load_in_8bit=True)},
             "fp16": {dtype_key: self._dtype},
             "fp32": {dtype_key: self._dtype},
             "fp64": {dtype_key: self._dtype},
+            "bfp16": {dtype_key: self._dtype},
         }
         return args[self.str_dtype]
 
@@ -388,6 +392,9 @@ class RunDataHistory:
             areas[k] = area / total_area
         self.history[-1].areas = areas
 
+    def length(self):
+        return len(self.history)
+
 ######################################################################################
 # Activation Collector Data Class
 ######################################################################################
@@ -537,6 +544,9 @@ class PruningConfig:
     scoring_normalization: str = "orig" # "original" or "loss_normed"
     ff_scoring: str = "abs"
 
+    attn_offset_mode: str = "zero"
+    ff_offset_mode:   str = "zero"
+
     attn_scoring: str = "abs"
     attn_mode: str = "pre-out"
     svd_attn: bool = False
@@ -556,6 +566,9 @@ class PruningConfig:
     n_steps: int = 1
     wandb_run_name: Optional[str] = None
     misc: dict = None
+
+    save: bool = False
+    save_subdirectory: str = None
 
     @property
     def model_size(self): # legacy code
