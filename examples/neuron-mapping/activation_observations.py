@@ -77,10 +77,17 @@ def get_activations(c: PruningConfig, datasets: list[str]):
             dataset,
             c.collection_sample_size,
             c.attn_mode,
-            collect_attn=True
+            collect_attn=True,
+            collect_ids=True,
+            random_subset_frac=0.01
             )
 
-        results[dataset] = midlayer_activations.attn.orig
+        results[dataset]["ff_activations"] = midlayer_activations.raw.ff
+        results[dataset]["attn_activations"] = midlayer_activations.raw.attn
+        results[dataset]["ff_summary"] = midlayer_activations.ff
+        results[dataset]["attn_summary"] = midlayer_activations.attn
+        results[dataset]["input_ids"] = midlayer_activations["raw"]["input_ids"]
+        results[dataset]["expected_ids"] = midlayer_activations["raw"]["expected_ids"]
 
     return results
 
