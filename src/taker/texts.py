@@ -124,19 +124,6 @@ class DatasetFilters:
             return _dataset.filter(filter_example)
         return filter_dataset
 
-def get_cifar_dataset_configs():
-    cifar20_datasets = ["aquatic_mammals", "fish", "flowers", "food_containers", "fruit_and_vegetables", "household_electrical_devices", "household_furniture", "insects", "large_carnivores", "large_outdoor", "large_omnivores_and_herbivores", "medium_mammals", "non_insect_invertebrates", "people", "reptiles", "small_mammals", "trees", "veh1", "veh2"]
-    return [EvalConfig(f"cifar20-{dataset}",
-                       dataset_repo = "cifar100",
-                       dataset_type = "image-classification",
-                       dataset_split = ["train", "test"],
-                       is_train_mode = True,
-                       dataset_image_key = "img",
-                       streaming = False,
-                       dataset_image_label_key = "coarse_label",
-                       dataset_filter=DatasetFilters.filter_cifar(count),
-                       ) for count, dataset in enumerate(cifar20_datasets)]
-    
     @staticmethod
     def filter_pile_FreeLaw(_dataset):
         def filter_pile_FreeLaw_example(example):
@@ -242,7 +229,19 @@ def get_cifar_dataset_configs():
         pile_Gutenberg_dataset = _dataset.filter(filter_pile_Gutenberg_example)
         return pile_Gutenberg_dataset
     
-        
+def get_cifar_dataset_configs():
+    cifar20_datasets = ["aquatic_mammals", "fish", "flowers", "food_containers", "fruit_and_vegetables", "household_electrical_devices", "household_furniture", "insects", "large_carnivores", "large_outdoor", "large_omnivores_and_herbivores", "medium_mammals", "non_insect_invertebrates", "people", "reptiles", "small_mammals", "trees", "veh1", "veh2"]
+    return [EvalConfig(f"cifar20-{dataset}",
+                       dataset_repo = "cifar100",
+                       dataset_type = "image-classification",
+                       dataset_split = ["train", "test"],
+                       is_train_mode = True,
+                       dataset_image_key = "img",
+                       streaming = False,
+                       dataset_image_label_key = "coarse_label",
+                       dataset_filter=DatasetFilters.filter_cifar(count),
+                       ) for count, dataset in enumerate(cifar20_datasets)]
+    
     
 
 def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
@@ -414,15 +413,6 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_type = "image-classification",
             dataset_image_key = "img",
             dataset_image_label_key = "coarse_label",
-        ),
-        EvalConfig("cifar20-split",
-            dataset_repo = "cifar100",
-            dataset_type = "image-classification",
-            dataset_split = ["train", "test"],
-            is_train_mode = True,
-            dataset_image_key = "img",
-            dataset_image_label_key = "coarse_label",
-            dataset_filter=DatasetFilters.filter_veh2,
         ),
         EvalConfig("emotion",
             dataset_repo = "dair-ai/emotion",

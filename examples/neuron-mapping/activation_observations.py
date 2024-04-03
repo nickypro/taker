@@ -73,10 +73,10 @@ def get_activations(c: PruningConfig, datasets: list[str]):
     results = {}
     for dataset in datasets:
         midlayer_activations = get_midlayer_activations(
-            opt,
-            dataset,
-            c.collection_sample_size,
-            c.attn_mode,
+            opt=opt,
+            dataset_name=dataset,
+            sample_size=c.collection_sample_size,
+            attn_mode=c.attn_mode,
             collect_attn=True,
             collect_ids=True,
             random_subset_frac=0.01
