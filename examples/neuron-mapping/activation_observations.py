@@ -125,4 +125,4 @@ print("file saved to: ", filepath)
 # filepath = "saved_tensors/llama-7b/test_activations-llama-7b-recent.pt"
 loaded_data = load_pt_file(filepath)["physics"]
 
-print(loaded_data["attention"])
+print(loaded_data["attn"])
