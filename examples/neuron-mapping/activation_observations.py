@@ -10,6 +10,8 @@ from taker.model import Model
 from taker.texts import infer_dataset_config
 from taker.eval import evaluate_all
 
+print("starting activation observations")
+
 c = PruningConfig(
     wandb_project = "testing", # repo to push results to
     # model_repo   = "nickypro/tinyllama-15M",
@@ -26,7 +28,7 @@ c = PruningConfig(
     cripple   = "physics",          # the “unlearned” dataset
     additional_datasets=tuple(), # any extra datasets to evaluate on
     recalculate_activations = False, # iterative vs non-iterative
-    dtype = "int8",
+    dtype = "int4",
     n_steps = 1,
 )
 
@@ -82,13 +84,11 @@ def get_activations(c: PruningConfig, datasets: list[str]):
             random_subset_frac=0.01
             )
 
-        results[dataset]["ff_activations"] = midlayer_activations.raw.ff
-        results[dataset]["attn_activations"] = midlayer_activations.raw.attn
-        results[dataset]["ff_summary"] = midlayer_activations.ff
-        results[dataset]["attn_summary"] = midlayer_activations.attn
-        results[dataset]["input_ids"] = midlayer_activations["raw"]["input_ids"]
-        results[dataset]["expected_ids"] = midlayer_activations["raw"]["expected_ids"]
-
+        results[dataset] = {}
+        results[dataset]["criteria"] = midlayer_activations.raw["criteria"]
+        results[dataset]["attn"] = midlayer_activations.raw["attn"]
+        results[dataset]["input_ids"] = midlayer_activations.raw["input_ids"]
+        results[dataset]["expected_ids"] = midlayer_activations.raw["expected_ids"]
     return results
 
 all_datasets = ["biology",
@@ -121,6 +121,8 @@ data = get_activations(c, test_datasets)
 
 filepath = save_data_dict("llama-7b", data, "test_activations")
 print("file saved to: ", filepath)
+
+# filepath = "saved_tensors/llama-7b/test_activations-llama-7b-recent.pt"
 loaded_data = load_pt_file(filepath)["physics"]
 
-print(loaded_data)
+print(loaded_data["attention"])
