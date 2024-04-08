@@ -84,7 +84,6 @@ class Model():
                 and (use_accelerator) \
                 and (torch.cuda.device_count() > 1):
             self.use_accelerator = True
-        self.dtype = dtype
         self.svd_attn = svd_attn
 
         # Handle devices and multi-gpu stuff.
@@ -123,6 +122,7 @@ class Model():
         self.dtype_map = DtypeMap(dtype, torch_dtype)
         self.dtype = self.dtype_map._dtype
         self.dtype_args = self.dtype_map._dtype_args
+        self.use_quantization = "quantization_config" in self.dtype_args
 
         # eval mode or train mode
         self.eval_mode = eval_mode
@@ -218,7 +218,7 @@ class Model():
 
         # Import model config
         self.cfg = convert_hf_model_config(self.model_repo)
-        self.cfg.is_low_precision = self.dtype_map.is_low_precision
+        self.cfg.is_low_precision = self.dtype_map.is_low_precision or self.use_quantization
 
         if do_model_import:
             self.import_models(**kwargs)
@@ -344,6 +344,8 @@ class Model():
         if self.use_accelerator: # If using accelerator, init handles multi-device
             return
         if self.dtype_map.is_low_precision: # 8bit & 4bit mode handled by accelerator
+            return
+        if self.use_quantization:
             return
         orig_device = self.device
         self.device = device

@@ -15,6 +15,17 @@ from transformers import BitsAndBytesConfig
 ######################################################################################
 
 # Class for storing dtype as string
+@dataclass
+class QDtypeConfigs:
+    int8 = BitsAndBytesConfig(load_in_8bit=True)
+    int4 = BitsAndBytesConfig(load_in_4bit=True)
+    nf4  = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16
+    )
+
 class DtypeMap():
     def __init__(self, str_dtype=None, torch_dtype=None):
         self.str_dtype = str_dtype
@@ -34,12 +45,14 @@ class DtypeMap():
             "fp32": torch.float32,
             "fp64": torch.float64,
             "bfp16": torch.bfloat16,
+            "nf4": torch.bfloat16,
         }
         return dtype_map[self.str_dtype]
 
     @property
     def _dtype_args(self):
         dtype_key = "torch_dtype"
+        quant_conf = "quantization_config"
 
         # Manual Override
         if self.torch_dtype is not None:
@@ -47,8 +60,9 @@ class DtypeMap():
 
         # Auto type from string
         args = {
-            "int4": {dtype_key: self._dtype, "quantization_config": BitsAndBytesConfig(load_in_4bit=True)},
-            "int8": {dtype_key: self._dtype, "quantization_config": BitsAndBytesConfig(load_in_8bit=True)},
+            "nf4" : {dtype_key: self._dtype, quant_conf: QDtypeConfigs.nf4},
+            "int4": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.int4},
+            "int8": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.int8},
             "fp16": {dtype_key: self._dtype},
             "fp32": {dtype_key: self._dtype},
             "fp64": {dtype_key: self._dtype},
