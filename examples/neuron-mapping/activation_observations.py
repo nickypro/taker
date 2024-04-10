@@ -90,7 +90,7 @@ def get_activations(c: PruningConfig, datasets: list[str]):
         results["input_ids"] = midlayer_activations.raw["input_ids"]
         results["expected_ids"] = midlayer_activations.raw["expected_ids"]
         
-        filepath = save_data_dict("llama-7b", data, f"{dataset}_activations")
+        filepath = save_data_dict("llama-7b", results, f"{dataset}_activations")
         print(f"file for {dataset} activations saved to: ", filepath)
         saved_files.append(filepath)
         
