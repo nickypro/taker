@@ -71,7 +71,7 @@ def get_activations(c: PruningConfig, datasets: list[str]):
         model_device=c.model_device,
         mask_fn=c.mask_fn,
         )
-
+    saved_files = []
     for dataset in datasets:
         midlayer_activations = get_midlayer_activations(
             opt=opt,
@@ -91,9 +91,10 @@ def get_activations(c: PruningConfig, datasets: list[str]):
         results["expected_ids"] = midlayer_activations.raw["expected_ids"]
         
         filepath = save_data_dict("llama-7b", data, f"{dataset}_activations")
-        print(f"file for {dataset} activations saved to: ", filepath) 
+        print(f"file for {dataset} activations saved to: ", filepath)
+        saved_files.append(filepath)
         
-    return results
+    return saved_files
 
 all_datasets = ["biology",
             "chemistry", 
