@@ -76,22 +76,25 @@ class Generators:
         buffer_size = eval_config.sliding_window_buffer_size
         step_size   = eval_config.sliding_window_step_size
         dataset_text_key = eval_config.dataset_text_key
-        eval_config.start_index = buffer_size - step_size - 1
+        start_index = buffer_size - step_size - 1
 
         def get_sliding_window_outputs(
                 model: Model,
                 ids: Tensor
             ):
             ids = torch.tensor([ids], device=model.device)
-            expected_ids = ids[..., 1:]
-            logits = model.get_all_logits(input_ids=ids)[..., :-1, :]
-            yield (logits, expected_ids, {})
+            expected_ids = ids[..., start_index:]
+            logits = model.get_all_logits(input_ids=ids)[..., start_index-1:-1, :]
+            # logits = logits.reshape(-1, logits.shape[-1])
+            # expected_ids = expected_ids.reshape(-1)
+            return (logits, expected_ids, {})
 
         buffer_tokens = [] # Initialize the buffer
         token_count   = 0  # Initialize the token counter
 
         for sample in dataset:
-            tokenized_text = model.tokenizer.tokenize(sample[dataset_text_key])
+            text = sample[dataset_text_key] + "\n"
+            tokenized_text = model.tokenizer.tokenize(text)
             buffer_tokens.extend(tokenized_text)
 
             while len(buffer_tokens) >= buffer_size:
@@ -532,7 +535,7 @@ class Evaluator:
 
             # If start index != 0, skip the first tokens
             if c.start_index != 0:
-                logits       = logits[..., c.start_index:]
+                logits       = logits[..., c.start_index:, :]
                 expected_ids = expected_ids[..., c.start_index:]
 
             # Assess performance on a sample
@@ -646,6 +649,11 @@ def choose_functions(eval_config):
         evaluator = Evaluator().evaluate_mia
         return generator, evaluator
 
+    if eval_config.dataset_type == "sliding-window":
+        generator = ImageGenerators.get_sliding_window_generator
+        evaluator = Evaluator().evaluate_dataset
+        return generator, evaluator
+
     evaluator = Evaluator().evaluate_dataset
     if eval_config.masked_model:
         return Generators.get_masked_generator, evaluator
@@ -670,7 +678,8 @@ def run_evaluation(model: Model,
     generator = get_generator(model, eval_config)
 
     # Run Evaluation
-    out: EvalOutput = dataset_evaluator(generator, eval_config)
+    with torch.no_grad():
+        out: EvalOutput = dataset_evaluator(generator, eval_config)
     out.misc["eval_config"] = eval_config.to_dict()
 
     return out
