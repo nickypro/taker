@@ -72,7 +72,6 @@ def get_activations(c: PruningConfig, datasets: list[str]):
         mask_fn=c.mask_fn,
         )
 
-    results = {}
     for dataset in datasets:
         midlayer_activations = get_midlayer_activations(
             opt=opt,
@@ -83,12 +82,17 @@ def get_activations(c: PruningConfig, datasets: list[str]):
             collect_ids=True,
             random_subset_frac=0.01
             )
-
-        results[dataset] = {}
-        results[dataset]["criteria"] = midlayer_activations.raw["criteria"]
-        results[dataset]["attn"] = midlayer_activations.raw["attn"]
-        results[dataset]["input_ids"] = midlayer_activations.raw["input_ids"]
-        results[dataset]["expected_ids"] = midlayer_activations.raw["expected_ids"]
+        
+        results = {}
+        results["dataset"] = dataset
+        results["criteria"] = midlayer_activations.raw["criteria"]
+        results["attn"] = midlayer_activations.raw["attn"]
+        results["input_ids"] = midlayer_activations.raw["input_ids"]
+        results["expected_ids"] = midlayer_activations.raw["expected_ids"]
+        
+        filepath = save_data_dict("llama-7b", data, f"{dataset} activations")
+        print(f"file for {dataset} activations saved to: ", filepath) 
+        
     return results
 
 all_datasets = ["biology",
@@ -117,12 +121,12 @@ all_datasets = ["biology",
 
 test_datasets = ["physics", "math", "code", "pile_Github", "pile_HackerNews"]
 
-data = get_activations(c, test_datasets)
+data = get_activations(c, all_datasets)
 
-filepath = save_data_dict("llama-7b", data, "test_activations")
-print("file saved to: ", filepath)
+# filepath = save_data_dict("llama-7b", data, "test_activations")
+# print("file saved to: ", filepath)
 
 # filepath = "saved_tensors/llama-7b/test_activations-llama-7b-recent.pt"
-loaded_data = load_pt_file(filepath)["physics"]
+# loaded_data = load_pt_file(filepath)["physics"]
 
-print(loaded_data["attn"])
+# print(loaded_data["attn"])
