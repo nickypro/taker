@@ -115,7 +115,7 @@ all_datasets = ["biology",
             "pile_Wikipedia",
             "poems"]
 
-test_datasets = ["physics"]
+test_datasets = ["physics", "math", "code", "pile_Github", "pile_HackerNews"]
 
 data = get_activations(c, test_datasets)
 
