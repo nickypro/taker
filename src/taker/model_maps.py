@@ -461,6 +461,7 @@ def build_llama_layer_map(cfg: ConfigClass):
         "ln2.w"         : "post_attention_layernorm.weight",
         "ln2.b"         : None,
 
+        "mlp"           : "mlp",
         "mlp.in_proj"   : "mlp.up_proj",
         "mlp.gate_proj" : "mlp.gate_proj",
         "mlp.W_in"      : "mlp.up_proj.weight",
@@ -559,6 +560,7 @@ def build_mistral_layer_map(cfg: ConfigClass):
         "ln2.w"         : "post_attention_layernorm.weight",
         "ln2.b"         : None,
 
+        "mlp"           : "mlp",
         "mlp.in_proj"   : "mlp.up_proj",
         "mlp.gate_proj" : "mlp.gate_proj",
         "mlp.W_in"      : "mlp.up_proj.weight",
@@ -663,6 +665,7 @@ def build_gemma_layer_map(cfg: ConfigClass):
         "ln2.w"         : "post_attention_layernorm.weight",
         "ln2.b"         : None,
 
+        "mlp"           : "mlp",
         "mlp.in_proj"   : "mlp.up_proj",
         "mlp.gate_proj" : "mlp.gate_proj",
         "mlp.W_in"      : "mlp.up_proj.weight",
@@ -765,6 +768,7 @@ def build_gpt_neox_layer_map(cfg: ConfigClass):
         "ln2.w"     : "post_attention_layernorm.weight",
         "ln2.b"     : "post_attention_layernorm.bias",
 
+        "mlp"         : "mlp",
         "mlp.in_proj" : "mlp.dense_h_to_4h",
         "mlp.out_proj": "mlp.dense_4h_to_h",
         "mlp.W_in"  : "mlp.dense_h_to_4h.weight",
@@ -870,6 +874,7 @@ def build_gpt2_layer_map(cfg: ConfigClass):
         "ln2"       : "ln_2",
         "ln2.w"     : "ln_2.weight",
         "ln2.b"     : "ln_2.bias",
+        "mlp"         : "mlp",
         "mlp.in_proj" : "mlp.c_fc",
         "mlp.out_proj": "mlp.c_proj",
         "mlp.W_in"  : lambda layer, inpt=None: gpt2_mlp_in_weight(layer, inpt),
@@ -974,6 +979,7 @@ def build_roberta_layer_map(cfg: ConfigClass):
         "ln2.w"         : "output.LayerNorm.weight",
         "ln2.b"         : "output.LayerNorm.bias",
 
+        # "mlp"           : "intermediate",
         "mlp.in_proj"   : "intermediate.dense",
         "mlp.W_in"      : "intermediate.dense.weight",
         "mlp.b_in"      : "intermediate.dense.bias",
@@ -1080,6 +1086,7 @@ def build_vit_layer_map(cfg: ConfigClass):
         "ln2.w"         : "layernorm_after.weight",
         "ln2.b"         : "layernorm_after.bias",
 
+        # "mlp"           : "intermediate",
         "mlp.in_proj"   : "intermediate.dense",
         "mlp.W_in"      : "intermediate.dense.weight",
         "mlp.b_in"      : "intermediate.dense.bias",
