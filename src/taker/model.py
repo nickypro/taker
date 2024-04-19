@@ -827,6 +827,7 @@ class Model():
         # get ff outputs
         ff_out =  []
         for i in range(self.cfg.n_layers):
+            # TODO: Fix this for the case where the final hidden state is post-layernorm
             ff_out.append( hidden_states[i+1] - attention_out[i] - hidden_states[i] )
         ff_out = self.out_stack( ff_out ).squeeze().detach().detach()
 
