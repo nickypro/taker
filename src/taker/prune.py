@@ -11,7 +11,7 @@ from .data_classes import PruningConfig, RunDataHistory, \
 from .eval import evaluate_all
 from .scoring import score_indices_by, score_indices
 from .activations import get_midlayer_activations, get_top_frac, \
-    choose_attn_heads_by, save_timestamped_tensor_dict
+    choose_attn_heads_by, save_timestamped_tensor_dict, save_tensor_dict
 from .texts import prepare
 
 def prune_and_evaluate(
@@ -72,7 +72,7 @@ def score_and_prune( opt: Model,
             focus_activations_data: ActivationOverview,
             cripple_activations_data: ActivationOverview,
             pruning_config: PruningConfig,
-            save=False,
+            save=True,
         ):
     # Get the top fraction FF activations and prune
     ff_frac, ff_eps     = pruning_config.ff_frac,   pruning_config.ff_eps
@@ -146,6 +146,8 @@ def score_and_prune( opt: Model,
         "attn_threshold": attn_threshold if do_attn else 0,
         "ff_del": float( torch.sum(ff_criteria) ) if do_ff else 0,
         "attn_del": float( torch.sum(attn_criteria) ) if do_attn else 0,
+        "ff_scores": ff_scores.cpu().numpy(),
+        "ff_criteria": ff_criteria.cpu().numpy(),
     }})
 
     data.update({'deletions_per_layer': {
@@ -319,7 +321,7 @@ def run_pruning(c: PruningConfig):
     print(history.history[-1])
     print(history.df.T)
     print(history.df.T.to_csv())
-
+    # print("masks: ", opt.masks["mlp_pre_out"])
     return opt, history
 
 ######################################################################################

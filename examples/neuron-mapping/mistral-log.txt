@@ -1,0 +1,2084 @@
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+run started at:  2024-03-15 01:50:12.005664
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+trying to find correct ff_frac for chemistry with target accuracy -0.8
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+time to get data for dataset:  chemistry is  9:35:53.623159 results:  {'unpruned_accuracy': -1, 'target_accuracy': -0.8, 'ff_frac': 0.064, 'chemistry': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'civil': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'code': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'emotion': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'math': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'physics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_ArXiv': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_Enron_Emails': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_EuroParl': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_FreeLaw': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_Github': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_Gutenberg': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_HackerNews': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_NIH_ExPorter': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_PhilPapers': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_PubMed_Abstracts': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_PubMed_Central': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_StackExchange': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_Ubuntu_IRC': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_USPTO_Backgrounds': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_Wikipedia': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'poems': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'biology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:abstract_algebra': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:anatomy': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:astronomy': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:business_ethics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:clinical_knowledge': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_biology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_chemistry': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_computer_science': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_mathematics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_medicine': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_physics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:computer_security': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:conceptual_physics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:econometrics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:electrical_engineering': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:elementary_mathematics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:formal_logic': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:global_facts': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_biology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_chemistry': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_computer_science': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_european_history': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_geography': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_government_and_politics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_macroeconomics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_mathematics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_microeconomics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_physics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_psychology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_statistics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_us_history': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_world_history': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:human_aging': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:human_sexuality': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:international_law': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:jurisprudence': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:logical_fallacies': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:machine_learning': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:management': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:marketing': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:medical_genetics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:miscellaneous': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:moral_disputes': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:moral_scenarios': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:nutrition': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:philosophy': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:prehistory': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:professional_accounting': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:professional_law': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:professional_medicine': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:professional_psychology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:public_relations': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:security_studies': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:sociology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:us_foreign_policy': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:virology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:world_religions': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}}
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+trying to find correct ff_frac for civil with target accuracy -0.8
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+time to get data for dataset:  civil is  8:41:39.793750 results:  {'unpruned_accuracy': -1, 'target_accuracy': -0.8, 'ff_frac': 0.064, 'chemistry': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'civil': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'code': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'emotion': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'math': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'physics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_ArXiv': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_Enron_Emails': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_EuroParl': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_FreeLaw': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_Github': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_Gutenberg': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_HackerNews': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_NIH_ExPorter': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_PhilPapers': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_PubMed_Abstracts': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_PubMed_Central': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_StackExchange': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_Ubuntu_IRC': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_USPTO_Backgrounds': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'pile_Wikipedia': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'poems': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'biology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:abstract_algebra': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:anatomy': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:astronomy': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:business_ethics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:clinical_knowledge': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_biology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_chemistry': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_computer_science': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_mathematics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_medicine': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:college_physics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:computer_security': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:conceptual_physics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:econometrics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:electrical_engineering': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:elementary_mathematics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:formal_logic': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:global_facts': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_biology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_chemistry': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_computer_science': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_european_history': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_geography': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_government_and_politics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_macroeconomics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_mathematics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_microeconomics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_physics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_psychology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_statistics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_us_history': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:high_school_world_history': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:human_aging': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:human_sexuality': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:international_law': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:jurisprudence': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:logical_fallacies': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:machine_learning': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:management': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:marketing': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:medical_genetics': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:miscellaneous': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:moral_disputes': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:moral_scenarios': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:nutrition': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:philosophy': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:prehistory': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:professional_accounting': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:professional_law': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:professional_medicine': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:professional_psychology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:public_relations': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:security_studies': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:sociology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:us_foreign_policy': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:virology': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}, 'mmlu:world_religions': {'unpruned_accuracy': -1, 'pruned_accuracy': -1, 'accuracy_difference': 0, 'accuracy_ratio': 1.0}}
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+trying to find correct ff_frac for code with target accuracy -0.8
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+Warning: 'pile_deduped' has no 'test' split. Using 'train' split and skipping 100 texts instead.
+- Loaded mistralai/Mistral-7b-instruct-v0.2
+ - Registered 32 Attention Layers
+W

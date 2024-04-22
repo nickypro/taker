@@ -5,8 +5,6 @@ from taker.prune import run_pruning
 import torch
 
 def compare_pruned_ff_criteria(cripple_repos: list[str], model_size: str):
-    # cripple_repos = ["physics", "bio", "code"]
-    print("model_size: ",model_size)
     directory = "/home/ubuntu/taker-rashid/examples/neuron-mapping/saved_tensors/"+model_size+"/"
     focus_repo = "pile"
     suffix = "-"+model_size+"-recent.pt"
@@ -29,65 +27,39 @@ def compare_pruned_ff_criteria(cripple_repos: list[str], model_size: str):
             ratio = torch.sum(matches)/torch.sum(repo1_ff_criteria)
             ratios[repo1][repo2] = ratio
             
-    return ratios 
+    return ratios
     
-def get_shared_pruning_data(
-        model_repo: str = "nickypro/tinyllama-15M",
-        cripple_repos: list[str] = ["physics", "biology","chemistry", "math", "code"],
-        focus_repo: str = "pile"
-    ):
-    
-    # Configure initial model and tests
-    c = PruningConfig(
-        wandb_project = "testing", # repo to push results to
-        model_repo   = model_repo,
-        # "metallama/llama-2-7b"
-        token_limit  = 1000,  # trim the input to this max length
-        run_pre_test = True,  # evaluate the unpruned model
-        eval_sample_size = 1e3,
-        collection_sample_size = 1e3,
-        # Removals parameters
-        ff_frac   = 0.2,     # % of feed forward neurons to prune
-        attn_frac = 0.00,     # % of attention neurons to prune
-        focus     = focus_repo, # the “reference” dataset
-        cripple   = "physics",          # the “unlearned” dataset
-        additional_datasets=tuple(), # any extra datasets to evaluate on
-        recalculate_activations = False, # iterative vs non-iterative
-        n_steps = 1,
-        save=True,
-        save_subdirectory = "/home/ubuntu/tetra/taker/examples/neuron-mapping"
-    )
 
-    # Parse CLI for arguments
-    # c, args = cli_parser(c)
+# Configure initial model and tests
+c = PruningConfig(
+    wandb_project = "testing", # repo to push results to
+    # model_repo   = "nickypro/tinyllama-15M",
+    # model_repo   = "facebook/opt-1.3b",
+    # model_repo   = "nickypro/llama-7b-hf-rand",
+    model_repo   = "nickypro/mistral-7b-rand",
+    token_limit  = 1000,  # trim the input to this max length
+    run_pre_test = False,  # evaluate the unpruned model
+    eval_sample_size = 1e5,
+    collection_sample_size = 1e5,
+    # Removals parameters
+    ff_frac   = 0.01,     # % of feed forward neurons to prune
+    attn_frac = 0.00,     # % of attention neurons to prune
+    focus     = "pile", # the “reference” dataset
+    cripple   = "physics",          # the “unlearned” dataset
+    additional_datasets=tuple(), # any extra datasets to evaluate on
+    recalculate_activations = False, # iterative vs non-iterative
+    dtype = "int4",
+    n_steps = 1,
+)
 
-    #list of repos to cripple
-    ff_frac_to_prune = [0.01,0.02,0.05,0.1,0.2]
-    model_size = c.model_repo.split('-')[-1]
+#list of repos to cripple
+cripple_repos = ["emotion", "pile_FreeLaw", "pile_PubMed_Abstracts", "pile_PubMed_Central", "pile_NIH_ExPorter", "pile_Enron_Emails", "pile_Github", "pile_StackExchange", "pile_HackerNews", "pile_ArXiv", "pile_Wikipedia", "pile_Ubuntu_IRC", "pile_USPTO_Backgrounds", "pile_PhilPapers", "pile_EuroParl", "pile_Gutenberg", "pile_PhilPapers", "pile_EuroParl", "pile_Gutenberg", 'code', 'poems', 'civil', 'chemistry']
+#cripple_repos = ['physics', 'biology', 'math']
 
-    # Run the iterated pruning for each cripple repo, for a range of ff_frac pruned
-    shared_pruning_data = {}
-    for ff_frac in ff_frac_to_prune:
-        c.ff_frac = ff_frac
-        for repo in cripple_repos:
-            c.cripple = repo
-            print("running iteration for ", c.cripple, " vs ", c.focus, "with ff_frac: ", ff_frac)
-            with torch.no_grad():
-                model, history = run_pruning(c)
-       # ratios = compare_pruned_ff_criteria(cripple_repos, model_size)
-       # shared_pruning_data[ff_frac] = ratios
-    
-    return {}
+#prune each repo and save tensors, doing some extra computation but only really need ff_scores for each repo, will do actual pruning for different values of ff_frac in compare.py
+for repo in cripple_repos:
+    c.cripple = repo
+    print("running iteration for ", c.cripple, " vs ", c.focus, "with ff_frac: ", c.ff_frac)
+    with torch.no_grad():
+        model, history = run_pruning(c)
 
-cifar20_datasets = ["aquatic_mammals", "fish", "flowers", "food_containers", "fruit_and_vegetables", "household_electrical_devices", 
-                    "household_furniture", "insects", "large_carnivores", "large_outdoor", "large_omnivores_and_herbivores", "medium_mammals",
-                    "non_insect_invertebrates", "people", "reptiles", "small_mammals"]
-
-shared_pruning_data = get_shared_pruning_data(
-    model_repo="Ahmed9275/Vit-Cifar100",
-    cripple_repos=cifar20_datasets,
-    focus_repo="cifar20-split")
-print(shared_pruning_data)
-
-# shared_pruning_data = get_shared_pruning_data("nickypro/tinyllama-15M")
-# print(shared_pruning_data)
