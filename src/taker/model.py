@@ -68,6 +68,7 @@ class Model():
             use_inverse_out: bool = False,
             eval_mode: bool = True,
             collect_midlayers: bool = True,
+            add_hooks: bool = True,
         ):
         """
         OPT Model with functions for extracting activations.
@@ -158,7 +159,7 @@ class Model():
         self.post_biases: dict = None
         self.attn_pre_out_mode: str = None
         self.mlp_pre_out_mode: str = None
-        self.init_model()
+        self.init_model(add_hooks=add_hooks)
         self.limit = limit
 
         if not collect_midlayers:
@@ -185,6 +186,7 @@ class Model():
         ):
         # Import model components (Default: Causal Language Models)
         device_map = self.device_map
+        device_map = "cuda"
 
         if self.cfg.model_modality == "vision":
             from transformers import AutoImageProcessor, AutoModelForImageClassification
@@ -210,6 +212,7 @@ class Model():
     def init_model( self,
             model_repo: Optional[str] = None,
             do_model_import: bool = True,
+            add_hooks: bool = True,
             **kwargs,
         ):
         if not model_repo is None:
@@ -247,6 +250,10 @@ class Model():
         self.masks = {}
         self.actadds = {}
         self.post_biases = {}
+
+        # Add option to not add hooks (e.g: early testing)
+        if not add_hooks:
+            return self
 
         self.register_activations()
         self.register_masks()
