@@ -3,27 +3,25 @@ Code for getting attention activations and evaluating model. Includes specific
 references to functions from texts.py, so is not included in model.py Model.
 """
 
-import os
 import datetime
 import math
+import os
 # Import types for typed python
-from typing import Optional, Union, Dict, Tuple, List, Callable
-from torch import Tensor
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
-import torch
-import numpy as np
 import einops
-from tqdm import tqdm
 import matplotlib.pyplot as plt
+import numpy as np
+import torch
+from torch import Tensor
+from tqdm import tqdm
 
+from .data_classes import (ActivationCollector, ActivationOverview,
+                           ActivationSummaryHolder, EvalConfig, RunDataItem)
+from .eval import evaluate_all
 # Import from this project
 from .model import Model
-from .texts import prepare
-from .texts import infer_dataset_config, prepare_dataset
-from .data_classes import RunDataItem, ActivationCollector, \
-                          ActivationSummaryHolder, ActivationOverview, \
-                          EvalConfig
-from .eval import evaluate_all
+from .texts import infer_dataset_config, prepare, prepare_dataset
 
 ######################################################################################
 # New code for getting attention activations and evaluating model
@@ -103,7 +101,9 @@ def get_midlayer_activations( opt: Model,
         dataset_texts_to_skip: int = None,
         random_subset_frac: float = None,
         eval_config: EvalConfig = None,
-        masked_mode: bool = False
+        masked_mode: bool = False,
+        ff_peak: Tensor = None,
+        attn_peak: Tensor = None,
     ):
     """Gets the number of activations of the midlayer ('key' layer) of MLPs for
     each layer, as well as for the pre_out layer of attention for each layer.
@@ -179,6 +179,8 @@ def get_midlayer_activations( opt: Model,
         ff_data = ActivationCollector( ff_shape, opt.output_device, collect_ff )
         ff_data_loss_normed = ActivationCollector( ff_shape, opt.output_device)
         ff_data_log_loss_normed = ActivationCollector( ff_shape, opt.output_device)
+        if ff_peak is not None:
+            ff_data_peak_centered = ActivationCollector(ff_shape, opt.output_device)
 
     # self-attention activation collector
     if do_attn:
@@ -186,6 +188,8 @@ def get_midlayer_activations( opt: Model,
         attn_data = ActivationCollector( attn_shape, opt.output_device, collect_attn )
         attn_data_loss_normed = ActivationCollector( attn_shape, opt.output_device)
         attn_data_log_loss_normed = ActivationCollector( attn_shape, opt.output_device)
+        if attn_peak is not None:
+            attn_data_peak_centered = ActivationCollector(attn_shape, opt.output_device)
 
     if do_collect:
         criteria_raw = []
@@ -299,6 +303,9 @@ def get_midlayer_activations( opt: Model,
                         continue
                     ff_data.add(ff_activation)
 
+                    if ff_peak is not None:
+                        ff_data_peak_centered.add(ff_activation - ff_peak)
+
                     if token_index == 0 or loss is None:
                         continue
                     token_loss = loss[token_index-1]
@@ -311,6 +318,10 @@ def get_midlayer_activations( opt: Model,
                     if not criteria[token_index]:
                         continue
                     attn_data.add(attn_activation)
+
+                    if attn_peak is not None:
+                        #print(f"attn_activation shape: {attn_activation.shape} attn_peak shape: {attn_peak.shape}") #FIXME: delete this line before commiting
+                        attn_data_peak_centered.add(attn_activation - attn_peak)
 
                     if token_index == 0 or loss is None:
                         continue
@@ -338,16 +349,18 @@ def get_midlayer_activations( opt: Model,
     if calculate_ff:
         output["ff"] = ActivationSummaryHolder(
             orig = ff_data.summary(dtype=opt.dtype),
+            peak_centered = ff_data_peak_centered.summary(dtype=opt.dtype, allow_nan=True) if ff_peak is not None else None,
             loss_normed = ff_data_loss_normed.summary(dtype=opt.dtype, allow_nan=True),
             log_loss_normed = ff_data_log_loss_normed.summary(dtype=opt.dtype, allow_nan=True),
         )
     if calculate_attn:
         output["attn"] = ActivationSummaryHolder(
             orig = attn_data.summary(dtype=opt.dtype),
+            peak_centered = attn_data_peak_centered.summary(dtype=opt.dtype, allow_nan=True) if attn_peak is not None else None,
             loss_normed = attn_data_loss_normed.summary(dtype=opt.dtype, allow_nan=True),
             log_loss_normed = attn_data_log_loss_normed.summary(dtype=opt.dtype, allow_nan=True),
         )
-
+    
     # Raw activations of data
     if do_collect:
         output["raw"] = { "criteria": torch.stack(criteria_raw) }

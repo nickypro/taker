@@ -1,14 +1,14 @@
-from typing import List, Dict, Tuple, Union, Optional, Callable
 from dataclasses import dataclass
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+import pandas as pd
 import torch
 from torch import Tensor
-import pandas as pd
-import wandb
-from welford_torch import Welford
 from transformers import BitsAndBytesConfig
+from welford_torch import Welford
 
+import wandb
 
 ######################################################################################
 # Functional Conversion Data Classes
@@ -440,6 +440,7 @@ class ActivationSummary:
 class ActivationSummaryHolder:
     """ Holder for multiple ActivationSummary objects."""
     orig: ActivationSummary
+    peak_centered: ActivationSummary = None
     loss_normed: ActivationSummary = None
     log_loss_normed: ActivationSummary = None
     misc: dict = None
