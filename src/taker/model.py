@@ -59,6 +59,7 @@ class Model():
             limit: int = None,
             model_device: str = None,
             output_device: str = None,
+            device_map: str = None,
             use_accelerator: bool = True,
             dtype: Optional[str] = None,
             torch_dtype: Optional[torch.dtype] = None,
@@ -101,7 +102,7 @@ class Model():
                 self.device = "cpu"
 
         # model device mapping for HuggingFace transformers
-        self.device_map = "auto"
+        self.device_map = device_map or "auto"
         if not self.use_accelerator and self.device != "cuda":
             self.device_map = self.device
 
@@ -186,7 +187,7 @@ class Model():
         ):
         # Import model components (Default: Causal Language Models)
         device_map = self.device_map
-        device_map = "cuda"
+        model_args = {}
 
         if self.cfg.model_modality == "vision":
             from transformers import AutoImageProcessor, AutoModelForImageClassification
@@ -195,7 +196,7 @@ class Model():
             self.processor = self.init_image_processor(device_map) \
                 if processor is None else self.processor
             self.predictor = AutoModelForImageClassification.from_pretrained(
-                self.model_repo, device_map=device_map, **self.dtype_args) \
+                self.model_repo, device_map=device_map, **model_args) \
                 if predictor is None else predictor
         elif self.cfg.model_modality == "language":
             self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_repo, legacy=False) \
@@ -203,7 +204,7 @@ class Model():
             self.processor = None \
                 if processor is None else processor
             self.predictor = AutoModelForCausalLM.from_pretrained(
-                self.model_repo, device_map=device_map, **self.dtype_args) \
+                self.model_repo, device_map=device_map, **model_args) \
                 if predictor is None else predictor
 
         else:
@@ -238,13 +239,13 @@ class Model():
         self.activations = {
             "attn": {},
             "attn_pre_out": {},
-            "ff": {},
+            "mlp": {},
             "mlp_pre_out": {}
         }
         self.do_activations = {
             "attn": True,
             "attn_pre_out": True,
-            "ff": True,
+            "mlp": True,
             "mlp_pre_out": True
         }
         self.masks = {}
@@ -362,6 +363,12 @@ class Model():
             component.to(self.device)
         return self
 
+    def to_out(self, t: Tensor) -> Tensor:
+        if self.use_accelerator or self.device != self.output_device:
+            return t.to(self.output_device)
+        return t
+
+
     def out_stack(self, tensor_list: List[Tensor]) -> Tensor:
         if self.use_accelerator or self.device != self.output_device:
             tensor_list = [ t.to(self.output_device) for t in tensor_list ]
@@ -448,6 +455,12 @@ class Model():
                 self.do_activations[component_name] = True
                 _handle = attn_o.register_forward_pre_hook(self.build_input_hook(component_name, name))
                 self.save_hook_handle(_handle, "input-read", "attn.out_proj", layer_index)
+
+        # build normal mlp hook for last layer if possible
+        if "mlp" in layer:
+            attn = layer["attn"]
+            name = pad_zeros( layer_index ) + "-mlp"
+            attn.register_forward_hook(self.build_output_hook("mlp", name))
 
         print( f" - Registered {layer_index+1} Attention Layers" )
 
@@ -880,6 +893,54 @@ class Model():
 
         return inpt, attention_out, ff_out, output
 
+    def get_residual_stream_new( self,
+                text: str | None = None,
+                input_ids: Tensor | None = None,
+                inputs_embeds: Tensor | None = None,
+                limit: Optional[int] = None,
+                **kwargs
+            ) -> Tensor:
+        """
+        Get residual stream at output of each component of transformer:
+        ### inpt attn0 mlp0 attn1 mlp1 ... attnN mlpN output
+        ### 0    1     2    3     4        -3    -2   -1
+        """
+        # run the model
+        if text is not None and input_ids is None:
+            input_ids = self.get_ids(text, limit=limit)
+        if input_ids is not None and inputs_embeds is None:
+            inputs_embeds = self.get_inputs_embeds( input_ids=input_ids, limit=limit )
+        if inputs_embeds is None:
+            raise ValueError( "must provide data: inputs_embeds | input_ids | text" )
+        outputs = self.model( inputs_embeds=inputs_embeds,
+                              output_hidden_states=True, **kwargs )
+
+        # get the hidden states and shapes
+        hidden_states = outputs.hidden_states
+        [d_batch, n_tokens, d_model] = hidden_states[0].shape
+
+        # init residual stream
+        residual_stream = torch.zeros(
+            [d_batch, 2*self.cfg.n_layers+2, n_tokens, d_model],
+            dtype=hidden_states[0].dtype, device=self.output_device,
+        )
+
+        # Fill residual stream with correct information
+        for idx, layer_state in enumerate(hidden_states):
+            residual_stream[:, idx*2] = self.to_out(layer_state)
+        for idx, attn_act in enumerate(self.get_recent_activations("attn")):
+            residual_stream[:, 1 + idx*2] = \
+                residual_stream[:, idx*2] + attn_act[1]
+        try:
+            mlp_outs = self.get_recent_activations("mlp")
+            mlp_out_final = mlp_outs[-1][1]
+            residual_stream[:, -2] = residual_stream[:, -3] + mlp_out_final
+        except:
+            pass
+        residual_stream[:, -1] = outputs.last_hidden_state
+
+        return residual_stream
+
     def get_residual_stream( self,
                 text: Optional[str] = None,
                 input_ids: Optional[Tensor] = None,
@@ -1018,6 +1079,22 @@ class Model():
             attention_mask, input_shape, inpt, past_key_values_length=0
         )
         return attention_mask
+
+
+    # Get the function which takes res[res_index] and returns res[res_index+1]
+    def get_res_func(self, res_index: int):
+        layer_index = res_index // 2
+        L = self.layers[layer_index]
+        if res_index % 2 == 0: # attention
+            def func(x):
+                y = L["attn"]( L["ln1"](x) )[0]
+                return y + x
+        elif res_index % 2 == 1: # mlp
+            def func(x):
+                y = L["mlp"]( L["ln2"](x) )
+                return y + x
+
+        return func
 
     def calculate_attn_out_layer( self,
                 attn_in: Tensor,
