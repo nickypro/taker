@@ -212,6 +212,45 @@ def convert_hf_model_config(official_model_name: str):
             "normalization_type": "LN",
 
         }
+    elif architecture == "PhiForCausalLM":
+        cfg_dict = {
+            "d_model": hf_config.hidden_size,
+            "d_head": hf_config.hidden_size // hf_config.num_attention_heads,
+            "n_heads": hf_config.num_attention_heads,
+            "d_mlp": hf_config.intermediate_size,
+            "n_layers": hf_config.num_hidden_layers,
+            "n_ctx": hf_config.max_position_embeddings,
+            "eps": hf_config.rms_norm_eps,
+            "d_vocab": hf_config.vocab_size,
+            "act_fn": hf_config.hidden_act,
+            #"initializer_range": hf_config.initializer_range,
+            "normalization_type": "LN",
+            "positional_embedding_type": "rotary",
+            "rotary_base": hf_config.rope_theta,
+            "use_local_attn": False,
+            "gated_mlp": False,
+            #"trust_remote_code": True,
+            #"use_attn_scale": True,
+            #"parallel_attn_mlp": True,
+        }
+    elif architecture == "Phi3ForCausalLM":
+        cfg_dict = {
+            "d_model": hf_config.hidden_size,
+            "d_head": hf_config.hidden_size // hf_config.num_attention_heads,
+            "n_heads": hf_config.num_attention_heads,
+            "d_mlp": hf_config.intermediate_size,
+            "n_layers": hf_config.num_hidden_layers,
+            "n_ctx": hf_config.max_position_embeddings,
+            "eps": hf_config.rms_norm_eps,
+            "d_vocab": hf_config.vocab_size,
+            "act_fn": hf_config.hidden_act,
+            "normalization_type": "RMS",
+            "positional_embedding_type": "rotary",
+            "eps": hf_config.rms_norm_eps,
+            "n_key_value_heads": hf_config.num_key_value_heads,
+            "rotary_dim": hf_config.hidden_size // hf_config.num_attention_heads, #?
+            "gated_mlp": True,
+        }
     elif architecture == "ViTForImageClassification":
         cfg_dict = {
             "model_type": "classification",
@@ -681,6 +720,178 @@ def build_gemma_layer_map(cfg: ConfigClass):
     }
     return gemma_layer_map
 
+
+# PHI 1 and 2 models
+####################
+
+phi_model_map = {
+    "model": "model",
+    "layers": "model.layers",
+    "embed": "model.embed_tokens",
+    "embed.W_E": "model.embed_tokens.weight",
+    "ln_final": "model.final_layernorm",
+    "ln_final.w": "model.final_layernorm.weight",
+    "ln_final.b": "model.final_layernorm.bias",
+    "unembed.W_U": "lm_head.weight.T",
+    "unembed.b_U": "lm_head.bias",
+}
+
+def build_phi_layer_map(cfg: ConfigClass):
+    attn_proj_map = {"q": "q_proj", "k": "k_proj", "v": "v_proj", "o": "dense"}
+    mlp_proj_map = {"mlp.W_in": "fc1", "mlp.W_out": "fc2"}
+
+    def phi_qkv_weight(layer, key: str, inpt: Optional[Any]=None):
+        # Prepare shape changing
+        their_shape = "(n_head d_head) d_model"
+        my_shape = "n_head d_model d_head"
+        sizes = generate_sizes_dict(my_shape, cfg)
+
+        # Get attn proj module
+        attn = layer.self_attn
+        attn_proj = get_attrs(attn, attn_proj_map[key])
+
+        # Get mode
+        if inpt is None:
+            W = attn_proj.weight
+            W = einops.rearrange(W, f"{their_shape} -> {my_shape}", **sizes)
+            return W
+        # Set mode
+        W = einops.rearrange(inpt, f"{my_shape} -> {their_shape}", **sizes)
+        update_param(attn_proj, "weight", W)
+
+    def phi_attn_bias(layer, key: str, inpt: Optional[Any]=None):
+        # Prepare shape changing
+        their_shape = "(n_head d_head)"
+        my_shape = "n_head d_head"
+        sizes = generate_sizes_dict(my_shape, cfg)
+
+        # Get attn proj module
+        attn = layer.self_attn
+        attn_proj = get_attrs(attn, attn_proj_map[key])
+
+        # Get mode
+        if inpt is None:
+            b = attn_proj.bias
+            b = einops.rearrange(b, f"{their_shape} -> {my_shape}", **sizes)
+            return b
+        # Set mode
+        b = einops.rearrange(inpt, f"{my_shape} -> {their_shape}", **sizes)
+        update_param(attn_proj, "bias", b)
+
+    def phi_mlp_bias(layer, key: str, inpt: Optional[Any]=None):
+        mlp = layer.mlp
+        _proj = get_attrs(mlp, mlp_proj_map[key]).weight
+        b = torch.zeros(_proj.shape[:-1], dtype=_proj.dtype, device=_proj.device)
+        return b
+
+    phi_layer_map = {
+        "ln1": "input_layernorm",
+        "ln1.w": "input_layernorm.weight",
+        "ln1.b": "input_layernorm.bias",
+        "attn": "self_attn",
+        **generate_attn_qkv_functions(phi_qkv_weight, phi_attn_bias),
+        "attn.W_O": "self_attn.dense.weight",
+        "attn.b_O": "self_attn.dense.bias",
+        "ln2": "input_layernorm",
+        "ln2.w": "input_layernorm.weight",
+        "ln2.b": "input_layernorm.bias",
+        "mlp": "mlp",
+        "activation_fn" : "mlp.act_fn",
+        "mlp.W_in"      : "mlp.fc1.weight",
+        "mlp.b_in"      : lambda layer, _inpt=None: phi_mlp_bias(layer, "mlp.fc1", _inpt),
+        "mlp.W_gate"    : "mlp.fc2.weight",
+        "mlp.b_gate"    : lambda layer, _inpt=None: phi_mlp_bias(layer, "mlp.fc2", _inpt),
+    }
+
+    return phi_layer_map
+
+# PHI-3
+#######
+
+phi3_model_map = {
+    "model": "model",
+    "layers": "model.layers",
+    "embed": "model.embed_tokens",
+    "embed.W_E": "model.embed_tokens.weight",
+    "ln_final": "model.norm",
+    "ln_final.w": "model.norm.weight",
+    "ln_final.b": "model.norm.bias",
+    "unembed.W_U": "lm_head.weight.T",
+    "unembed.b_U": "lm_head.bias",
+}
+
+def build_phi3_layer_map(cfg: ConfigClass):
+    attn_proj_map = {"q": "q_proj", "k": "k_proj", "v": "v_proj", "o": "dense"}
+
+    def phi3_qkv_weight(layer, key: str, inpt: Optional[Any]=None):
+        # Prepare shape changing
+        their_shape = "(n_head d_head) d_model"
+        my_shape = "n_head d_model d_head"
+        sizes = generate_sizes_dict(my_shape, cfg)
+
+        # Attention qkv proj is combined in phi:
+        # op_size = self.num_heads * self.head_dim + 2 * (self.num_key_value_heads * self.head_dim)
+        # self.o_proj = nn.Linear(self.num_heads * self.head_dim, self.hidden_size, bias=False)
+        # self.qkv_proj = nn.Linear(self.hidden_size, op_size, bias=False)
+
+        attn = layer.self_attn
+        attn_proj = get_attrs(attn, attn_proj_map[key])
+
+        # Get mode
+        if inpt is None:
+            W = attn_proj.weight
+            W = einops.rearrange(W, f"{their_shape} -> {my_shape}", **sizes)
+            return W
+        # Set mode
+        W = einops.rearrange(inpt, f"{my_shape} -> {their_shape}", **sizes)
+        update_param(attn_proj, "weight", W)
+
+    def phi3_attn_bias(layer, key: str, inpt: Optional[Any]=None):
+        # Get attn proj module
+        attn = layer.self_attn
+        attn_proj = get_attrs(attn, attn_proj_map[key])
+
+        # Get mode
+        if inpt is None:
+            b = attn_proj.bias
+            return b
+        # Set mode
+        update_param(attn_proj, "bias", inpt)
+
+    def phi3_mlp_bias(layer, key: str, _inpt: Optional[Any]=None):
+        mlp = layer.mlp
+        if key == "mlp.b_in":
+            _proj = mlp.gate_up_proj.weight
+        elif key == "mlp.b_out":
+            _proj = mlp.down_proj.weight
+        else:
+            raise ValueError(f"Unknown MLP bias key {key}")
+
+        b = torch.zeros(_proj.shape[1] // 2 if key == "mlp.b_in" else _proj.shape[0], dtype=_proj.dtype)
+        return b
+
+    phi3_layer_map = {
+        "ln1": "input_layernorm",
+        "ln1.w": "input_layernorm.weight",
+        "ln1.b": "input_layernorm.bias",
+        "attn": "self_attn",
+        **generate_attn_qkv_functions(phi3_qkv_weight, phi3_attn_bias),
+        "attn.out_proj": "self_attn.o_proj",
+        "attn.W_O": "self_attn.o_proj.weight",
+        "attn.b_O": "self_attn.o_proj.bias",
+
+
+        "mlp": "mlp",
+        #"mlp.in_proj" : "mlp.gate_up_proj", # this combined up and gate proj matrices
+        "mlp.out_proj": "mlp.down_proj",
+        "mlp.W_in": "mlp.gate_up_proj.weight",
+        "mlp.b_in": lambda layer, _inpt=None: phi3_mlp_bias(layer, "mlp.b_in", _inpt),
+        "mlp.W_out": "mlp.down_proj.weight",
+        "mlp.b_out": lambda layer, _inpt=None: phi3_mlp_bias(layer, "mlp.b_out", _inpt),
+        "activation_fn": "mlp.activation_fn",
+    }
+
+    return phi3_layer_map
 
 
 # GPT NEO X and Pythia Models
@@ -1227,6 +1438,10 @@ def get_model_key_map(config: ConfigClass):
         return mistral_model_map
     if architecture == "GemmaForCausalLM":
         return gemma_model_map
+    if architecture == "PhiForCausalLM":
+        return phi_model_map
+    if architecture == "Phi3ForCausalLM":
+        return phi3_model_map
     if architecture == "GPTNeoXForCausalLM":
         return gpt_neox_model_map
     if architecture == "GPT2LMHeadModel":
@@ -1249,6 +1464,10 @@ def get_layer_key_map(config: ConfigClass):
         return build_mistral_layer_map(config)
     if architecture == "GemmaForCausalLM":
         return build_gemma_layer_map(config)
+    if architecture == "PhiForCausalLM":
+        return build_phi_layer_map(config)
+    if architecture == "Phi3ForCausalLM":
+        return build_phi3_layer_map(config)
     if architecture == "GPTNeoXForCausalLM":
         return build_gpt_neox_layer_map(config)
     if architecture == "GPT2LMHeadModel":
