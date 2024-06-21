@@ -1,0 +1,1 @@
+poetry run python prune_30.py nickypro/vit-cifar100-hf --focus cifar100-rocketless --cripple cifar100-rocket --dtype fp32 --eval_sample_size 10000 --collection_sample_size 100000 --additional_datasets cifar100-rocket-mia --wandb_project rockets --recalculate_activations false --name "vit b 1% 1% noniter" --attn_frac 0.01 --ff_frac 0.01 --n_steps 10
