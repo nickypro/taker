@@ -8,6 +8,10 @@ import pandas as pd
 import wandb
 from welford_torch import Welford
 from transformers import BitsAndBytesConfig
+try:
+    from transformers import HqqConfig
+except:
+    HqqConfig = None
 
 
 ######################################################################################
@@ -25,6 +29,8 @@ class QDtypeConfigs:
         bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=torch.bfloat16
     )
+    hqq8 = HqqConfig(nbits=8, group_size=64, quant_zero=False, quant_scale=False)
+    hqq4 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False)
 
 class DtypeMap():
     def __init__(self, str_dtype=None, torch_dtype=None):
@@ -46,6 +52,8 @@ class DtypeMap():
             "fp64": torch.float64,
             "bfp16": torch.bfloat16,
             "nf4": torch.bfloat16,
+            "hqq4": torch.bfloat16,
+            "hqq8": torch.bfloat16,
         }
         return dtype_map[self.str_dtype]
 
@@ -62,7 +70,9 @@ class DtypeMap():
         args = {
             "nf4" : {dtype_key: self._dtype, quant_conf: QDtypeConfigs.nf4},
             "int4": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.int4},
+            "hqq4": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq4},
             "int8": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.int8},
+            "hqq8": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq8},
             "fp16": {dtype_key: self._dtype},
             "fp32": {dtype_key: self._dtype},
             "fp64": {dtype_key: self._dtype},
