@@ -13,6 +13,9 @@ tests/.pytest_cache
 tests/separability
 ansible/hosts.ini
 ansible/env_vars.yml
+examples/early-testing/transformers*
+examples/quant-compare/transformers*
+*.npy
 dist
 
 # Don't allow jupiter notebooks, they take too much space
