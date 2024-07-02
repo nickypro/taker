@@ -373,6 +373,7 @@ def prepare_dataset(eval_config: EvalConfig):
     _dataset = load_dataset(
         eval_config.dataset_repo,
         eval_config.dataset_subset,
+        trust_remote_code=True, # TODO: probably fix at some point
         streaming=eval_config.streaming,
     )
 
