@@ -33,6 +33,7 @@ with open(json_file_path, 'r') as file:
 most_common_pile_tokens          = llama_most_common_tokens["all"]["skip50"]["tokens_str"]
 most_common_pile_codeless_tokens = llama_most_common_tokens["only_text"]["skip50"]["tokens_str"]
 most_common_code_tokens          = llama_most_common_tokens["only_code"]["skip50"]["tokens_str"]
+PILE_DATASET_REPO = "JeanKaddour/minipile" # "monology/pile-uncopyrighted"
 
 class DatasetFilters:
     @staticmethod
@@ -140,17 +141,17 @@ def get_cifar_dataset_configs():
 def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
     eval_configs = [
         EvalConfig("pile_codeless",
-            dataset_repo = "monology/pile-uncopyrighted",
+            dataset_repo = PILE_DATASET_REPO,
             skip_token_strings = most_common_pile_codeless_tokens,
             dataset_filter = DatasetFilters.filter_codeless,
         ),
         EvalConfig("pile_freelaw",
-            dataset_repo = "monology/pile-uncopyrighted",
+            dataset_repo = PILE_DATASET_REPO,
             skip_token_strings = most_common_pile_codeless_tokens,
             dataset_filter = lambda __dataset : DatasetFilters.filter_pile_general(__dataset, "FreeLaw"),
         ),
         EvalConfig("pile",
-            dataset_repo = "monology/pile-uncopyrighted",
+            dataset_repo = PILE_DATASET_REPO,
             skip_token_strings = most_common_pile_tokens,
         ),
         EvalConfig("code",
