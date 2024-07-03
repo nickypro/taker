@@ -26,6 +26,7 @@ class ConfigClass:
     use_local_attn: bool = None
     scale_attn_by_inverse_layer_idx: bool = None
     parallel_attn_mlp: bool = False
+    post_layernorm: bool = False
     positional_embedding_type: str = "standard"
     rotary_dim: Optional[int] = None
     final_rms: bool = False
@@ -137,6 +138,7 @@ def convert_hf_model_config(official_model_name: str):
             "use_local_attn": False,
             "scale_attn_by_inverse_layer_idx": hf_config.scale_attn_by_inverse_layer_idx,
             "normalization_type": "LN",
+            "post_layernorm": True,
         }
     elif architecture == "OPTForCausalLM":
         cfg_dict = {
