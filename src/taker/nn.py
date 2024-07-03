@@ -135,7 +135,7 @@ class NeuronSave(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.activation = None
-        self.enabled = True
+        self.enabled = False
 
     def forward(self, x: Tensor):
         if self.enabled:
