@@ -98,11 +98,10 @@ class InverseLinear(torch.nn.Module):
 # Model way of storing hooks that are currently in use
 class ActiveHooks:
     def __init__(self):
+        self.collects = {}
         self.neuron_masks = {}
         self.neuron_actadds = {}
         self.neuron_postbiases = {}
-        self.input_saves = {}
-        self.output_saves = {}
 
     def __str__(self):
         attributes = []
@@ -130,29 +129,18 @@ class NeuronFunctionList(torch.nn.Module):
     def __getitem__(self, index: int):
         return self.layers[index]
 
-class NeuronInputSave(torch.nn.Module):
-    """Class that saves input activations to self"""
+class NeuronSave(torch.nn.Module):
+    """Class that saves activations to self"""
 
     def __init__(self):
         super().__init__()
         self.activation = None
         self.enabled = True
 
-    def forward(self, _module, x: Tensor, _y: Tensor = None):
+    def forward(self, x: Tensor):
         if self.enabled:
             self.activation = x.detach()
-
-class NeuronOutputSave(torch.nn.Module):
-    """Class that saves output activations to self"""
-
-    def __init__(self):
-        super().__init__()
-        self.activation = None
-        self.enabled = True
-
-    def forward(self, _module, _x: Tensor, y: Tensor = None):
-        if self.enabled:
-            self.activation = y.detach()
+        return x
 
 # Neuron Mask. EG: [a, b, c] -> [a, 0, c]
 class NeuronMask(torch.nn.Module):
