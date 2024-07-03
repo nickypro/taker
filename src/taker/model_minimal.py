@@ -68,7 +68,7 @@ class Model:
     def __init__(self, model_repo, activations_config=None, device_map="auto"):
         self.model_repo = model_repo
         self.device_map = device_map
-        self.cfg = None
+        self.cfg: ConfigClass = None
         self.tokenizer = None
         self.predictor = None
         self.map = None
@@ -84,12 +84,12 @@ class Model:
     @staticmethod
     def default_config():
         config_string = """
-        pre_attn: save_input, mask
-        post_attn: save_output, actadd
-        pre_mlp: save_input, mask
-        post_mlp: save_output, actadd
+        pre_attn: save_input
         attn_pre_out: save_input, mask
+        post_attn:
+        pre_mlp: save_input
         mlp_pre_out: save_input, mask
+        post_mlp:
         """
         return ActivationsConfig().from_string(config_string)
 
@@ -124,16 +124,18 @@ class Model:
                     self.register_hooks(f"layer_{layer_idx}_{point}", module, hooks)
 
     def get_module_for_hook_point(self, layer, point):
+        # Attention Points
         if point == "pre_attn":
-            return layer["ln1"]
-        elif point == "post_attn":
-            return layer["attn"]
-        elif point == "pre_mlp":
-            return layer["ln2"]
-        elif point == "post_mlp":
-            return layer["mlp"]
+            return layer["ln1"] if not self.cfg.post_layernorm else layer["attn"]
         elif point == "attn_pre_out":
             return layer["attn.out_proj"]
+        elif point == "post_attn":
+            return layer["attn"] if not self.cfg.post_layernorm else layer["ln1"]
+        # MLP Points
+        elif point == "pre_mlp":
+            return layer["ln2"] if not self.cfg.post_layernorm else layer["mlp.in_proj"]
+        elif point == "post_mlp":
+            return layer["mlp.out_proj"] if not self.cfg.post_layernorm else layer["ln2"]
         elif point == "mlp_pre_out":
             return layer["mlp.out_proj"]
         else:
