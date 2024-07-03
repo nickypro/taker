@@ -34,6 +34,7 @@ class HookConfig:
             if layer not in self.hook_points[point]:
                 self.hook_points[point][layer] = []
             self.hook_points[point][layer].append(hook_type)
+
     def from_string(self, config_string):
         for line in config_string.strip().split('\n'):
             parts = line.split(':')
@@ -280,8 +281,12 @@ class Model:
 
     def get_data(self, name=None, data_type=None):
         if data_type == "collect":
-            return self.hooks_raw.collects.get(name).activation if name in self.hooks_raw.collects else None
-            #return self.hooks_raw.collects.get(name).activation if name in self.hooks_raw.collects else None
+            # collect is desctructively gotten (to save memory)
+            if name in self.hooks_raw.collects:
+                data = self.hooks_raw.collects[name].activation
+                self.hooks_raw.collects[name].activation = None
+                return data
+            return None
         elif data_type == "mask":
             return self.hooks_raw.neuron_masks.get(name)
         elif data_type == "actadd":
@@ -325,7 +330,26 @@ class Model:
         for name, value in zip(layer_names, values):
             self.set_hook_parameter(name, param_type, value)
 
+    def disable_all_collect_hooks(self):
+        for name, hook in self.hooks_raw.collects.items():
+            hook.enabled = False
+
+    def enable_collect_hooks(self, components=None, layers=None):
+        if components is None:
+            components = self.hook_config.hook_points.keys()
+        if layers is None:
+            layers = range(len(self.layers))
+
+        for component in components:
+            for layer in layers:
+                hook_name = f"layer_{layer}_{component}"
+                if hook_name in self.hooks_raw.collects:
+                    self.hooks_raw.collects[hook_name].enabled = True
+
     def get_midlayer_activations(self, text):
+        self.disable_all_collect_hooks()
+        self.enable_collect_hooks(["mlp_pre_out", "attn_pre_out"])
+
         input_ids = self.tokenizer(text, return_tensors="pt").input_ids.to(self.device)
         self.forward(input_ids)
 
@@ -338,6 +362,8 @@ class Model:
         }
 
     def get_residual_stream(self, text):
+        self.disable_all_collect_hooks()
+        self.enable_collect_hooks(["pre_mlp", "pre_attn"])
         input_ids = self.tokenizer(text, return_tensors="pt").input_ids.to(self.device)
 
         # Forward pass
@@ -345,7 +371,7 @@ class Model:
 
         # Collect residual stream
         pre_attn_activations = self.hooks["pre_attn"]["collect"]
-        pre_mlp_activations = self.hooks["pre_mlp"]["collect"]
+        pre_mlp_activations  = self.hooks["pre_mlp"]["collect"]
 
         residual_stream = []
         for pre_attn, pre_mlp in zip(pre_attn_activations, pre_mlp_activations):
@@ -358,8 +384,6 @@ class Model:
                 residual_stream.append(torch.stack(layer_residuals))
 
         return torch.stack(residual_stream) if residual_stream else None
-
-
 
     def forward(self, input_ids):
         input_ids = input_ids.to(self.device)
