@@ -1,6 +1,7 @@
 from collections import defaultdict
 import torch
 import torch.nn as nn
+from torch import Tensor
 from transformers import AutoTokenizer, AutoModelForCausalLM, PreTrainedModel
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 try:
@@ -78,7 +79,7 @@ class HookMap:
         return HookMapComponent(self.model, component)
 
     def __str__(self):
-        return "HookConfig:\n" + str(model.hook_config)
+        return "HookConfig:\n" + str(self.model.hook_config)
 
 class HookMapComponent:
     def __init__(self, model, component):
@@ -163,6 +164,7 @@ class Model:
 
         # Initialize the model
         self.init_model(add_hooks=add_hooks)
+        self.get_outputs_embeds(".")
 
     @staticmethod
     def default_config():
@@ -221,6 +223,15 @@ class Model:
                     io_type, module = self.get_module_for_hook_point(layer, point)
                     self.register_hooks(f"layer_{layer_idx}_{point}", module, hooks, io_type)
 
+    def set_hook_config(self, config):
+        for handle in self.hook_handles:
+            handle.remove()
+        self.hook_handles.clear()
+        self.hooks_raw = ActiveHooks()
+        self.hook_config = config
+        self.init_hooks()
+
+    # Hook-specific methods
     def get_module_for_hook_point(self, layer, point):
         layer["attn"].is_attention = True
         # Attention Points
@@ -306,14 +317,6 @@ class Model:
         else:
             raise ValueError(f"Unknown parameter type: {param_type}")
 
-    def set_hook_config(self, config):
-        for handle in self.hook_handles:
-            handle.remove()
-        self.hook_handles.clear()
-        self.hooks_raw = ActiveHooks()
-        self.hook_config = config
-        self.init_hooks()
-
     def get_layer_names(self, component):
         return [f"layer_{i}_{component}" for i in range(len(self.layers))]
 
@@ -346,6 +349,42 @@ class Model:
                 if hook_name in self.hooks_raw.collects:
                     self.hooks_raw.collects[hook_name].enabled = True
 
+    # Get "normal" Model Activations
+    # text           --[tokenizer]-----> input_ids
+    def get_ids(self, text:str):
+        input_ids = self.tokenizer( text, return_tensors='pt').input_ids
+        if self.limit is not None:
+            input_ids = torch.stack([ input_ids[0][:limit] ])
+        return input_ids.to( self.device )
+
+    # input_ids      --[model.embed]---> inputs_embeds
+    def get_inputs_embeds(self, text:str = None, input_ids:Tensor = None):
+        input_ids = input_ids or self.get_ids(text)
+        inputs_embeds = self.map["embed"]( input_ids )
+        return inputs_embeds
+
+    # inputs_embeds  --[model.model]---> outputs_embeds
+    def get_outputs_embeds(self, text:str=None, input_ids:Tensor=None, inputs_embeds:Tensor=None):
+        """Get output logits from input token ids"""
+        inputs_embeds = inputs_embeds or self.get_inputs_embeds(text, input_ids)
+        outputs = self.model( inputs_embeds=inputs_embeds, output_hidden_states=False ).last_hidden_state
+        return outputs
+
+    # outputs_embeds --[model.lm_head]-> logits
+    def unembed(self, embedded_outputs: Tensor):
+        """ Converts outputs_embeds -> token logits. Is also basically LogitLens."""
+        if "lm_head" in self.map.key_map:
+            lm_head = self.map["lm_head"]
+        else:
+            lm_head = self.predictor.get_output_embeddings()
+        return lm_head( embedded_outputs.to(self.device) )
+
+    def get_logits(self, text:str=None, input_ids:Tensor=None, inputs_embeds:Tensor=None, outputs_embeds:Tensor=None):
+        outputs_embeds = outputs_embeds or self.get_outputs_embeds(text, input_ids, inputs_embeds)
+        logits = self.unembed( outputs.last_hidden_state )
+        return logits
+
+    # Get intermediate activaitons
     def get_midlayer_activations(self, text):
         self.disable_all_collect_hooks()
         self.enable_collect_hooks(["mlp_pre_out", "attn_pre_out"])
