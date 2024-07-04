@@ -404,31 +404,36 @@ class Model:
         return logits
 
     # Get intermediate activaitons (using HOOKS!!!)
-    def get_midlayer_activations(self, text):
+    def get_midlayer_activations(self, text=None, input_ids=None):
+        # Set up the activations to be collected minimally
         self.disable_all_collect_hooks()
         self.enable_collect_hooks(["mlp_pre_out", "attn_pre_out"])
 
-        input_ids = self.tokenizer(text, return_tensors="pt").input_ids.to(self.device)
-        self.forward(input_ids)
+        # Run model
+        _outputs_embeds = self.get_outputs_embeds(text, input_ids)
 
-        mlp_activations = self.hooks["mlp_pre_out"]["collect"]
-        attn_activations = self.hooks["attn_pre_out"]["collect"]
-
-        if mlp_activations:
-            mlp_activations = einops.rearrange(torch.stack(mlp_activations),
-                "layer batch token dim -> batch layer token dim")
-        if attn_activations:
-            attn_activations = einops.rearrange(torch.stack(attn_activations),
-                "layer batch token (n_heads d_head) -> batch layer token n_heads d_head",
-                n_heads=self.cfg.n_heads, d_head=self.cfg.d_head
-            )
-
+        # Collect and return activaitons
         return {
-            "mlp": mlp_activations,
-            "attn": attn_activations,
+            "attn": self.collect_recent_attn_pre_out(),
+            "mlp":  self.collect_recent_mlp_pre_out(),
         }
 
+    def collect_recent_mlp_pre_out(self):
+        mlp_activations = self.hooks["mlp_pre_out"]["collect"]
+        mlp_activations = einops.rearrange(torch.stack(mlp_activations),
+            "layer batch token dim -> batch layer token dim")
+        return mlp_activations
+
+    def collect_recent_attn_pre_out(self):
+        attn_activations = self.hooks["attn_pre_out"]["collect"]
+        attn_activations = einops.rearrange(torch.stack(attn_activations),
+            "layer batch token (n_heads d_head) -> batch layer token n_heads d_head",
+            n_heads=self.cfg.n_heads, d_head=self.cfg.d_head
+        )
+        return attn_activations
+
     def get_residual_stream(self, text, split=False):
+        # Set up the activations to be collected minimally
         self.disable_all_collect_hooks()
         self.enable_collect_hooks(["pre_mlp", "pre_attn"])
 
@@ -505,10 +510,10 @@ if __name__ == "__main__":
     print("Attention activations shape:", midlayer_activations["attn"].shape)
 
     # Get residual stream
-    residual_stream = model.get_residual_stream(text, split=True)
-    print("Residual stream shape:", residual_stream.shape)
-    residual_stream = model.get_residual_stream(text)
-    print("Residual stream shape:", residual_stream.shape)
+    res = model.get_residual_stream(text, split=True)
+    print("Residual stream shape:", res.shape)
+    res = model.get_residual_stream(text)
+    print("Residual stream shape:", res.shape)
 
     mask0 = model.get_data("layer_0_attn_pre_out", "mask")
     new_mask = torch.ones_like(mask0.param)  # Assuming d_model is 768
