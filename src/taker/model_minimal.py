@@ -396,17 +396,16 @@ class Model:
         attn_activations = self.hooks["attn_pre_out"]["collect"]
 
         return {
-            "mlp": torch.stack(mlp_activations) if mlp_activations else None,
-            "attn": torch.stack(attn_activations) if attn_activations else None
+            "mlp": torch.stack(mlp_activations).movedim(0,1) if mlp_activations else None,
+            "attn": torch.stack(attn_activations).movedim(0,1) if attn_activations else None
         }
 
-    def get_residual_stream(self, text):
+    def get_residual_stream(self, text, classic_mode=True):
         self.disable_all_collect_hooks()
         self.enable_collect_hooks(["pre_mlp", "pre_attn"])
-        input_ids = self.tokenizer(text, return_tensors="pt").input_ids.to(self.device)
 
         # Forward pass
-        output = self.forward(input_ids)
+        outputs_embeds = self.get_outputs_embeds(text)
 
         # Collect residual stream
         pre_attn_activations = self.hooks["pre_attn"]["collect"]
@@ -420,9 +419,20 @@ class Model:
             if pre_mlp is not None:
                 layer_residuals.append(pre_mlp)
             if layer_residuals:
-                residual_stream.append(torch.stack(layer_residuals))
+                if classic_mode:
+                    residual_stream += layer_residuals
+                else:
+                    residual_stream.append(torch.stack(layer_residuals))
 
-        return torch.stack(residual_stream) if residual_stream else None
+        if residual_stream is None:
+            print("WARNING: Could not get residual stream.")
+            return None
+
+        if classic_mode:
+            residual_stream.append(outputs_embeds)
+            return torch.stack(residual_stream).movedim(0,1)
+
+        return torch.stack(residual_stream).transpose(0,2) if residual_stream else None
 
     def forward(self, input_ids):
         input_ids = input_ids.to(self.device)
@@ -440,6 +450,8 @@ if __name__ == "__main__":
     print("Attention activations shape:", midlayer_activations["attn"].shape)
 
     # Get residual stream
+    residual_stream = model.get_residual_stream(text)
+    print("Residual stream shape:", residual_stream.shape)
     residual_stream = model.get_residual_stream(text)
     print("Residual stream shape:", residual_stream.shape)
 
