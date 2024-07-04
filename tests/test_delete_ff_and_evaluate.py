@@ -4,7 +4,7 @@ import pytest
 from taker.model_repos import test_model_repos
 from taker.data_classes import ActivationSummary
 from taker import Model
-from taker.activations import count_ff_key_activations
+from taker.activations import get_midlayer_data
 from taker.eval import evaluate_all
 
 class TestDeleteFFKeys:
@@ -20,9 +20,9 @@ class TestDeleteFFKeys:
         print(" - Initial Evaluation...")
 
         pile_data: ActivationSummary = \
-            count_ff_key_activations(opt, 'pile', sample_size=1e3)
+            get_midlayer_data(opt, 'pile', sample_size=1e3, calculate_attn=False)["ff"]
         code_data: ActivationSummary = \
-            count_ff_key_activations(opt, 'code', sample_size=1e3)
+            get_midlayer_data(opt, 'code', sample_size=1e3, calculate_attn=False)["ff"]
         pile_count = pile_data.orig.pos_count
         code_count = code_data.orig.pos_count
 
