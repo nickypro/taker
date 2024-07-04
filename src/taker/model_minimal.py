@@ -1,7 +1,9 @@
 from collections import defaultdict
+from typing import List
 import torch
 import torch.nn as nn
-from torch import Tensor
+from torch import Tensor as TT
+import einops
 from transformers import AutoTokenizer, AutoModelForCausalLM, PreTrainedModel
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 try:
@@ -157,14 +159,15 @@ class Model:
         self.layers: list = None
 
         # Hooking into the model
-        self.hook_config = hook_config or self.default_config()
-        self.hook_handles = []
-        self.hooks_raw = ActiveHooks()
-        self.hooks = HookMap(self)
+        self.hook_config: HookConfig = hook_config or self.default_config()
+        self.hook_handles: list = []
+        self.hooks_raw: ActiveHooks = ActiveHooks()
+        self.hooks: HookMap = HookMap(self)
 
         # Initialize the model
         self.init_model(add_hooks=add_hooks)
-        self.get_outputs_embeds(".")
+        with torch.no_grad():
+            self.get_outputs_embeds(".")
 
     @staticmethod
     def default_config():
@@ -205,6 +208,8 @@ class Model:
         else:
             raise NotImplementedError(f"Model modality {self.cfg.model_modality} not implemented.")
 
+        print(f"Loaded model '{self.model_repo}':")
+
     def init_model(self, do_model_import=True, add_hooks=True):
         self.cfg = convert_hf_model_config(self.model_repo)
         if do_model_import:
@@ -222,6 +227,7 @@ class Model:
                 if hooks:
                     io_type, module = self.get_module_for_hook_point(layer, point)
                     self.register_hooks(f"layer_{layer_idx}_{point}", module, hooks, io_type)
+        print(f"- Added hooks for {layer_idx+1} layers")
 
     def set_hook_config(self, config):
         for handle in self.hook_handles:
@@ -358,20 +364,20 @@ class Model:
         return input_ids.to( self.device )
 
     # input_ids      --[model.embed]---> inputs_embeds
-    def get_inputs_embeds(self, text:str = None, input_ids:Tensor = None):
+    def get_inputs_embeds(self, text:str = None, input_ids:TT = None):
         input_ids = input_ids or self.get_ids(text)
         inputs_embeds = self.map["embed"]( input_ids )
         return inputs_embeds
 
     # inputs_embeds  --[model.model]---> outputs_embeds
-    def get_outputs_embeds(self, text:str=None, input_ids:Tensor=None, inputs_embeds:Tensor=None):
+    def get_outputs_embeds(self, text:str=None, input_ids:TT=None, inputs_embeds:TT=None):
         """Get output logits from input token ids"""
         inputs_embeds = inputs_embeds or self.get_inputs_embeds(text, input_ids)
         outputs = self.model( inputs_embeds=inputs_embeds, output_hidden_states=False ).last_hidden_state
         return outputs
 
     # outputs_embeds --[model.lm_head]-> logits
-    def unembed(self, embedded_outputs: Tensor):
+    def unembed(self, embedded_outputs: TT):
         """ Converts outputs_embeds -> token logits. Is also basically LogitLens."""
         if "lm_head" in self.map.key_map:
             lm_head = self.map["lm_head"]
@@ -379,12 +385,12 @@ class Model:
             lm_head = self.predictor.get_output_embeddings()
         return lm_head( embedded_outputs.to(self.device) )
 
-    def get_logits(self, text:str=None, input_ids:Tensor=None, inputs_embeds:Tensor=None, outputs_embeds:Tensor=None):
+    def get_logits(self, text:str=None, input_ids:TT=None, inputs_embeds:TT=None, outputs_embeds:TT=None):
         outputs_embeds = outputs_embeds or self.get_outputs_embeds(text, input_ids, inputs_embeds)
         logits = self.unembed( outputs.last_hidden_state )
         return logits
 
-    # Get intermediate activaitons
+    # Get intermediate activaitons (using HOOKS!!!)
     def get_midlayer_activations(self, text):
         self.disable_all_collect_hooks()
         self.enable_collect_hooks(["mlp_pre_out", "attn_pre_out"])
@@ -395,12 +401,21 @@ class Model:
         mlp_activations = self.hooks["mlp_pre_out"]["collect"]
         attn_activations = self.hooks["attn_pre_out"]["collect"]
 
+        if mlp_activations:
+            mlp_activations = einops.rearrange(torch.stack(mlp_activations),
+                "layer batch token dim -> batch layer token dim")
+        if attn_activations:
+            attn_activations = einops.rearrange(torch.stack(attn_activations),
+                "layer batch token (n_heads d_head) -> batch layer token n_heads d_head",
+                n_heads=self.cfg.n_heads, d_head=self.cfg.d_head
+            )
+
         return {
-            "mlp": torch.stack(mlp_activations).movedim(0,1) if mlp_activations else None,
-            "attn": torch.stack(attn_activations).movedim(0,1) if attn_activations else None
+            "mlp": mlp_activations,
+            "attn": attn_activations,
         }
 
-    def get_residual_stream(self, text, classic_mode=True):
+    def get_residual_stream(self, text, split=False):
         self.disable_all_collect_hooks()
         self.enable_collect_hooks(["pre_mlp", "pre_attn"])
 
@@ -419,7 +434,7 @@ class Model:
             if pre_mlp is not None:
                 layer_residuals.append(pre_mlp)
             if layer_residuals:
-                if classic_mode:
+                if not split:
                     residual_stream += layer_residuals
                 else:
                     residual_stream.append(torch.stack(layer_residuals))
@@ -428,11 +443,15 @@ class Model:
             print("WARNING: Could not get residual stream.")
             return None
 
-        if classic_mode:
-            residual_stream.append(outputs_embeds)
-            return torch.stack(residual_stream).movedim(0,1)
+        if split:
+            return einops.rearrange(torch.stack(residual_stream),
+                "layer component batch token dim -> component batch layer token dim"
+            )
 
-        return torch.stack(residual_stream).transpose(0,2) if residual_stream else None
+        residual_stream.append(outputs_embeds)
+        return einops.rearrange(torch.stack(residual_stream),
+            "layer batch token dim -> batch layer token dim"
+        )
 
     def forward(self, input_ids):
         input_ids = input_ids.to(self.device)
@@ -450,7 +469,7 @@ if __name__ == "__main__":
     print("Attention activations shape:", midlayer_activations["attn"].shape)
 
     # Get residual stream
-    residual_stream = model.get_residual_stream(text)
+    residual_stream = model.get_residual_stream(text, split=True)
     print("Residual stream shape:", residual_stream.shape)
     residual_stream = model.get_residual_stream(text)
     print("Residual stream shape:", residual_stream.shape)
