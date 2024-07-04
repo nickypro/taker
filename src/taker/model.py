@@ -167,11 +167,6 @@ class Model():
             self.do_activations["mlp_pre_out"] = False
             self.do_activations["attn_pre_out"] = False
 
-        # Indices of outputs for reference
-        self.layer_index     = -3
-        self.token_index     = -2
-        self.dimension_index = -1
-
     def set_repo(self, model_repo: str, tokenizer_repo: Optional[str] = None):
         if model_repo not in supported_model_repos:
             warnings.warn( f"Model {model_repo} not tested." )
