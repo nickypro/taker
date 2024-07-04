@@ -519,6 +519,11 @@ class ActivationCollector:
         if self.collect_raw:
             self.raw.append(data_point.detach().cpu())
 
+    def add_all(self, data_points):
+        # TODO: reimplement with ".add_all()" methods
+        for data_point in data_points:
+            self.add(data_point)
+
     def get_raw(self):
         if not self.collect_raw:
             raise ValueError('Raw activations not collected'

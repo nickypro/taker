@@ -10,7 +10,7 @@ from .data_classes import PruningConfig, RunDataHistory, \
                           RunDataItem, ActivationOverview
 from .eval import evaluate_all
 from .scoring import score_indices_by, score_indices
-from .activations import get_midlayer_activations, get_top_frac, \
+from .activations import get_midlayer_data, get_top_frac, \
     choose_attn_heads_by, save_timestamped_tensor_dict
 from .texts import prepare
 
@@ -27,8 +27,8 @@ def prune_and_evaluate(
     Args:
         opt (Model): model to prune and evaluate
         pruning_config (PruningConfig): config for pruning
-        focus_out (dict): output of get_midlayer_activations for focus dataset
-        cripple_out (dict): output of get_midlayer_activations for cripple dataset
+        focus_out (dict): output of get_midlayer_data for focus dataset
+        cripple_out (dict): output of get_midlayer_data for cripple dataset
         iteration (int): iteration number for when activations are not recalculated
 
     Returns:
@@ -46,9 +46,9 @@ def prune_and_evaluate(
 
     # Get midlayer activations of FF and ATTN
     if pruning_config.recalculate_activations:
-        focus_out   = get_midlayer_activations( opt, pruning_config.focus,
+        focus_out   = get_midlayer_data( opt, pruning_config.focus,
             pruning_config.collection_sample_size, pruning_config.attn_mode )
-        cripple_out = get_midlayer_activations( opt, pruning_config.cripple,
+        cripple_out = get_midlayer_data( opt, pruning_config.cripple,
             pruning_config.collection_sample_size, pruning_config.attn_mode )
 
     # Otherwise, import activation data, and adjust the "pruning fraction"
@@ -307,9 +307,9 @@ def run_pruning(c: PruningConfig):
 
     # Non-iteratively get activations, then iteratively prune and evaluate
     else:
-        focus_out   = get_midlayer_activations(opt, c.focus,
+        focus_out   = get_midlayer_data(opt, c.focus,
                         c.collection_sample_size, c.attn_mode)
-        cripple_out = get_midlayer_activations(opt, c.cripple,
+        cripple_out = get_midlayer_data(opt, c.cripple,
                         c.collection_sample_size, c.attn_mode)
         for i in range(c.n_steps):
             data = prune_and_evaluate(opt, c, focus_out, cripple_out, i)
@@ -368,9 +368,9 @@ def forsaken_pruning(c: PruningConfig,
         print(history.df.T)
 
     # Get activations
-    focus_out   = get_midlayer_activations(opt, c.focus,
+    focus_out   = get_midlayer_data(opt, c.focus,
                     c.collection_sample_size, c.attn_mode)
-    cripple_out = get_midlayer_activations(opt, c.cripple,
+    cripple_out = get_midlayer_data(opt, c.cripple,
                     c.collection_sample_size, c.attn_mode)
 
     def normalize_scores(scores):

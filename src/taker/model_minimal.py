@@ -183,13 +183,13 @@ class Model:
 
     def show_details( self, verbose=True ):
         if verbose:
-            print( " - n_layers :", self.cfg.n_layers )
-            print( " - d_model  :", self.cfg.d_model  )
-            print( " - n_heads  :", self.cfg.n_heads  )
-            print( " - d_head   :", self.cfg.d_head   )
+            print(" - n_layers :", self.cfg.n_layers)
+            print(" - d_model  :", self.cfg.d_model)
+            print(" - n_heads  :", self.cfg.n_heads)
+            print(" - d_head   :", self.cfg.d_head)
+            print(" - d_mlp    :", self.cfg.d_mlp)
         else:
             print( f" - n_layers, d_model = {self.cfg.n_layers}, {self.cfg.d_model}" )
-
 
     def import_models(self,
             tokenizer=None,
@@ -262,10 +262,10 @@ class Model:
         # MLP Points
         elif point == "pre_mlp":
             return "in", layer["ln2"] if not self.cfg.post_layernorm else layer["mlp.in_proj"]
-        elif point == "post_mlp":
-            return "in", layer["mlp.out_proj"] if not self.cfg.post_layernorm else layer["ln2"]
         elif point == "mlp_pre_out":
-            return "out", layer["mlp.out_proj"]
+            return "in", layer["mlp.out_proj"]
+        elif point == "post_mlp":
+            return "out", layer["mlp.out_proj"] if not self.cfg.post_layernorm else layer["ln2"]
         else:
             raise ValueError(f"Unknown hook point: {point}")
 
@@ -375,16 +375,31 @@ class Model:
             input_ids = torch.stack([ input_ids[0][:self.limit] ])
         return input_ids.to( self.device )
 
-    # input_ids      --[model.embed]---> inputs_embeds
-    def get_inputs_embeds(self, text:str = None, input_ids:TT = None):
-        input_ids = self.get_ids(text) if input_ids is None else input_ids
-        inputs_embeds = self.map["embed"]( input_ids )
-        return inputs_embeds
+
+    # raw_img      --[processor]----> pixel_values
+    def get_pixel_values(self, raw_img):
+        img = self.processor(raw_img, return_tensors="pt")
+        pixel_values = img["pixel_values"].to(self.device)
+        return pixel_values
+
+    # input_ids    --[model.embed]--> inputs_embeds
+    # pixel_values --[model.embed]--> inputs_embeds
+    def get_inputs_embeds(self, text:str = None, input_ids:TT = None, raw_img=None, pixel_values=None):
+        if text is not None:
+            input_ids = self.get_ids(text)
+        if input_ids is not None:
+            return self.map["embed"](input_ids)
+        if raw_img is not None:
+            pixel_values = self.get_pixel_values(raw_img)
+        if pixel_values is not None:
+            return self.map["embed"](pixel_values)
+        return None
 
     # inputs_embeds  --[model.model]---> outputs_embeds
-    def get_outputs_embeds(self, text:str=None, input_ids:TT=None, inputs_embeds:TT=None):
+    def get_outputs_embeds(self, text:str=None, input_ids:TT=None, raw_img=None, pixel_values=None, inputs_embeds:TT=None):
         """Get output logits from input token ids"""
-        inputs_embeds = self.get_inputs_embeds(text, input_ids) if inputs_embeds is None else inputs_embeds
+        inputs_embeds = self.get_inputs_embeds(text, input_ids, raw_img, pixel_values) \
+            if inputs_embeds is None else inputs_embeds
         outputs = self.model( inputs_embeds=inputs_embeds, output_hidden_states=False ).last_hidden_state
         return outputs
 
@@ -397,20 +412,20 @@ class Model:
             lm_head = self.predictor.get_output_embeddings()
         return lm_head( embedded_outputs.to(self.device) )
 
-    def get_logits(self, text:str=None, input_ids:TT=None, inputs_embeds:TT=None, outputs_embeds:TT=None):
-        outputs_embeds = self.get_outputs_embeds(text, input_ids, inputs_embeds) \
+    def get_logits(self, text:str=None, input_ids:TT=None, raw_img=None, pixel_values=None, inputs_embeds:TT=None, outputs_embeds:TT=None):
+        outputs_embeds = self.get_outputs_embeds(text, input_ids, raw_img, pixel_values, inputs_embeds) \
             if outputs_embeds is None else outputs_embeds
         logits = self.unembed(outputs_embeds)
         return logits
 
     # Get intermediate activaitons (using HOOKS!!!)
-    def get_midlayer_activations(self, text=None, input_ids=None):
+    def get_midlayer_activations(self, text=None, input_ids=None, raw_img=None, pixel_values=None):
         # Set up the activations to be collected minimally
         self.disable_all_collect_hooks()
         self.enable_collect_hooks(["mlp_pre_out", "attn_pre_out"])
 
         # Run model
-        _outputs_embeds = self.get_outputs_embeds(text, input_ids)
+        _outputs_embeds = self.get_outputs_embeds(text, input_ids, raw_img, pixel_values)
 
         # Collect and return activaitons
         return {
@@ -504,15 +519,15 @@ if __name__ == "__main__":
 
     print(model.hooks)
     # Get midlayer activations
-    text = "Hello, world!"
-    midlayer_activations = model.get_midlayer_activations(text)
+    txt = "Hello, world!"
+    midlayer_activations = model.get_midlayer_activations(txt)
     print("MLP activations shape:", midlayer_activations["mlp"].shape)
     print("Attention activations shape:", midlayer_activations["attn"].shape)
 
     # Get residual stream
-    res = model.get_residual_stream(text, split=True)
+    res = model.get_residual_stream(txt, split=True)
     print("Residual stream shape:", res.shape)
-    res = model.get_residual_stream(text)
+    res = model.get_residual_stream(txt)
     print("Residual stream shape:", res.shape)
 
     mask0 = model.get_data("layer_0_attn_pre_out", "mask")
@@ -524,5 +539,5 @@ if __name__ == "__main__":
     print(model.hook_config.hook_points)
 
     # Run with new mask
-    midlayer_activations = model.get_midlayer_activations(text)
+    midlayer_activations = model.get_midlayer_activations(txt)
     print("New MLP activations shape:", midlayer_activations["mlp"].shape)
