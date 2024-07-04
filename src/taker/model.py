@@ -1502,9 +1502,9 @@ class Model():
             lm_head = self.predictor.get_output_embeddings()
         return lm_head( embedded_outputs.to(self.device) )
 
-    def get_all_logits( self, input_ids ):
+    def get_logits( self, text=None, input_ids=None ):
         """Get output logits from input token ids"""
-
+        input_ids = self.get_ids(text) if input_ids is None else input_ids
         outputs = self.model( input_ids, output_hidden_states=False )
         logits = self.unembed( outputs.last_hidden_state )
 
@@ -1515,7 +1515,7 @@ class Model():
         return topk.indices[0]
 
     def predict_top_k_tokens( self, text: str, k: int = 10 ):
-        logits = self.get_all_logits( text )
+        logits = self.get_logits(text)
         return self.top_k_tokens( logits, k=k )
 
     def evaluate_ce_losses( self,
@@ -1535,7 +1535,7 @@ class Model():
                 expected_ids = input_ids[..., 1:]
 
             if logits is None:
-                logits = self.get_all_logits( input_ids )[..., :-1, :]
+                logits = self.get_logits(input_ids=input_ids)[..., :-1, :]
             elif input_ids is not None:
                 logits = logits[..., :-1, :]
 

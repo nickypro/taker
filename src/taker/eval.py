@@ -39,7 +39,7 @@ class Generators:
       - model.tokenizer.tokenize(text)
       - model.tokenizer.convert_tokens_to_ids(ids)
       - model.get_ids(text)
-      - model.get_all_logits(input_ids)
+      - model.get_logits(input_ids=input_ids)
 
     """
     @staticmethod
@@ -58,7 +58,7 @@ class Generators:
                 input_ids    = model.get_ids(text=text)
                 if len(input_ids.squeeze().shape) == 0 or input_ids.squeeze().shape[-1] == 0:
                     continue
-                logits       = model.get_all_logits(input_ids=input_ids)
+                logits       = model.get_logits(input_ids=input_ids)
                 logits       = logits[..., :-1, :]
                 expected_ids = input_ids[..., 1:]
 
@@ -84,7 +84,7 @@ class Generators:
             ):
             ids = torch.tensor([ids], device=model.device)
             expected_ids = ids[..., start_index:]
-            logits = model.get_all_logits(input_ids=ids)[..., start_index-1:-1, :]
+            logits = model.get_logits(input_ids=ids)[..., start_index-1:-1, :]
             # logits = logits.reshape(-1, logits.shape[-1])
             # expected_ids = expected_ids.reshape(-1)
             return (logits, expected_ids, {})
@@ -150,7 +150,7 @@ class Generators:
 
             orig_ids = model.get_ids(text=text)
             input_ids, indices_chosen = run_random_masking(orig_ids)
-            logits = model.get_all_logits(input_ids=input_ids)
+            logits = model.get_logits(input_ids=input_ids)
 
             expected_ids = orig_ids[..., indices_chosen]
             logits = logits[..., indices_chosen, :]
@@ -1006,7 +1006,7 @@ def evaluate_wikitext(opt: Model,
         for ids in wiki_id_generator:
             ids = torch.tensor([ids], device=opt.device)
             expected_ids = ids[..., 1:]
-            logits = opt.get_all_logits(ids)[..., :-1, :]
+            logits = opt.get_logits(input_ids=ids)[..., :-1, :]
             yield (logits, expected_ids)
 
     out = opt.evaluate_dataset( wiki_generator(), k=topk, start_index=512-1,
@@ -1119,7 +1119,7 @@ def masked_generator(opt: Model, dataset, dataset_text_key):
         orig_ids, masked_ids, indices = \
             opt.roberta_masked_ids(input_ids=input_ids, frac=0.15)
         with torch.no_grad():
-            logits = opt.get_all_logits(masked_ids)[..., indices, :]
+            logits = opt.get_logits(input_ids=masked_ids)[..., indices, :]
             expected_ids = orig_ids[..., indices]
         #print(opt.tokenizer.batch_decode(masked_ids[0, indices]))
         #print(opt.tokenizer.batch_decode(logits[0].argmax(-1)))

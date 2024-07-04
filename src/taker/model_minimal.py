@@ -173,11 +173,23 @@ class Model:
     def default_config():
         config_string = """
         pre_attn: collect
-        attn_pre_out: collect, mask
+        attn_pre_out: mask, collect
+        post_attn: collect
         pre_mlp: collect
-        mlp_pre_out: collect, mask
+        mlp_pre_out: mask, collect
+        post_mlp: collect
         """
         return HookConfig().from_string(config_string)
+
+    def show_details( self, verbose=True ):
+        if verbose:
+            print( " - n_layers :", self.cfg.n_layers )
+            print( " - d_model  :", self.cfg.d_model  )
+            print( " - n_heads  :", self.cfg.n_heads  )
+            print( " - d_head   :", self.cfg.d_head   )
+        else:
+            print( f" - n_layers, d_model = {self.cfg.n_layers}, {self.cfg.d_model}" )
+
 
     def import_models(self,
             tokenizer=None,
@@ -269,7 +281,7 @@ class Model:
                     curr_hook = self.hooks_raw.collects[name]
                 elif hook == "mask":
                     if name not in self.hooks_raw.neuron_masks:
-                         self.hooks_raw.neuron_masks[name] = NeuronMask(activation.shape[1:]).to(self.device)
+                         self.hooks_raw.neuron_masks[name] = NeuronMask(activation.shape[2:]).to(self.device)
                     curr_hook = self.hooks_raw.neuron_masks[name]
                 elif hook == "actadd":
                     if name not in self.hooks_raw.neuron_actadds:
@@ -277,7 +289,7 @@ class Model:
                     curr_hook = self.hooks_raw.neuron_actadds[name]
                 elif hook == "postbias":
                     if name not in self.hooks_raw.neuron_postbiases:
-                        self.hooks_raw.neuron_postbiases[name] = NeuronPostBias(activation.shape[1:])
+                        self.hooks_raw.neuron_postbiases[name] = NeuronPostBias(activation.shape[2:])
                     curr_hook = self.hooks_raw.neuron_postbiases[name]
                 else:
                     print(f"Warning: '{hook}' not found")
@@ -360,19 +372,19 @@ class Model:
     def get_ids(self, text:str):
         input_ids = self.tokenizer( text, return_tensors='pt').input_ids
         if self.limit is not None:
-            input_ids = torch.stack([ input_ids[0][:limit] ])
+            input_ids = torch.stack([ input_ids[0][:self.limit] ])
         return input_ids.to( self.device )
 
     # input_ids      --[model.embed]---> inputs_embeds
     def get_inputs_embeds(self, text:str = None, input_ids:TT = None):
-        input_ids = input_ids or self.get_ids(text)
+        input_ids = self.get_ids(text) if input_ids is None else input_ids
         inputs_embeds = self.map["embed"]( input_ids )
         return inputs_embeds
 
     # inputs_embeds  --[model.model]---> outputs_embeds
     def get_outputs_embeds(self, text:str=None, input_ids:TT=None, inputs_embeds:TT=None):
         """Get output logits from input token ids"""
-        inputs_embeds = inputs_embeds or self.get_inputs_embeds(text, input_ids)
+        inputs_embeds = self.get_inputs_embeds(text, input_ids) if inputs_embeds is None else inputs_embeds
         outputs = self.model( inputs_embeds=inputs_embeds, output_hidden_states=False ).last_hidden_state
         return outputs
 
@@ -386,8 +398,9 @@ class Model:
         return lm_head( embedded_outputs.to(self.device) )
 
     def get_logits(self, text:str=None, input_ids:TT=None, inputs_embeds:TT=None, outputs_embeds:TT=None):
-        outputs_embeds = outputs_embeds or self.get_outputs_embeds(text, input_ids, inputs_embeds)
-        logits = self.unembed( outputs.last_hidden_state )
+        outputs_embeds = self.get_outputs_embeds(text, input_ids, inputs_embeds) \
+            if outputs_embeds is None else outputs_embeds
+        logits = self.unembed(outputs_embeds)
         return logits
 
     # Get intermediate activaitons (using HOOKS!!!)
@@ -452,6 +465,29 @@ class Model:
         return einops.rearrange(torch.stack(residual_stream),
             "layer batch token dim -> batch layer token dim"
         )
+
+    def get_residual_diffs(self, text=None, input_ids=None, split=True):
+        self.disable_all_collect_hooks()
+        self.enable_collect_hooks(["post_attn", "post_mlp"])
+
+        # Forward pass
+        inputs_embeds  = self.get_inputs_embeds(text, input_ids)
+        outputs_embeds = self.get_outputs_embeds(inputs_embeds=inputs_embeds)
+
+        # Collect residual stream
+        post_attn_activations = self.hooks["post_attn"]["collect"]
+        post_mlp_activations  = self.hooks["post_mlp"]["collect"]
+        post_attn_activations = einops.rearrange(
+            torch.stack(post_attn_activations),
+            "layer batch token dim -> batch layer token dim")
+        post_mlp_activations  = einops.rearrange(
+            torch.stack(post_mlp_activations),
+            "layer batch token dim -> batch layer token dim")
+
+        return inputs_embeds, post_attn_activations, post_mlp_activations, outputs_embeds
+
+    def get_text_activations(self, text=None, input_ids=None):
+        return self.get_residual_diffs(text=text, input_ids=input_ids)
 
     def forward(self, input_ids):
         input_ids = input_ids.to(self.device)

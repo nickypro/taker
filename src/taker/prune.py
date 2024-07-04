@@ -470,16 +470,16 @@ def forsaken_pruning(c: PruningConfig,
             for i in range(num_texts):
                 # Get junk loss L_kl(gamma,P)
                 with torch.no_grad():
-                    junk_logits = opt.get_all_logits(junk_ids[i])[..., :-1, :]
-                bad_logits = opt.get_all_logits(bad_ids[i])[..., :-1, :]
+                    junk_logits = opt.get_logits(input_ids=junk_ids[i])[..., :-1, :]
+                bad_logits = opt.get_logits(input_ids=bad_ids[i])[..., :-1, :]
                 loss += kl_loss_fn(bad_logits, junk_logits).mean()
 
                 # Get good loss L_kl(gamma,Q)
                 with torch.no_grad():
                     opt.masking_enabled = False
-                    orig_logits = opt.get_all_logits(good_ids[i])[..., :-1, :]
+                    orig_logits = opt.get_logits(input_ids=good_ids[i])[..., :-1, :]
                     opt.masking_enabled = True
-                new_logits = opt.get_all_logits(good_ids[i])[..., :-1, :]
+                new_logits = opt.get_logits(input_ids=good_ids[i])[..., :-1, :]
                 loss += kl_loss_fn(new_logits, orig_logits).mean()
 
             # Backpropagate
