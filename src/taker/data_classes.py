@@ -461,7 +461,7 @@ class ActivationSummaryHolder:
 class ActivationOverview:
     """Output from activation collection on multiple possible parts"""
     texts_viewed: int
-    ff: Optional[ActivationSummaryHolder] = None
+    mlp: Optional[ActivationSummaryHolder] = None
     attn: Optional[ActivationSummaryHolder] = None
     raw: Optional[dict] = None
     misc_data: Optional[dict] = None
