@@ -1,7 +1,7 @@
 import torch
 from separability import Model
 from separability.data_classes import RunDataItem
-from separability.activations import get_midlayer_activations, \
+from separability.activations import get_midlayer_data, \
     get_top_frac, get_attn_crossover
 from separability.eval import evaluate_all
 
@@ -23,8 +23,8 @@ def manual_prune_and_evaluate(model_name):
     print(act)
 
     # Get midlayer activations of FF and ATTN
-    focus_out   = get_midlayer_activations( opt, focus, sample_size )
-    cripple_out = get_midlayer_activations( opt, cripple, sample_size )
+    focus_out   = get_midlayer_data( opt, focus, sample_size )
+    cripple_out = get_midlayer_data( opt, cripple, sample_size )
 
     # Get the top fraction FF activations and prune
     if do_ff > 0:
@@ -32,7 +32,7 @@ def manual_prune_and_evaluate(model_name):
         focus_ff_count = focus_out["ff"]["pos_count"]
         ff_rel_freq = ( cripple_ff_count / ( focus_ff_count + ff_eps ) ).cpu()
         ff_criteria, ff_threshold = get_top_frac( ff_rel_freq, ff_prune_frac )
-        opt.delete_ff_keys( ff_criteria )
+        opt.hooks.delete_mlp_neurons( ff_criteria )
 
     # Get the top fraction of Attention activations and prune
     if do_attn > 0:
