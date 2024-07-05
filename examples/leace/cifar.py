@@ -8,7 +8,7 @@ m = Model("nickypro/vit-cifar100")
 d_model = m.cfg.d_model
 d_vocab = 100 # cifar100
 
-def get_midlayer_activations(model, dataset, token_limit=None):
+def get_midlayer_data(model, dataset, token_limit=None):
     """Gets the activations of the midlayer ('key' layer) of MLPs for
     each layer, as well as for the pre_out layer of attention for each layer.
     """
@@ -51,6 +51,6 @@ def get_midlayer_activations(model, dataset, token_limit=None):
                 break
 
     return {
-        "ff":     ff_act,
+        "mlp":     ff_act,
         "attn": attn_act,
     }
