@@ -21,11 +21,11 @@ class TestCollection:
         data_code = get_midlayer_data(opt, "code", n_samples,
             calculate_ff=False, calculate_attn=False, collect_ff=True)
 
-        assert data_pile.raw["ff"].size()[1:] == torch.Size([n_layers, d_mlp])
-        assert data_code.raw["ff"].size()[1:] == torch.Size([n_layers, d_mlp])
+        assert data_pile.raw["mlp"].size()[1:] == torch.Size([n_layers, d_mlp])
+        assert data_code.raw["mlp"].size()[1:] == torch.Size([n_layers, d_mlp])
 
-        ff_pile = data_pile.raw["ff"].permute( (1,2,0) )
-        ff_code = data_code.raw["ff"].permute( (1,2,0) )
+        ff_pile = data_pile.raw["mlp"].permute( (1,2,0) )
+        ff_code = data_code.raw["mlp"].permute( (1,2,0) )
 
         assert ff_pile.size()[:-1] == torch.Size([n_layers, d_mlp])
         assert ff_code.size()[:-1] == torch.Size([n_layers, d_mlp])
@@ -67,9 +67,9 @@ class TestCollection:
 
         # assert only attention was collected
         with pytest.raises(KeyError):
-            data_pile.raw["ff"]
+            data_pile.raw["mlp"]
         with pytest.raises(KeyError):
-            data_code.raw["ff"]
+            data_code.raw["mlp"]
 
         # TODO: Add more tests here to make sure the data is correct
 
@@ -77,20 +77,19 @@ class TestCollection:
     @pytest.mark.parametrize("mask_fn", ["delete", "step"])
     def test_masked_collection(self, model_repo, mask_fn):
         print( "# Running Test: test_masked_collection" )
-        use_inverse_out = (mask_fn == "delete")
-        opt = Model(model_repo, limit=1000, dtype="fp32", mask_fn=mask_fn,
-                    use_inverse_out=use_inverse_out)
+        # use_inverse_out = (mask_fn == "delete") TODO: maybe try this idk?
+        opt = Model(model_repo, limit=1000, dtype="fp32", mask_fn=mask_fn)
         n_samples = 1e3
 
         data_pile = get_midlayer_data(opt, "pile", n_samples)
 
         attn_removals = torch.zeros_like(data_pile.attn.orig.mean)
         attn_removals[:, :10] = 1
-        mlp_removals  = torch.zeros_like(data_pile.ff.orig.mean)
+        mlp_removals  = torch.zeros_like(data_pile.mlp.orig.mean)
         mlp_removals[:, :10] = 1
 
-        opt.delete_attn_pre_out(attn_removals)
-        opt.delete_ff_keys(mlp_removals)
+        opt.hooks.delete_attn_neurons(attn_removals)
+        opt.hooks.delete_mlp_neurons(mlp_removals)
 
         # TODO: add tests here
 

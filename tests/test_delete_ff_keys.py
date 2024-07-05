@@ -23,15 +23,18 @@ class TestDeleteFFKeys:
         n_tokens  = input_ids.size()[-1]
 
         # Make a tensor of the expected_size
-        expected_size = torch.Size([ n_layers, n_tokens, d_ff ])
+        expected_size = torch.Size([ 1, n_layers, n_tokens, d_ff ])
 
         # Run the model
         with torch.no_grad():
-            ff_keys = opt.get_ff_key_activations(input_ids=input_ids)
+            opt.disable_all_collect_hooks()
+            opt.enable_collect_hooks(["mlp_pre_out"])
+            opt.get_outputs_embeds(input_ids=input_ids)
+            ff_keys = opt.collect_recent_mlp_pre_out()
 
         # Test that result is as desired
-        assert len(ff_keys) == n_layers
-        assert ff_keys.size() == expected_size
+        assert ff_keys.shape[1] == n_layers
+        assert ff_keys.shape == expected_size
 
         print( "Text size:", ff_keys.size() )
         print( "Expected :", expected_size )
@@ -107,7 +110,7 @@ class TestDeleteFFKeys:
 
         # Run deletions on the layers
         print('# Running deletion')
-        opt.delete_ff_keys(removal_tensor)
+        opt.hooks.delete_mlp_keys(removal_tensor)
 
         # Post-test to make sure deletions work as expected
         print('# Running post-deletion validation')

@@ -11,7 +11,7 @@ from taker.prune import prune_and_evaluate
 class TestPruneAndEvaluate:
     pruning_config = PruningConfig("nickypro/tinyllama-15m",
         attn_mode="pre-out", do_attn_mean_offset=False, use_accelerator=False,
-        ff_frac=0.1, ff_eps=0.1, attn_frac=0.001, attn_eps=1e4,
+        ff_frac=0.1, ff_eps=0.1, attn_frac=0.001, attn_eps=1e-4,
         token_limit=1000, focus="pile", cripple="code")
 
     def __run_testing(self, _pruning_config: PruningConfig):

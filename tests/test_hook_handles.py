@@ -1,4 +1,4 @@
-""" Test the evaluate_all function. """
+""" Test the hook handles storage functions. """
 
 # pylint: disable=import-error
 import pytest
@@ -16,7 +16,8 @@ class TestHookHandles:
         res_0 = m.get_residual_stream(text)
 
         # modify the masks
-        mask0 = m.masks["attn_pre_out"][0]
+        #mask0 = m.hooks_raw["attn_pre_out"][0]
+        mask0 = m.hooks_raw.neuron_masks["layer_0_attn_pre_out"]
         mask0.delete_neurons(
             keep_indices=torch.zeros([m.cfg.d_model])
         )

@@ -82,13 +82,13 @@ def score_and_prune( opt: Model,
 
     act_subset = pruning_config.scoring_normalization
     if do_ff > 0:
-        ff_focus_data   = focus_activations_data.ff[act_subset]
-        ff_cripple_data = cripple_activations_data.ff[act_subset]
+        ff_focus_data   = focus_activations_data.mlp[act_subset]
+        ff_cripple_data = cripple_activations_data.mlp[act_subset]
         ff_scoring_fn = score_indices_by(pruning_config.ff_scoring)
 
         ff_scores = ff_scoring_fn(opt, ff_focus_data, ff_cripple_data, ff_eps)
         ff_criteria, ff_threshold = get_top_frac(ff_scores, ff_frac)
-        opt.delete_ff_keys(ff_criteria)
+        opt.hooks.delete_mlp_neurons(ff_criteria)
 
     # Get the top fraction of Attention activations and prune
     if do_attn > 0:
@@ -117,8 +117,9 @@ def score_and_prune( opt: Model,
 
         # get criteria and prune if using only attention neurons
         if pruning_config.attn_mode == "pre-out":
-            opt.delete_attn_pre_out( attn_criteria, means )
+            opt.hooks.delete_attn_neurons( attn_criteria) # TODO: add option for means
         elif pruning_config.attn_mode == "value":
+            raise NotImplementedError("'value' pruning not yet implemented in v1")
             opt.delete_attn_values( attn_criteria, means )
         else:
             raise NotImplementedError("attn_mode must be 'pre-out' or 'value'")
@@ -383,7 +384,7 @@ def forsaken_pruning(c: PruningConfig,
 
     # Set masks for feed-forward layers
     ff_scores   = score_indices(c.ff_scoring,
-        opt, focus_out.ff.orig,   cripple_out.ff.orig)
+        opt, focus_out.mlp.orig,   cripple_out.mlp.orig)
     ff_masks    = sigmoid_offset - normalize_scores(ff_scores)
     for layer_index in range(opt.cfg.n_layers):
         mask = opt.masks["mlp_pre_out"][layer_index]

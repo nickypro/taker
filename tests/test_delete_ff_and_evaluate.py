@@ -20,9 +20,9 @@ class TestDeleteFFKeys:
         print(" - Initial Evaluation...")
 
         pile_data: ActivationSummary = \
-            get_midlayer_data(opt, 'pile', sample_size=1e3, calculate_attn=False)["ff"]
+            get_midlayer_data(opt, 'pile', sample_size=1e3, calculate_attn=False).mlp
         code_data: ActivationSummary = \
-            get_midlayer_data(opt, 'code', sample_size=1e3, calculate_attn=False)["ff"]
+            get_midlayer_data(opt, 'code', sample_size=1e3, calculate_attn=False).mlp
         pile_count = pile_data.orig.pos_count
         code_count = code_data.orig.pos_count
 
@@ -30,7 +30,7 @@ class TestDeleteFFKeys:
         removals = code_count > pile_count
         print("# Deleting FF Keys...")
 
-        opt.delete_ff_keys(removals)
+        opt.hooks.delete_mlp_neurons(removals)
 
         # Make sure attention heads were deleted
         print("# Final Evaluation...")

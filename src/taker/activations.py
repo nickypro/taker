@@ -181,7 +181,7 @@ def get_midlayer_data(opt: Model,
     }
 
     if calculate_ff:
-        output["ff"] = ActivationSummaryHolder(
+        output["mlp"] = ActivationSummaryHolder(
             orig=ff_data.summary(dtype=opt.dtype),
         )
     if calculate_attn:
@@ -192,7 +192,7 @@ def get_midlayer_data(opt: Model,
     if do_collect:
         output["raw"] = {"criteria": torch.stack(criteria_raw)}
     if collect_ff:
-        output["raw"]["ff"] = ff_data.get_raw()
+        output["raw"]["mlp"] = ff_data.get_raw()
     if collect_attn:
         output["raw"]["attn"] = attn_data.get_raw()
     if collect_ids:

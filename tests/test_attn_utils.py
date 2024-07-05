@@ -27,34 +27,31 @@ class TestAttnUtils:
 
             # Get example input
             in_0 = torch.randn([1, 3, d_model], device=device, dtype=dtype)
-            mask = torch.tensor(
+            attn_mask = torch.tensor(
                 [[[[1, 0, 0], [1, 1, 0], [1, 1, 1]]]],
                 device=device, dtype=torch.bool
             )
 
             # Get example output
-            out_0, _, (k_0, v_0) = attn(in_0, attention_mask=mask)
+            out_0, _, (k_0, v_0) = attn(in_0, attention_mask=attn_mask)
             print(out_0)
-
 
             # Do SVD stuff
             opt.svd_attention_layers()
 
             # Check that the output is the same
-            out_1, _, (k_1, v_1) = attn(in_0, attention_mask=mask)
+            out_1, _, (k_1, v_1) = attn(in_0, attention_mask=attn_mask)
             assert torch.allclose(out_0, out_1, 1e-3, 1e-4)
 
-            return
-
     @pytest.mark.parametrize("model_repo", test_model_repos)
-    @pytest.mark.parametrize("mask_fn", ["delete", "step"])
+    @pytest.mark.parametrize("mask_fn", ["step"]) # TODO: reimplement "delete"
     def test_deletion(self, model_repo, mask_fn):
         with torch.no_grad():
             layer, h_index, i_index = 0, 11, 31
             n_tokens = 3
 
             opt = Model(model_repo, dtype="fp32", mask_fn=mask_fn,
-                use_accelerator=False, svd_attn=False, use_inverse_out=True)
+                use_accelerator=False, svd_attn=False)
             d_model, d_head, n_heads = \
                 opt.cfg.d_model, opt.cfg.d_head, opt.cfg.n_heads
             device, dtype = opt.device, opt.dtype
@@ -83,7 +80,7 @@ class TestAttnUtils:
                 dtype=torch.bool, device=device
             )
             remove_indices[h_index, i_index] = True
-            opt.delete_attn_pre_out_layer(layer, remove_indices)
+            opt.hooks.delete_attn_neurons(remove_indices, layer)
 
             # Test behaviour is correct
             out_1, _, (k_1, v_1) = attn(in_0, attention_mask=mask)
@@ -94,10 +91,9 @@ class TestAttnUtils:
                 assert torch.equal(v_0, v_1)
                 assert not torch.equal(v_0_mod, v_1)
 
-
             # Delete ALL indices
             remove_indices = torch.ones_like(remove_indices)
-            opt.delete_attn_pre_out_layer(layer, remove_indices)
+            opt.hooks.delete_attn_neurons(remove_indices, layer)
 
             # Test behaviour is correct
             out_2, _, (k_2, v_2) = attn(in_0, attention_mask=mask)

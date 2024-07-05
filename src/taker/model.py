@@ -8,11 +8,13 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, PreTrainedModel
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 try:
     from .model_maps import convert_hf_model_config, ModelMap, ConfigClass
-    from .nn import ActiveHooks, NeuronMask, NeuronActAdd, NeuronPostBias, NeuronSave, NeuronFunctionList
+    from .hooks import ActiveHooks, NeuronMask, NeuronActAdd, NeuronPostBias, \
+        NeuronSave, NeuronOffset, NeuronReplace, NeuronFunctionList
     from .data_classes import DtypeMap
 except:
     from model_maps import convert_hf_model_config, ModelMap, ConfigClass
-    from nn import ActiveHooks, NeuronMask, NeuronActAdd, NeuronPostBias, NeuronSave, NeuronFunctionList
+    from hooks import ActiveHooks, NeuronMask, NeuronActAdd, NeuronPostBias, \
+        NeuronSave, NeuronOffset, NeuronReplace, NeuronFunctionList
     from data_classes import DtypeMap
 
 class HookConfig:
@@ -83,6 +85,12 @@ class HookMap:
     def __str__(self):
         return "HookConfig:\n" + str(self.model.hook_config)
 
+    def delete_mlp_neurons(self, remove_indices, layer: int = None):
+        return self["mlp_pre_out"].delete_neurons(remove_indices, layer)
+
+    def delete_attn_neurons(self, remove_indices, layer: int = None):
+        return self["attn_pre_out"].delete_neurons(remove_indices, layer)
+
 class HookMapComponent:
     def __init__(self, model, component):
         self.model = model
@@ -102,23 +110,44 @@ class HookMapComponent:
         else:
             raise ValueError(f"Cannot set data type: {data_type}")
 
+    def delete_neurons(self, remove_indices, layer: int = None):
+        if layer is not None:
+            mask = self.model.get_data(f"layer_{layer}_{self.component}", "mask")
+            if mask is not None:
+                remove_indices = self._prepare_remove_indices(remove_indices, mask.param.shape)
+                keep_indices = torch.logical_not(remove_indices).flatten()
+                mask.delete_neurons(keep_indices)
+        else:
+            masks = self["mask"]
+            for layer, mask in enumerate(masks):
+                if mask is not None:
+                    layer_remove_indices = self._prepare_remove_indices(remove_indices[layer], mask.param.shape)
+                    keep_indices = torch.logical_not(layer_remove_indices).flatten()
+                    mask.delete_neurons(keep_indices)
+        return self.model
+
+    def _prepare_remove_indices(self, remove_indices: torch.Tensor, mask_shape: torch.Size) -> torch.Tensor:
+        remove_indices = torch.tensor(remove_indices, dtype=torch.bool, device=self.model.device)
+        if remove_indices.shape != mask_shape:
+            remove_indices = remove_indices.reshape(mask_shape)
+        return remove_indices
+
 class Model:
     def __init__(self,
-            model_repo: str = "nickypro/tinyllama-15m",
-            limit: int = None,
-            model_device: str = None,
-            output_device: str = None,
-            device_map: str = None,
-            use_accelerator: bool = True,
-            dtype: str = "bfp16",
-            torch_dtype: torch.dtype = None,
-            svd_attn: bool = False,
-            tokenizer_repo: str = None,
-            mask_fn: str = "step",
-            use_inverse_out: bool = False,
-            eval_mode: bool = True,
-            hook_config: str = None,
-            add_hooks: bool = True,
+            model_repo: str = "nickypro/tinyllama-15m", # Which huggingface model to load
+            limit: int = None, # Max amount of tokens to allow to run
+            model_device: str = None, # device for transformers model ["cuda", "cpu", "mps"]
+            output_device: str = None, # device for saving outputs
+            device_map: str = None, # transformers device map config ["auto", "cuda"]
+            use_accelerator: bool = True, # Allow multigpu
+            dtype: str = "bfp16", # See DtypeConfig. ["bfp16", "fp32", "fp16", "hqq8", "int8", "hqq4", "int4", "nf4"]
+            torch_dtype: torch.dtype = None, # manual torch.dtype
+            svd_attn: bool = False, # whether to modify attention weights with SVD (TODO: reimplement)
+            tokenizer_repo: str = None, # huggingface tokenizer to load (defaults to model_repo)
+            mask_fn: str = "step", # what kind of mask to apply to model hooks ("step", "sigmoid", ...)
+            eval_mode: bool = True, # set model to model.eval(), not sure what this does
+            hook_config: str = None, # See HookConfig. hook configuration string.
+            add_hooks: bool = True, # whether to add hooks from the start or not [True, False]
         ):
         # Handle devices and multi-gpu stuff
         self.use_accelerator = False
@@ -173,10 +202,10 @@ class Model:
     def default_config():
         config_string = """
         pre_attn: collect
-        attn_pre_out: mask, collect
+        attn_pre_out: offset, mask, replace, collect, unoffset
         post_attn: collect
         pre_mlp: collect
-        mlp_pre_out: mask, collect
+        mlp_pre_out: offset, mask, replace, collect, unoffset
         post_mlp: collect
         """
         return HookConfig().from_string(config_string)
@@ -289,8 +318,21 @@ class Model:
                     curr_hook = self.hooks_raw.neuron_actadds[name]
                 elif hook == "postbias":
                     if name not in self.hooks_raw.neuron_postbiases:
-                        self.hooks_raw.neuron_postbiases[name] = NeuronPostBias(activation.shape[2:])
+                        self.hooks_raw.neuron_postbiases[name] = NeuronPostBias(activation.shape[2:]).to(self.device)
                     curr_hook = self.hooks_raw.neuron_postbiases[name]
+                elif hook == "offset":
+                    if name not in self.hooks_raw.neuron_offsets:
+                        self.hooks_raw.neuron_offsets[name] = NeuronOffset(activation.shape[2:]).to(self.device)
+                    curr_hook = self.hooks_raw.neuron_offsets[name]
+                elif hook == "unoffset":
+                    if name not in self.hooks_raw.neuron_unoffsets:
+                        assert name in self.hooks_raw.neuron_offsets
+                        self.hooks_raw.neuron_unoffsets[name] = self.hooks_raw.neuron_offsets[name]
+                    curr_hook = lambda __x : self.hooks_raw.neuron_unoffsets[name].undo(__x)
+                elif hook == "replace":
+                    if name not in self.hooks_raw.neuron_replace:
+                        self.hooks_raw.neuron_replace[name] = NeuronReplace(self.device, self.dtype)
+                    curr_hook = self.hooks_raw.neuron_replace[name]
                 else:
                     print(f"Warning: '{hook}' not found")
                     continue
