@@ -470,9 +470,8 @@ llama_model_map = {
     "pos_embed.W"     : "model.embed_positions.weight",
     "ln_final"        : "model.norm",
     "ln_final.w"      : "model.norm.weight",
-    #"unembed"         : "lm_head",
-    #"unembed.W_U"     : "lm_head.weight.T",
-    #"unembed.b_U"     : None,
+    "unembed"         : "lm_head",
+    "unembed.W_U"     : "lm_head.weight.T",
 }
 
 def build_llama_layer_map(cfg: ConfigClass):
