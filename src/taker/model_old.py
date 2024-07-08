@@ -151,7 +151,6 @@ class Model():
         self.layers: list = None
 
         # Hooking into the model
-        self.use_inverse_out: bool = use_inverse_out
         self.hook_handles = defaultdict(lambda : defaultdict(dict))
         self.activations: dict = None
         self.do_activations: dict = None

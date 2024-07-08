@@ -876,18 +876,22 @@ def build_phi3_layer_map(cfg: ConfigClass):
         "ln1": "input_layernorm",
         "ln1.w": "input_layernorm.weight",
         "ln1.b": "input_layernorm.bias",
+
         "attn": "self_attn",
         **generate_attn_qkv_functions(phi3_qkv_weight, phi3_attn_bias),
         "attn.out_proj": "self_attn.o_proj",
         "attn.W_O": "self_attn.o_proj.weight",
         "attn.b_O": "self_attn.o_proj.bias",
 
+        "ln2"  : "post_attention_layernorm",
+        "ln2.w": "post_attention_layernorm.weight",
+        "ln2.b": None,
 
         "mlp": "mlp",
         #"mlp.in_proj" : "mlp.gate_up_proj", # this combined up and gate proj matrices
         "mlp.out_proj": "mlp.down_proj",
-        "mlp.W_in": "mlp.gate_up_proj.weight",
-        "mlp.b_in": lambda layer, _inpt=None: phi3_mlp_bias(layer, "mlp.b_in", _inpt),
+        #"mlp.W_in": "mlp.gate_up_proj.weight",
+        #"mlp.b_in": lambda layer, _inpt=None: phi3_mlp_bias(layer, "mlp.b_in", _inpt),
         "mlp.W_out": "mlp.down_proj.weight",
         "mlp.b_out": lambda layer, _inpt=None: phi3_mlp_bias(layer, "mlp.b_out", _inpt),
         "activation_fn": "mlp.activation_fn",
