@@ -8,11 +8,7 @@ import pandas as pd
 import wandb
 from welford_torch import Welford
 from transformers import BitsAndBytesConfig
-try:
-    from transformers import HqqConfig
-except:
-    HqqConfig = None
-
+from transformers import HqqConfig
 
 ######################################################################################
 # Functional Conversion Data Classes
@@ -30,7 +26,8 @@ class QDtypeConfigs:
         bnb_4bit_compute_dtype=torch.bfloat16
     )
     hqq8 = HqqConfig(nbits=8, group_size=64, quant_zero=False, quant_scale=False)
-    hqq4 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False)
+    hqq4_0 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=0)
+    hqq4_1 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=1)
 
 class DtypeMap():
     def __init__(self, str_dtype=None, torch_dtype=None):
@@ -53,6 +50,7 @@ class DtypeMap():
             "bfp16": torch.bfloat16,
             "nf4": torch.bfloat16,
             "hqq4": torch.bfloat16,
+            "hqq4_1": torch.bfloat16,
             "hqq8": torch.bfloat16,
         }
         return dtype_map[self.str_dtype]
@@ -70,7 +68,8 @@ class DtypeMap():
         args = {
             "nf4" : {dtype_key: self._dtype, quant_conf: QDtypeConfigs.nf4},
             "int4": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.int4},
-            "hqq4": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq4},
+            "hqq4": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq4_0},
+            "hqq4_1": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq4_1},
             "int8": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.int8},
             "hqq8": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq8},
             "fp16": {dtype_key: self._dtype},
@@ -79,6 +78,14 @@ class DtypeMap():
             "bfp16": {dtype_key: self._dtype},
         }
         return args[self.str_dtype]
+
+    def compile(self, model):
+        " Function that takes model -> returns compiled model"
+        if self.str_dtype == "hqq4_1":
+            from hqq.utils.patching import prepare_for_inference
+            prepare_for_inference(model, backend="torchao_int4")
+            return model
+        return torch.compile(model)
 
     @property
     def is_low_precision(self):

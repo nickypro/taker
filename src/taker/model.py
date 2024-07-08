@@ -136,6 +136,7 @@ class Model:
             device_map: str = None, # transformers device map config ["auto", "cuda"]
             use_accelerator: bool = True, # Allow multigpu
             dtype: str = "bfp16", # See DtypeConfig. ["bfp16", "fp32", "fp16", "hqq8", "int8", "hqq4", "int4", "nf4"]
+            compile: bool = True, # whether to use compiled backend. Prevents "training/backprop", adds speed
             torch_dtype: torch.dtype = None, # manual torch.dtype
             svd_attn: bool = False, # whether to modify attention weights with SVD (TODO: reimplement)
             tokenizer_repo: str = None, # huggingface tokenizer to load (defaults to model_repo)
@@ -190,6 +191,9 @@ class Model:
 
         # Initialize the model
         self.init_model(add_hooks=add_hooks)
+        self.compile = compile
+        if self.compile:
+            self.predictor = self.dtype_map.compile(self.predictor)
         with torch.no_grad():
             self.get_outputs_embeds(".")
 
