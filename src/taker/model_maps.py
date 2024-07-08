@@ -764,6 +764,104 @@ def build_gemma_layer_map(cfg: ConfigClass):
     }
     return gemma_layer_map
 
+# Gemma 2
+#########
+
+gemma2_model_map = {
+    "model"           : "model",
+    "layers"          : "model.layers",
+    "embed"           : "model.embed_tokens",
+    "embed.W_E"       : "model.embed_tokens.weight",
+    "ln_final"        : "model.norm",
+    "ln_final.w"      : "model.norm.weight",
+    "unembed"         : "lm_head",
+    "unembed.W_U"     : "lm_head.weight.T",
+    "unembed.b_U"     : None,
+}
+
+def build_gemma2_layer_map(cfg: ConfigClass):
+    attn_proj_map = {"q": "q_proj", "k": "k_proj", "v": "v_proj", "o": "o_proj"}
+    mlp_proj_map = {"mlp.gate_proj": "gate_proj", "mlp.up_proj": "up_proj", "mlp.down_proj": "down_proj"}
+
+    def gemma2_qkv_weight(layer, key: str, inpt: Optional[Any]=None):
+        # Prepare shape changing
+        their_shape = "(n_heads d_head) d_model"
+        my_shape    = "n_heads d_head d_model"
+        sizes = generate_sizes_dict(my_shape, cfg)
+
+        # Get attn proj module
+        attn = layer.self_attn
+        attn_proj = get_attrs(attn, attn_proj_map[key])
+
+        # Get mode
+        if inpt is None:
+            W = attn_proj.weight
+            W = einops.rearrange(W, f"{their_shape} -> {my_shape}", **sizes)
+            return W
+
+        # Set mode
+        W = einops.rearrange(inpt, f"{my_shape} -> {their_shape}", **sizes)
+        update_param(attn_proj, "weight", W)
+
+    def gemma2_attn_bias(layer, key: str, _inpt: Optional[Any]=None):
+        # Gemma2 doesn't use biases in attention
+        return None
+
+    def gemma2_mlp_weight(layer, key: str, inpt: Optional[Any]=None):
+        mlp = layer.mlp
+        proj = get_attrs(mlp, mlp_proj_map[key])
+
+        if inpt is None:
+            return proj.weight
+        update_param(proj, "weight", inpt)
+
+    def gemma2_mlp_bias(layer, key: str, _inpt: Optional[Any]=None):
+        # Gemma2 doesn't use biases in MLP
+        return None
+
+    gemma2_layer_map = {
+        "attn.ln_in"    : "input_layernorm",
+        "attn.ln_in.w"  : "input_layernorm.weight",
+        "attn.ln_in.b"  : None,
+
+        "attn"          : "self_attn",
+        "attn.q_proj"   : "self_attn.q_proj",
+        "attn.k_proj"   : "self_attn.k_proj",
+        "attn.v_proj"   : "self_attn.v_proj",
+
+        **generate_attn_qkv_functions(gemma2_qkv_weight, gemma2_attn_bias),
+
+        "attn.out_proj" : "self_attn.o_proj",
+        "attn.W_O"      : "self_attn.o_proj.weight",
+        "attn.b_O"      : None,
+
+        "attn.ln_out"   : "post_attention_layernorm",
+        "attn.ln_out.w" : "post_attention_layernorm.weight",
+        "attn.ln_out.b" : None,
+
+        "mlp"           : "mlp",
+        "mlp.gate_proj" : "mlp.gate_proj",
+        "mlp.up_proj"   : "mlp.up_proj",
+        "mlp.down_proj" : "mlp.down_proj",
+        "mlp.W_gate"    : lambda layer, inpt=None: gemma2_mlp_weight(layer, "mlp.gate_proj", inpt),
+        "mlp.W_up"      : lambda layer, inpt=None: gemma2_mlp_weight(layer, "mlp.up_proj", inpt),
+        "mlp.W_down"    : lambda layer, inpt=None: gemma2_mlp_weight(layer, "mlp.down_proj", inpt),
+        "mlp.b_gate"    : lambda layer, _inpt=None: gemma2_mlp_bias(layer, "mlp.gate_proj", _inpt),
+        "mlp.b_up"      : lambda layer, _inpt=None: gemma2_mlp_bias(layer, "mlp.up_proj", _inpt),
+        "mlp.b_down"    : lambda layer, _inpt=None: gemma2_mlp_bias(layer, "mlp.down_proj", _inpt),
+
+        "activation_fn" : "mlp.act_fn",
+
+        "mlp.ln_in"     : "pre_feedforward_layernorm",
+        "mlp.ln_in.w"   : "pre_feedforward_layernorm.weight",
+        "mlp.ln_in.b"   : None,
+
+        "mlp.ln_out"    : "post_feedforward_layernorm",
+        "mlp.ln_out.w"  : "post_feedforward_layernorm.weight",
+        "mlp.ln_out.b"  : None,
+    }
+
+    return gemma2_layer_map
 
 # PHI 1 and 2 models
 ####################
