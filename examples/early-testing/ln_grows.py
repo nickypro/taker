@@ -21,7 +21,7 @@ def plot_model(model_name):
 
     with torch.no_grad():
         for layer in range(model.cfg.n_layers):
-            LN = model.layers[layer]["ln1"]
+            LN = model.layers[layer]["attn.ln_in"]
             norms.append( LN(res[layer]).norm(dim=-1).cpu().numpy() )
             print(f"L{layer:2} post LN", norms[-1])
 

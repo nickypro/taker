@@ -250,7 +250,8 @@ def convert_hf_model_config(official_model_name: str):
             "use_local_attn": False,
             "scale_attn_by_inverse_layer_idx": False,
             "normalization_type": "LN",
-
+            "pre_layernorm": False,
+            "post_layernorm": True,
         }
     elif architecture == "PhiForCausalLM":
         cfg_dict = {
@@ -271,7 +272,7 @@ def convert_hf_model_config(official_model_name: str):
             "gated_mlp": False,
             #"trust_remote_code": True,
             #"use_attn_scale": True,
-            #"parallel_attn_mlp": True,
+            "parallel_attn_mlp": True,
         }
     elif architecture == "Phi3ForCausalLM":
         cfg_dict = {
@@ -310,6 +311,8 @@ def convert_hf_model_config(official_model_name: str):
             "normalization_type": "LN",
             "label2id": hf_config.label2id,
             "id2label": hf_config.id2label,
+            "pre_layernorm": True,
+            "post_layernorm": False,
         }
     else:
         raise NotImplementedError(f"{architecture} is not currently supported.")
@@ -420,9 +423,9 @@ def build_opt_layer_map(cfg: ConfigClass):
 
 
     opt_layer_map = {
-        "ln1"           : "self_attn_layer_norm",
-        "ln1.w"         : "self_attn_layer_norm.weight",
-        "ln1.b"         : "self_attn_layer_norm.bias",
+        "attn.ln_in"           : "self_attn_layer_norm",
+        "attn.ln_in.w"         : "self_attn_layer_norm.weight",
+        "attn.ln_in.b"         : "self_attn_layer_norm.bias",
 
         "attn"          : "self_attn",
         "attn.q_proj"   : "self_attn.q_proj",
@@ -439,9 +442,9 @@ def build_opt_layer_map(cfg: ConfigClass):
         "attn.W_O_inv"  : "self_attn.inv_out_proj.weight",
         "attn.b_O_inv"  : "self_attn.inv_out_proj.inverse_bias",
 
-        "ln2"           : "final_layer_norm",
-        "ln2.w"         : "final_layer_norm.weight",
-        "ln2.b"         : "final_layer_norm.bias",
+        "mlp.ln_in"           : "final_layer_norm",
+        "mlp.ln_in.w"         : "final_layer_norm.weight",
+        "mlp.ln_in.b"         : "final_layer_norm.bias",
 
         "mlp.in_proj"   : "fc1",
         "mlp.W_in"      : "fc1.weight",
@@ -519,9 +522,9 @@ def build_llama_layer_map(cfg: ConfigClass):
         return b
 
     llama_layer_map = {
-        "ln1"           : "input_layernorm",
-        "ln1.w"         : "input_layernorm.weight",
-        "ln1.b"         : None,
+        "attn.ln_in"           : "input_layernorm",
+        "attn.ln_in.w"         : "input_layernorm.weight",
+        "attn.ln_in.b"         : None,
 
         "attn"          : "self_attn",
         "attn.q_proj"   : "self_attn.q_proj",
@@ -538,9 +541,9 @@ def build_llama_layer_map(cfg: ConfigClass):
         "attn.W_O_inv"  : "self_attn.inv_out_proj.weight",
         "attn.b_O_inv"  : "self_attn.inv_out_proj.bias",
 
-        "ln2"           : "post_attention_layernorm",
-        "ln2.w"         : "post_attention_layernorm.weight",
-        "ln2.b"         : None,
+        "mlp.ln_in"           : "post_attention_layernorm",
+        "mlp.ln_in.w"         : "post_attention_layernorm.weight",
+        "mlp.ln_in.b"         : None,
 
         "mlp"           : "mlp",
         "mlp.in_proj"   : "mlp.up_proj",
@@ -622,9 +625,9 @@ def build_mistral_layer_map(cfg: ConfigClass):
         return b
 
     mistral_layer_map = {
-        "ln1"           : "input_layernorm",
-        "ln1.w"         : "input_layernorm.weight",
-        "ln1.b"         : None,
+        "attn.ln_in"           : "input_layernorm",
+        "attn.ln_in.w"         : "input_layernorm.weight",
+        "attn.ln_in.b"         : None,
 
         "attn"          : "self_attn",
         "attn.q_proj"   : "self_attn.q_proj",
@@ -638,9 +641,9 @@ def build_mistral_layer_map(cfg: ConfigClass):
         "attn.W_O"      : "self_attn.o_proj.weight",
         "attn.b_O"      : lambda layer, _inpt=None: mistral_attn_bias(layer, "o", _inpt),
 
-        "ln2"           : "post_attention_layernorm",
-        "ln2.w"         : "post_attention_layernorm.weight",
-        "ln2.b"         : None,
+        "mlp.ln_in"           : "post_attention_layernorm",
+        "mlp.ln_in.w"         : "post_attention_layernorm.weight",
+        "mlp.ln_in.b"         : None,
 
         "mlp"           : "mlp",
         "mlp.in_proj"   : "mlp.up_proj",
@@ -725,9 +728,9 @@ def build_gemma_layer_map(cfg: ConfigClass):
         return b
 
     gemma_layer_map = {
-        "ln1"           : "input_layernorm",
-        "ln1.w"         : "input_layernorm.weight",
-        "ln1.b"         : None,
+        "attn.ln_in"           : "input_layernorm",
+        "attn.ln_in.w"         : "input_layernorm.weight",
+        "attn.ln_in.b"         : None,
 
         "attn"          : "self_attn",
         "attn.q_proj"   : "self_attn.q_proj",
@@ -744,9 +747,9 @@ def build_gemma_layer_map(cfg: ConfigClass):
         "attn.W_O_inv"  : "self_attn.inv_out_proj.weight",
         "attn.b_O_inv"  : "self_attn.inv_out_proj.bias",
 
-        "ln2"           : "post_attention_layernorm",
-        "ln2.w"         : "post_attention_layernorm.weight",
-        "ln2.b"         : None,
+        "mlp.ln_in"           : "post_attention_layernorm",
+        "mlp.ln_in.w"         : "post_attention_layernorm.weight",
+        "mlp.ln_in.b"         : None,
 
         "mlp"           : "mlp",
         "mlp.in_proj"   : "mlp.up_proj",
@@ -928,16 +931,16 @@ def build_phi_layer_map(cfg: ConfigClass):
         return b
 
     phi_layer_map = {
-        "ln1": "input_layernorm",
-        "ln1.w": "input_layernorm.weight",
-        "ln1.b": "input_layernorm.bias",
+        "attn.ln_in":   "input_layernorm",
+        "attn.ln_in.w": "input_layernorm.weight",
+        "attn.ln_in.b": "input_layernorm.bias",
         "attn": "self_attn",
         **generate_attn_qkv_functions(phi_qkv_weight, phi_attn_bias),
         "attn.W_O": "self_attn.dense.weight",
         "attn.b_O": "self_attn.dense.bias",
-        "ln2": "input_layernorm",
-        "ln2.w": "input_layernorm.weight",
-        "ln2.b": "input_layernorm.bias",
+        "mlp.ln_in": "input_layernorm", # parallel attn mlp
+        "mlp.ln_in.w": "input_layernorm.weight",
+        "mlp.ln_in.b": "input_layernorm.bias",
         "mlp": "mlp",
         "activation_fn" : "mlp.act_fn",
         "mlp.W_in"      : "mlp.fc1.weight",
@@ -1015,9 +1018,9 @@ def build_phi3_layer_map(cfg: ConfigClass):
         return b
 
     phi3_layer_map = {
-        "ln1": "input_layernorm",
-        "ln1.w": "input_layernorm.weight",
-        "ln1.b": "input_layernorm.bias",
+        "attn.ln_in": "input_layernorm",
+        "attn.ln_in.w": "input_layernorm.weight",
+        "attn.ln_in.b": "input_layernorm.bias",
 
         "attn": "self_attn",
         **generate_attn_qkv_functions(phi3_qkv_weight, phi3_attn_bias),
@@ -1025,9 +1028,9 @@ def build_phi3_layer_map(cfg: ConfigClass):
         "attn.W_O": "self_attn.o_proj.weight",
         "attn.b_O": "self_attn.o_proj.bias",
 
-        "ln2"  : "post_attention_layernorm",
-        "ln2.w": "post_attention_layernorm.weight",
-        "ln2.b": None,
+        "mlp.ln_in"  : "post_attention_layernorm",
+        "mlp.ln_in.w": "post_attention_layernorm.weight",
+        "mlp.ln_in.b": None,
 
         "mlp": "mlp",
         #"mlp.in_proj" : "mlp.gate_up_proj", # this combined up and gate proj matrices
@@ -1105,9 +1108,9 @@ def build_gpt_neox_layer_map(cfg: ConfigClass):
         update_param(qkv_head, "bias", qkv_bias)
 
     gpt_neox_layer_map = {
-        "ln1"       : "input_layernorm",
-        "ln1.w"     : "input_layernorm.weight",
-        "ln1.b"     : "input_layernorm.bias",
+        "attn.ln_in"       : "input_layernorm",
+        "attn.ln_in.w"     : "input_layernorm.weight",
+        "attn.ln_in.b"     : "input_layernorm.bias",
 
         "attn"      : "attention",
         "attn.q_proj"   : None,
@@ -1124,9 +1127,9 @@ def build_gpt_neox_layer_map(cfg: ConfigClass):
         "attn.W_O_inv"      : "attention.inv_out_proj.weight",
         "attn.b_O_inv"      : "attention.inv_out_proj.inverse_bias",
 
-        "ln2"       : "post_attention_layernorm",
-        "ln2.w"     : "post_attention_layernorm.weight",
-        "ln2.b"     : "post_attention_layernorm.bias",
+        "mlp.ln_in"       : "post_attention_layernorm",
+        "mlp.ln_in.w"     : "post_attention_layernorm.weight",
+        "mlp.ln_in.b"     : "post_attention_layernorm.bias",
 
         "mlp"         : "mlp",
         "mlp.in_proj" : "mlp.dense_h_to_4h",
@@ -1218,9 +1221,9 @@ def build_gpt2_layer_map(cfg: ConfigClass):
 
 
     gpt2_layer_map = {
-        "ln1"       : "ln_1",
-        "ln1.w"     : "ln_1.weight",
-        "ln1.b"     : "ln_1.bias",
+        "attn.ln_out"       : "ln_1",
+        "attn.ln_out.w"     : "ln_1.weight",
+        "attn.ln_out.b"     : "ln_1.bias",
         "attn"      : "attn",
         "attn.q_proj"   : None,
         "attn.k_proj"   : None,
@@ -1232,9 +1235,9 @@ def build_gpt2_layer_map(cfg: ConfigClass):
         "attn.inv_out_proj" : "attn.inv_out_proj",
         "attn.W_O_inv"      : "attn.inv_out_proj.weight",
         "attn.b_O_inv"      : "attn.inv_out_proj.inverse_bias",
-        "ln2"       : "ln_2",
-        "ln2.w"     : "ln_2.weight",
-        "ln2.b"     : "ln_2.bias",
+        "mlp.ln_out"       : "ln_2",
+        "mlp.ln_out.w"     : "ln_2.weight",
+        "mlp.ln_out.b"     : "ln_2.bias",
         "mlp"         : "mlp",
         "mlp.in_proj" : "mlp.c_fc",
         "mlp.out_proj": "mlp.c_proj",
@@ -1316,9 +1319,9 @@ def build_roberta_layer_map(cfg: ConfigClass):
 
 
     roberta_layer_map = {
-        "ln1"           : "attention.output.LayerNorm",
-        "ln1.w"         : "attention.output.LayerNorm.weight",
-        "ln1.b"         : "attention.output.LayerNorm.bias",
+        "attn.ln_out"           : "attention.output.LayerNorm",
+        "attn.ln_out.w"         : "attention.output.LayerNorm.weight",
+        "attn.ln_out.b"         : "attention.output.LayerNorm.bias",
 
         "attn"          : "attention",
         "attn.q_proj"   : "attention.self.query",
@@ -1336,9 +1339,9 @@ def build_roberta_layer_map(cfg: ConfigClass):
         "attn.W_O_inv"  : "attention.inv_out_proj.weight",
         "attn.b_O_inv"  : "attention.inv_out_proj.inverse_bias",
 
-        "ln2"           : "output.LayerNorm",
-        "ln2.w"         : "output.LayerNorm.weight",
-        "ln2.b"         : "output.LayerNorm.bias",
+        "mlp.ln_out"           : "output.LayerNorm",
+        "mlp.ln_out.w"         : "output.LayerNorm.weight",
+        "mlp.ln_out.b"         : "output.LayerNorm.bias",
 
         # "mlp"           : "intermediate",
         "mlp.in_proj"   : "intermediate.dense",
@@ -1423,9 +1426,9 @@ def build_vit_layer_map(cfg: ConfigClass):
 
 
     vit_layer_map = {
-        "ln1"           : "layernorm_before.LayerNorm",
-        "ln1.w"         : "layernorm_before.LayerNorm.weight",
-        "ln1.b"         : "layernorm_before.LayerNorm.bias",
+        "attn.ln_in"    : "layernorm_before.LayerNorm",
+        "attn.ln_in.w"  : "layernorm_before.LayerNorm.weight",
+        "attn.ln_in.b"  : "layernorm_before.LayerNorm.bias",
 
         "attn"          : "attention",
         "attn.q_proj"   : "attention.attention.query",
@@ -1443,9 +1446,9 @@ def build_vit_layer_map(cfg: ConfigClass):
         "attn.W_O_inv"  : "attention.inv_out_proj.weight",
         "attn.b_O_inv"  : "attention.inv_out_proj.inverse_bias",
 
-        "ln2"           : "layernorm_after",
-        "ln2.w"         : "layernorm_after.weight",
-        "ln2.b"         : "layernorm_after.bias",
+        "mlp.ln_in"     : "layernorm_after",
+        "mlp.ln_in.w"   : "layernorm_after.weight",
+        "mlp.ln_in.b"   : "layernorm_after.bias",
 
         # "mlp"           : "intermediate",
         "mlp.in_proj"   : "intermediate.dense",
@@ -1531,9 +1534,9 @@ def build_t5_layer_map(cfg: ConfigClass):
 
 
     t5_layer_map = {
-        "ln1"           : "layer_norm",
-        "ln1.w"         : "layer_norm.weight",
-        "ln1.b"         : "layer_norm.bias",
+        "attn.ln_in"    : "self_attn.layer_norm",
+        "attn.ln_in.w"  : "self_attn.layer_norm.weight",
+        "attn.ln_in.b"  : "self_attn.layer_norm.bias",
 
         "attn"          : "self_attn",
         "attn.q_proj"   : "self_attn.q",
@@ -1546,9 +1549,9 @@ def build_t5_layer_map(cfg: ConfigClass):
         "attn.W_O"      : "self_attn.o.weight",
         "attn.b_O"      : "self_attn.o.bias",
 
-        "ln2"           : "layer_norm",
-        "ln2.w"         : "layer_norm.weight",
-        "ln2.b"         : "layer_norm.bias",
+        "mlp.ln_in"     : "fc.layer_norm",
+        "mlp.ln_in.w"   : "fc.layer_norm.weight",
+        "mlp.ln_in.b"   : "fc.layer_norm.bias",
 
         "mlp"           : "fc",
         "mlp.in_proj"   : "fc.DenseReluDense.wi",

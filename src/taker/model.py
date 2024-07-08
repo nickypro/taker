@@ -273,25 +273,50 @@ class Model:
         self.hook_config = config
         self.init_hooks()
 
+    # Transformers parity methods
+    def center_unembed(self):
+        with torch.no_grad():
+            if "unembed" in self.map:
+                lm_head = self.map["unembed"]
+            else:
+                lm_head = self.get_output_embeddings()
+            embed = self.map["embed"]
+            assert embed is not lm_head, "centering unembedding not yet supported for tied weights"
+            lm_head.weight = torch.nn.Parameter(lm_head.weight - lm_head.weight.mean(dim=-1, keepdim=True))
+
     # Hook-specific methods
     def get_module_for_hook_point(self, layer, point):
         layer["attn"].is_attention = True
         # Attention Points
         if point == "pre_attn":
-            return "in", layer["ln1"] if not self.cfg.post_layernorm else layer["attn"]
+            return "in", layer["attn.ln_in"] if self.cfg.pre_layernorm else layer["attn"]
         elif point == "attn_pre_out":
             return "in", layer["attn.out_proj"]
         elif point == "post_attn":
-            return "out", layer["attn"] if not self.cfg.post_layernorm else layer["ln1"]
+            return "out", layer["attn.ln_out"] if self.cfg.post_layernorm else layer["attn"]
         # MLP Points
         elif point == "pre_mlp":
-            return "in", layer["ln2"] if not self.cfg.post_layernorm else layer["mlp.in_proj"]
+            return "in", layer["mlp.ln_in"] if self.cfg.pre_layernorm else layer["mlp.in_proj"]
         elif point == "mlp_pre_out":
             return "in", layer["mlp.out_proj"]
         elif point == "post_mlp":
-            return "out", layer["mlp.out_proj"] if not self.cfg.post_layernorm else layer["ln2"]
+            return "out", layer["mlp.ln_out"] if self.cfg.post_layernorm else layer["mlp.out_proj"]
         else:
             raise ValueError(f"Unknown hook point: {point}")
+
+    def split_attn_head_dims(self, activation):
+        if activation.shape[-1] == self.cfg.d_model:
+            activation = einops.rearrange(
+                activation, "... (n_heads d_head) -> ... n_heads d_head",
+                n_heads=self.cfg.n_heads, d_head=self.cfg.d_head)
+        return activation
+
+    def join_attn_head_dims(self, activation):
+        if activation.shape[-1] == self.cfg.d_head:
+            activation = einops.rearrange(
+                activation, "... n_heads d_head -> ... (n_heads d_head)",
+                n_heads=self.cfg.n_heads, d_head=self.cfg.d_head)
+        return activation
 
     def get_hook_fn(self, name, hooks, io_type="in"):
         def hook_fn(module, __input, __output=None):
@@ -299,6 +324,10 @@ class Model:
             activation = __act[0] if isinstance(__act, tuple) else __act
 
             for hook in hooks:
+                # split attention to [n_heads, d_head]
+                if "attn_pre_out" in name:
+                    activation = self.split_attn_head_dims(activation)
+
                 if hook == "collect":
                     if name not in self.hooks_raw.collects:
                         self.hooks_raw.collects[name] = NeuronSave()
@@ -333,6 +362,8 @@ class Model:
                     continue
                 activation = curr_hook(activation)
 
+            if "attn_pre_out" in name:
+                activation = self.join_attn_head_dims(activation)
             return (activation,) + __act[1:] if isinstance(__act, tuple) else activation
 
         return hook_fn
@@ -443,8 +474,8 @@ class Model:
     # outputs_embeds --[model.lm_head]-> logits
     def unembed(self, embedded_outputs: TT):
         """ Converts outputs_embeds -> token logits. Is also basically LogitLens."""
-        if "lm_head" in self.map.key_map:
-            lm_head = self.map["lm_head"]
+        if "unembed" in self.map.key_map: #aka "lm_head"
+            lm_head = self.map["unembed"]
         else:
             lm_head = self.predictor.get_output_embeddings()
         return lm_head( embedded_outputs.to(self.device) )
@@ -509,15 +540,15 @@ class Model:
         }
 
     def collect_recent_mlp_pre_out(self):
-        mlp_activations = self.hooks["mlp_pre_out"]["collect"]
-        mlp_activations = einops.rearrange(torch.stack(mlp_activations),
+        mlp_activations = torch.stack(self.hooks["mlp_pre_out"]["collect"])
+        mlp_activations = einops.rearrange(mlp_activations,
             "layer batch token dim -> batch layer token dim")
         return mlp_activations
 
     def collect_recent_attn_pre_out(self):
-        attn_activations = self.hooks["attn_pre_out"]["collect"]
-        attn_activations = einops.rearrange(torch.stack(attn_activations),
-            "layer batch token (n_heads d_head) -> batch layer token n_heads d_head",
+        attn_activations = torch.stack(self.hooks["attn_pre_out"]["collect"])
+        attn_activations = einops.rearrange(attn_activations,
+            "layer batch token n_heads d_head -> batch layer token n_heads d_head",
             n_heads=self.cfg.n_heads, d_head=self.cfg.d_head
         )
         return attn_activations

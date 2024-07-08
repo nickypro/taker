@@ -1081,11 +1081,11 @@ class Model():
         L = self.layers[layer_index]
         if res_index % 2 == 0: # attention
             def func(x):
-                y = L["attn"]( L["ln1"](x) )[0]
+                y = L["attn"]( L["attn.ln_in"](x) )[0]
                 return y + x
         elif res_index % 2 == 1: # mlp
             def func(x):
-                y = L["mlp"]( L["ln2"](x) )
+                y = L["mlp"]( L["mlp.ln_in"](x) )
                 return y + x
 
         return func
@@ -1096,7 +1096,7 @@ class Model():
                 attention_mask: Tensor
             ):
         u = self.layers[ layer ]
-        x = u["ln1"]( attn_in )
+        x = u["attn.ln_in"]( attn_in )
         x = u["attn"]( x, attention_mask=attention_mask )[0]
         return x
 
