@@ -4,18 +4,13 @@ import torch
 import torch.nn as nn
 from torch import Tensor as TT
 import einops
+from accelerate import Accelerator
 from transformers import AutoTokenizer, AutoModelForCausalLM, PreTrainedModel
 from transformers import AutoImageProcessor, AutoModelForImageClassification
-try:
-    from .model_maps import convert_hf_model_config, ModelMap, ConfigClass
-    from .hooks import ActiveHooks, NeuronMask, NeuronActAdd, NeuronPostBias, \
-        NeuronSave, NeuronOffset, NeuronReplace, NeuronFunctionList
-    from .data_classes import DtypeMap
-except:
-    from model_maps import convert_hf_model_config, ModelMap, ConfigClass
-    from hooks import ActiveHooks, NeuronMask, NeuronActAdd, NeuronPostBias, \
-        NeuronSave, NeuronOffset, NeuronReplace, NeuronFunctionList
-    from data_classes import DtypeMap
+from .model_maps import convert_hf_model_config, ModelMap, ConfigClass
+from .hooks import ActiveHooks, NeuronMask, NeuronActAdd, NeuronPostBias, \
+    NeuronSave, NeuronOffset, NeuronReplace, NeuronFunctionList
+from .data_classes import DtypeMap
 
 class HookConfig:
     def __init__(self):
@@ -460,6 +455,44 @@ class Model:
         logits = self.unembed(outputs_embeds)
         return logits
 
+
+    def generate(self, text:str=None, num=10,
+            input_ids: TT = None,
+            do_sample: bool = True,
+            temperature: float = 0.7,
+            **kwargs,
+        ):
+        """ Predict the next {num} tokens from an input {text}."""
+
+        if input_ids is None:
+            input_ids = self.get_ids(text).to(self.device)
+
+        # Write an attention mask so that the tokenizer doesn't complain
+        attn_mask = None
+        if hasattr(self.tokenizer, "pad_token_id"):
+            attn_mask = torch.ones_like(input_ids).bool()
+            for index, _id in enumerate(attn_mask[0]):
+                if _id == self.tokenizer.pad_token_id:
+                    attn_mask[index] = 0
+
+        # Hard code GPT2 Tokeniser pad_token_id to avoid warnings
+        if self.cfg.architecture == "GPT2LMHeadModel":
+            if "pad_token_id" not in kwargs:
+                kwargs["pad_token_id"] = 50256
+
+        new_len = len(input_ids[0])+num
+        generate_ids = self.predictor.generate( input_ids, max_length=new_len,
+            do_sample=do_sample, temperature=temperature,
+            attention_mask=attn_mask, **kwargs)
+
+        # return in format (before, after)
+        before = self.tokenizer.batch_decode( input_ids,
+            skip_special_tokens=True, clean_up_tokenization_spaces=False )[0]
+        after  = self.tokenizer.batch_decode( generate_ids,
+            skip_special_tokens=True, clean_up_tokenization_spaces=False )[0]
+        after = after[ len(before): ]
+        return before, after
+
     # Get intermediate activaitons (using HOOKS!!!)
     def get_midlayer_activations(self, text=None, input_ids=None, raw_img=None, pixel_values=None):
         # Set up the activations to be collected minimally
@@ -554,32 +587,3 @@ class Model:
     def forward(self, input_ids):
         input_ids = input_ids.to(self.device)
         return self.model(input_ids)
-
-if __name__ == "__main__":
-    model = Model("gpt2")  # This will use the default config
-
-
-    print(model.hooks)
-    # Get midlayer activations
-    txt = "Hello, world!"
-    midlayer_activations = model.get_midlayer_activations(txt)
-    print("MLP activations shape:", midlayer_activations["mlp"].shape)
-    print("Attention activations shape:", midlayer_activations["attn"].shape)
-
-    # Get residual stream
-    res = model.get_residual_stream(txt, split=True)
-    print("Residual stream shape:", res.shape)
-    res = model.get_residual_stream(txt)
-    print("Residual stream shape:", res.shape)
-
-    mask0 = model.get_data("layer_0_attn_pre_out", "mask")
-    new_mask = torch.ones_like(mask0.param)  # Assuming d_model is 768
-    new_mask[:384] = 0  # Set first half to 0
-    model.set_hook_parameter("layer_0_attn_pre_out", "mask", new_mask)
-
-    print(model.hooks)
-    print(model.hook_config.hook_points)
-
-    # Run with new mask
-    midlayer_activations = model.get_midlayer_activations(txt)
-    print("New MLP activations shape:", midlayer_activations["mlp"].shape)
