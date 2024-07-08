@@ -222,7 +222,7 @@ class Model:
         ):
         # Import model components (Default: Causal Language Models)
         device_map = self.device_map
-        model_args = {}
+        model_args = {**self.dtype_args}
 
         if self.cfg.model_modality == "vision":
             self.tokenizer = None \
@@ -251,7 +251,7 @@ class Model:
         if do_model_import:
             self.import_models()
         self.map = ModelMap(self.predictor, self.cfg)
-        self.model = self.map["model"].to(self.device)
+        self.model = self.map["model"] #.to(self.device)
         self.layers = self.map.layers
         if add_hooks:
             self.init_hooks()
@@ -334,7 +334,7 @@ class Model:
                     curr_hook = self.hooks_raw.collects[name]
                 elif hook == "mask":
                     if name not in self.hooks_raw.neuron_masks:
-                         self.hooks_raw.neuron_masks[name] = NeuronMask(activation.shape[2:]).to(self.device)
+                         self.hooks_raw.neuron_masks[name] = NeuronMask(activation.shape[2:]).to(self.device, self.dtype)
                     curr_hook = self.hooks_raw.neuron_masks[name]
                 elif hook == "actadd":
                     if name not in self.hooks_raw.neuron_actadds:
@@ -342,11 +342,11 @@ class Model:
                     curr_hook = self.hooks_raw.neuron_actadds[name]
                 elif hook == "postbias":
                     if name not in self.hooks_raw.neuron_postbiases:
-                        self.hooks_raw.neuron_postbiases[name] = NeuronPostBias(activation.shape[2:]).to(self.device)
+                        self.hooks_raw.neuron_postbiases[name] = NeuronPostBias(activation.shape[2:]).to(self.device, self.dtype)
                     curr_hook = self.hooks_raw.neuron_postbiases[name]
                 elif hook == "offset":
                     if name not in self.hooks_raw.neuron_offsets:
-                        self.hooks_raw.neuron_offsets[name] = NeuronOffset(activation.shape[2:]).to(self.device)
+                        self.hooks_raw.neuron_offsets[name] = NeuronOffset(activation.shape[2:]).to(self.device, self.dtype)
                     curr_hook = self.hooks_raw.neuron_offsets[name]
                 elif hook == "unoffset":
                     if name not in self.hooks_raw.neuron_unoffsets:

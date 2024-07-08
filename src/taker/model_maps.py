@@ -845,13 +845,13 @@ def build_gemma2_layer_map(cfg: ConfigClass):
         "mlp"           : "mlp",
         "mlp.gate_proj" : "mlp.gate_proj",
         "mlp.up_proj"   : "mlp.up_proj",
-        "mlp.down_proj" : "mlp.down_proj",
+        "mlp.out_proj" : "mlp.down_proj",
         "mlp.W_gate"    : lambda layer, inpt=None: gemma2_mlp_weight(layer, "mlp.gate_proj", inpt),
         "mlp.W_up"      : lambda layer, inpt=None: gemma2_mlp_weight(layer, "mlp.up_proj", inpt),
-        "mlp.W_down"    : lambda layer, inpt=None: gemma2_mlp_weight(layer, "mlp.down_proj", inpt),
+        "mlp.W_out"    : lambda layer, inpt=None: gemma2_mlp_weight(layer, "mlp.down_proj", inpt),
         "mlp.b_gate"    : lambda layer, _inpt=None: gemma2_mlp_bias(layer, "mlp.gate_proj", _inpt),
         "mlp.b_up"      : lambda layer, _inpt=None: gemma2_mlp_bias(layer, "mlp.up_proj", _inpt),
-        "mlp.b_down"    : lambda layer, _inpt=None: gemma2_mlp_bias(layer, "mlp.down_proj", _inpt),
+        "mlp.b_out"    : lambda layer, _inpt=None: gemma2_mlp_bias(layer, "mlp.down_proj", _inpt),
 
         "activation_fn" : "mlp.act_fn",
 
@@ -938,7 +938,7 @@ def build_phi_layer_map(cfg: ConfigClass):
         **generate_attn_qkv_functions(phi_qkv_weight, phi_attn_bias),
         "attn.W_O": "self_attn.dense.weight",
         "attn.b_O": "self_attn.dense.bias",
-        "mlp.ln_in": "input_layernorm", # parallel attn mlp
+        "mlp.ln_in": "input_layernorm", # parallel attn mlp
         "mlp.ln_in.w": "input_layernorm.weight",
         "mlp.ln_in.b": "input_layernorm.bias",
         "mlp": "mlp",
@@ -1591,6 +1591,8 @@ def get_model_key_map(config: ConfigClass):
         return mistral_model_map
     if architecture == "GemmaForCausalLM":
         return gemma_model_map
+    if architecture == "Gemma2ForCausalLM":
+        return gemma2_model_map
     if architecture == "PhiForCausalLM":
         return phi_model_map
     if architecture == "Phi3ForCausalLM":
@@ -1617,6 +1619,8 @@ def get_layer_key_map(config: ConfigClass):
         return build_mistral_layer_map(config)
     if architecture == "GemmaForCausalLM":
         return build_gemma_layer_map(config)
+    if architecture == "Gemma2ForCausalLM":
+        return build_gemma2_layer_map(config)
     if architecture == "PhiForCausalLM":
         return build_phi_layer_map(config)
     if architecture == "Phi3ForCausalLM":
