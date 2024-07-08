@@ -22,14 +22,21 @@ class ConfigClass:
     tokenizer_name: str
     n_key_value_heads: int = None
     is_low_precision: bool = False
+    attn_types: list = None
     use_attn_scale: bool = None
+    attn_scale: float = None
     use_local_attn: bool = None
+    window_size: Optional[int] = None
     scale_attn_by_inverse_layer_idx: bool = None
     parallel_attn_mlp: bool = False
+    pre_layernorm: bool = True
     post_layernorm: bool = False
     positional_embedding_type: str = "standard"
     rotary_dim: Optional[int] = None
+    rotary_base: Optional[int] = None
     final_rms: bool = False
+    attn_scores_soft_cap: int = None
+    output_logits_soft_cap: int = None
     gated_mlp: bool = False
     model_type: str = "causal"
     model_modality: str = "language" # language, vision, (maybe "speech" one day?)
@@ -105,6 +112,36 @@ def convert_hf_model_config(official_model_name: str):
             "use_local_attn": True,
             "gated_mlp": True,
         }
+    elif architecture == "Gemma2ForCausalLM":
+        # Architecture for Gemma-2 9b and Gemma-2 27b models
+        cfg_dict = {
+            "d_model": hf_config.hidden_size,
+            "d_head": hf_config.hidden_size // hf_config.num_attention_heads,
+            "n_heads": hf_config.num_attention_heads,
+            "d_mlp": hf_config.intermediate_size,
+            "n_layers": hf_config.num_hidden_layers,
+            "n_ctx": hf_config.max_position_embeddings,
+            "eps": hf_config.rms_norm_eps,
+            "d_vocab": hf_config.vocab_size,
+            "act_fn": hf_config.hidden_act,
+            "normalization_type": "RMS",
+            "positional_embedding_type": "rotary",
+            "rotary_base": hf_config.rope_theta,
+            "n_key_value_heads": hf_config.num_key_value_heads,
+            "rotary_dim": hf_config.hidden_size // hf_config.num_attention_heads, #?
+            "use_attn_scale": True,
+            "attn_scale": hf_config.query_pre_attn_scalar**0.5,
+            "use_local_attn": True, #
+            "window_size": hf_config.sliding_window, # 4096
+            #"initializer_range": hf_config.initializer_range,
+            "attn_types": ["global", "local"] * 21,  # Alternate global and local attn
+            "attn_scores_soft_cap": hf_config.attn_logit_softcapping,
+            "output_logits_soft_cap": hf_config.final_logit_softcapping,
+            "gated_mlp": True,
+            "final_rms": True,
+            "pre_layernorm": True, # before and after!
+            "post_layernorm": True,
+        }
     elif architecture == "GPTNeoForCausalLM":
         cfg_dict = {
             "d_model": hf_config.hidden_size,
@@ -138,6 +175,7 @@ def convert_hf_model_config(official_model_name: str):
             "use_local_attn": False,
             "scale_attn_by_inverse_layer_idx": hf_config.scale_attn_by_inverse_layer_idx,
             "normalization_type": "LN",
+            "pre_layernorm": False,
             "post_layernorm": True,
         }
     elif architecture == "OPTForCausalLM":
@@ -332,6 +370,7 @@ opt_model_map = {
     "ln_final"        : "model.decoder.final_layer_norm",
     "ln_final.w"      : "model.decoder.final_layer_norm.weight",
     "ln_final.b"      : "model.decoder.final_layer_norm.bias",
+    "unembed"         : "lm_head",
     "unembed.W_U"     : "lm_head.weight.T",
     "unembed.b_U"     : None,
 }
@@ -428,6 +467,7 @@ llama_model_map = {
     "pos_embed.W"     : "model.embed_positions.weight",
     "ln_final"        : "model.norm",
     "ln_final.w"      : "model.norm.weight",
+    "unembed"         : "model.lm_head",
     "unembed.W_U"     : "model.lm_head.weight.T",
     "unembed.b_U"     : None,
 }
@@ -530,6 +570,7 @@ mistral_model_map = {
     "pos_embed.W"     : "model.embed_positions.weight",
     "ln_final"        : "model.norm",
     "ln_final.w"      : "model.norm.weight",
+    "unembed"         : "model.lm_head",
     "unembed.W_U"     : "model.lm_head.weight.T",
     "unembed.b_U"     : None,
 }
@@ -632,6 +673,7 @@ gemma_model_map = {
 "pos_embed.W" : "model.embed_positions.weight",
 "ln_final" : "model.norm",
 "ln_final.w" : "model.norm.weight",
+"unembed"     : "model.lm_head",
 "unembed.W_U" : "model.lm_head.weight.T",
 "unembed.b_U" : None,
 }
@@ -734,6 +776,7 @@ phi_model_map = {
     "ln_final": "model.final_layernorm",
     "ln_final.w": "model.final_layernorm.weight",
     "ln_final.b": "model.final_layernorm.bias",
+    "unembed"    : "lm_head",
     "unembed.W_U": "lm_head.weight.T",
     "unembed.b_U": "lm_head.bias",
 }
@@ -818,6 +861,7 @@ phi3_model_map = {
     "ln_final": "model.norm",
     "ln_final.w": "model.norm.weight",
     "ln_final.b": "model.norm.bias",
+    "unembed"    : "lm_head",
     "unembed.W_U": "lm_head.weight.T",
     "unembed.b_U": "lm_head.bias",
 }
@@ -912,6 +956,7 @@ gpt_neox_model_map = {
     "ln_final"        : "base_model.final_layer_norm",
     "ln_final.w"      : "base_model.final_layer_norm.weight",
     "ln_final.b"      : "base_model.final_layer_norm.bias",
+    "unembed"         : "base_model.embed_out",
     "unembed.W_U"     : "base_model.embed_out.weight",
     "unembed.b_U"     : "base_model.embed_out.bias",
 }
@@ -1008,6 +1053,7 @@ gpt2_model_map = {
     "ln_final"        : "transformer.ln_f",
     "ln_final.w"      : "transformer.ln_f.weight",
     "ln_final.b"      : "transformer.ln_f.bias",
+    "unembed"         : "lm_head",
     "unembed.W_U"     : "lm_head.weight.T",
     "unembed.b_U"     : None,
 }
@@ -1118,7 +1164,7 @@ roberta_model_map = {
     "ln_final"        : "lm_head.layer_norm",
     "ln_final.w"      : "lm_head.layer_norm.weight",
     "ln_final.b"      : "lm_head.layer_norm.bias",
-    "lm_head"         : "lm_head",
+    "unembed"         : "lm_head",
     "unembed.W_U"     : "lm_head.dense.weight",
     "unembed.b_U"     : None,
 }
@@ -1225,7 +1271,7 @@ vit_model_map = {
     "ln_final"        : "layernorm",
     "ln_final.w"      : "layernorm.weight",
     "ln_final.b"      : "layernorm.bias",
-    "lm_head"         : "classifier",
+    "unembed"         : "classifier",
     "unembed.W_U"     : "classifier.weight",
     "unembed.b_U"     : "classifier.bias",
 }
@@ -1333,7 +1379,7 @@ t5_model_map = {
     "ln_final"        : "encoder.final_layer_norm",
     "ln_final.w"      : "encoder.final_layer_norm.weight",
     "ln_final.b"      : "encoder.final_layer_norm.bias",
-    "lm_head"         : "lm_head",
+    "unembed"         : "lm_head",
     "unembed.W_U"     : "lm_head.weight",
     "unembed.b_U"     : None,
 }
