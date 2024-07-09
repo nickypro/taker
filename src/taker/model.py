@@ -248,7 +248,7 @@ class Model:
         else:
             raise NotImplementedError(f"Model modality {self.cfg.model_modality} not implemented.")
 
-        print(f"Loaded model '{self.model_repo}':")
+        print(f"Loaded model '{self.model_repo}' with {self.dtype_map.str_dtype}:")
 
     def init_model(self, do_model_import=True, add_hooks=True):
         self.cfg = convert_hf_model_config(self.model_repo)
