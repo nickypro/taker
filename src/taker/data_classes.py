@@ -25,9 +25,11 @@ class QDtypeConfigs:
         bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=torch.bfloat16
     )
-    hqq8 = HqqConfig(nbits=8, group_size=64, quant_zero=False, quant_scale=False)
+    hqq8   = HqqConfig(nbits=8, group_size=64, quant_zero=False, quant_scale=False)
     hqq4_0 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=0)
     hqq4_1 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=1)
+    hqq3   = HqqConfig(nbits=3, group_size=32, quant_zero=False, quant_scale=False)
+
 
 class DtypeMap():
     def __init__(self, str_dtype=None, torch_dtype=None):
@@ -49,6 +51,7 @@ class DtypeMap():
             "fp64": torch.float64,
             "bfp16": torch.bfloat16,
             "nf4": torch.bfloat16,
+            "hqq3": torch.bfloat16,
             "hqq4": torch.bfloat16,
             "hqq4_1": torch.bfloat16,
             "hqq8": torch.bfloat16,
@@ -66,6 +69,7 @@ class DtypeMap():
 
         # Auto type from string
         args = {
+            "hqq3" : {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq3},
             "nf4" : {dtype_key: self._dtype, quant_conf: QDtypeConfigs.nf4},
             "int4": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.int4},
             "hqq4": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq4_0},
