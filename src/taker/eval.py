@@ -473,6 +473,7 @@ class Evaluator:
         # Collect Accuracy Data for Sample
         for j, text_expected_ids in enumerate(expected_ids):
             for i, expected_id in enumerate(text_expected_ids):
+                expected_id = expected_id.item()
                 is_accurate      = (expected_id in top_tokens[j][i])
                 is_topk_accurate = (expected_id in topk_tokens[j][i])
 
@@ -499,6 +500,7 @@ class Evaluator:
         """Computes cross entropy losses for each token."""
 
         log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
+        expected_ids = expected_ids.to(log_probs.device)
         predicted_log_probs = log_probs.gather(dim=-1, index=expected_ids[..., None])[..., 0]
         return -predicted_log_probs
 
