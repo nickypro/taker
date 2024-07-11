@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import List
 import torch
+import torch._dynamo
 import torch.nn as nn
 from torch import Tensor as TT
 import einops
@@ -193,9 +194,15 @@ class Model:
         self.init_model(add_hooks=add_hooks)
         self.compile = compile
         if self.compile:
+            torch._dynamo.config.suppress_errors = True
             self.predictor = self.dtype_map.compile(self.predictor)
         with torch.no_grad():
-            self.get_outputs_embeds(".")
+            if self.cfg.model_modality == "language":
+                self.get_outputs_embeds(".")
+            if self.cfg.model_modality == "vision":
+                self.get_outputs_embeds(
+                    pixel_values=torch.randn([1,3,self.cfg.image_size,self.cfg.image_size], dtype=self.dtype, device=self.device)
+                )
 
     @staticmethod
     def default_config():
@@ -259,6 +266,17 @@ class Model:
         self.layers = self.map.layers
         if add_hooks:
             self.init_hooks()
+
+    def init_image_processor(self, device_map):
+        """ Initialize processor from raw pixel values to normalised tensors"""
+        try:
+            from transformers import AutoImageProcessor
+            self.processor = AutoImageProcessor.from_pretrained(
+                self.model_repo, device_map=device_map, **self.dtype_args)
+        except:
+            from .vit_processor import SsdVitProcessor
+            self.processor = SsdVitProcessor()
+        return self.processor
 
     def init_hooks(self):
         for layer_idx, layer in enumerate(self.layers):
@@ -472,6 +490,8 @@ class Model:
         """Get output logits from input token ids"""
         inputs_embeds = self.get_inputs_embeds(text, input_ids, raw_img, pixel_values) \
             if inputs_embeds is None else inputs_embeds
+        if self.cfg.model_modality == "vision":
+            return self.model(pixel_values, output_hidden_states=False ).last_hidden_state
         outputs = self.model( inputs_embeds=inputs_embeds, output_hidden_states=False ).last_hidden_state
         return outputs
 
