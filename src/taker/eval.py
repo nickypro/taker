@@ -514,7 +514,8 @@ class Evaluator:
             # Print output string showing current accuracy
             pbar.update( sample_acc_data.num_skip_predictions )
             percent  = total_acc_data.get_percentages(as_string=True)
-            out_str  = f"{eval_config.loading_bar_desc}: "
+            out_str  = f"{eval_config.dataset_name[:8]:8s} "
+            out_str += f"{eval_config.loading_bar_desc}: "
             out_str += f"{percent['topk']}|{percent['base']} "
             out_str += f"(Skip: {percent['topk_skip']}|{percent['skip']})"
             pbar.set_description( out_str )
@@ -530,7 +531,6 @@ class Evaluator:
         loss_tracker = LossTracker()
 
         # Loop over the dataset
-        print(c.sample_size)
         pbar = tqdm(total=c.sample_size)
         for _item  in generator:
             (logits, expected_ids, _other_data) = _item
