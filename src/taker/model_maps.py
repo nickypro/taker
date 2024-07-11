@@ -42,6 +42,7 @@ class ConfigClass:
     model_modality: str = "language" # language, vision, (maybe "speech" one day?)
     label2id: Optional[Dict[str, int]] = None # for vision transformers
     id2label: Optional[Dict[int, str]] = None
+    image_size: int = 224
 
 def convert_hf_model_config(official_model_name: str):
     """
@@ -313,6 +314,7 @@ def convert_hf_model_config(official_model_name: str):
             "id2label": hf_config.id2label,
             "pre_layernorm": True,
             "post_layernorm": False,
+            "image_size": hf_config.image_size,
         }
     else:
         raise NotImplementedError(f"{architecture} is not currently supported.")
@@ -1425,9 +1427,9 @@ def build_vit_layer_map(cfg: ConfigClass):
 
 
     vit_layer_map = {
-        "attn.ln_in"    : "layernorm_before.LayerNorm",
-        "attn.ln_in.w"  : "layernorm_before.LayerNorm.weight",
-        "attn.ln_in.b"  : "layernorm_before.LayerNorm.bias",
+        "attn.ln_in"    : "layernorm_before",
+        "attn.ln_in.w"  : "layernorm_before.weight",
+        "attn.ln_in.b"  : "layernorm_before.bias",
 
         "attn"          : "attention",
         "attn.q_proj"   : "attention.attention.query",
