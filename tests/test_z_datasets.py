@@ -2,7 +2,7 @@ import torch
 from taker import Model
 from taker.eval import evaluate_all
 
-def test_test_datasets():
+def test_text_datasets():
     dataset_list = [
         "pile",
         "biology",
@@ -43,6 +43,7 @@ def test_test_datasets():
 
 def test_img_datasets():
     dataset_list = [
+        "cifar100",
         "cifar20-aquatic_mammals",
         "cifar20-fish",
         "cifar20-flowers",
@@ -70,5 +71,5 @@ def test_img_datasets():
             evaluate_all(m, 2, [dataset_name])
 
 if __name__ == "__main__":
-    # test_text_datasets()
+    test_text_datasets()
     test_img_datasets()
