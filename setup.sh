@@ -20,7 +20,7 @@ then
     echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64' >> ~/.bashrc
     echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
     echo 'alias py="poetry run python"' >> ~/.bashrc
-    echo 'alias t0="tmux attach-session -t 0 || tmux -L 0"' >> ~/.bashrc
+    echo 'alias t0="tmux attach-session -t 0 || tmux new -s 0"' >> ~/.bashrc
 
     # Add poetry to current bash session PATH
     export PATH="$HOME/.local/bin:$PATH"
