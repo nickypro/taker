@@ -21,8 +21,14 @@ args = parser.parse_args()
 k = args.model
 task = args.task
 
+# Test that latex parsing library works
+from sympy.parsing.latex import _parse_latex_antlr as _latex
+_latex.parse_latex("\frac{1}{2}")
 
+# Load model
 m = None
+if k == "test":
+    m = Model("nickypro/tinyllama-15m", dtype="bfp16", add_hooks=False)
 if k == 'bfp16':
     m = Model("NousResearch/Meta-Llama-3-8B-Instruct", dtype="bfp16", add_hooks=False)
 if k == 'fp16':
@@ -33,6 +39,10 @@ if k == '8bit-bnb':
     m = Model("NousResearch/Meta-Llama-3-8B-Instruct", dtype="int8", add_hooks=False)
 if k == '8bit-gptq':
     m = Model("astronomer/Llama-3-8B-Instruct-GPTQ-8-Bit", dtype="fp16", add_hooks=False)
+if k == '8bit-qfp':
+    m = Model("NousResearch/Meta-Llama-3-8B-Instruct", dtype="qfp8", add_hooks=False)
+if k == '8bit-qint':
+    m = Model("NousResearch/Meta-Llama-3-8B-Instruct", dtype="qint8", add_hooks=False)
 if k == '4bit-hqq':
     m = Model("NousResearch/Meta-Llama-3-8B-Instruct", dtype="hqq4", add_hooks=False, device_map="cuda")
 if k == '4bit-hqq-1':
@@ -44,7 +54,10 @@ if k == '4bit-bnb':
 if k == '4bit-nf':
     m = Model("NousResearch/Meta-Llama-3-8B-Instruct", dtype="nf4", add_hooks=False)
 if k == '4bit-awq':
-    m = Model("kaitchup/Llama-3-8b-awq-4bit", dtype="fp16", add_hooks=False)
+    m = Model("TechxGenus/Meta-Llama-3-8B-Instruct-AWQ", dtype="fp16", add_hooks=False, device_map="cuda")
+    #m = Model("kaitchup/Llama-3-8b-awq-4bit", dtype="fp16", add_hooks=False, device_map="cuda")
+if k == '4bit-qint':
+    m = Model("NousResearch/Meta-Llama-3-8B-Instruct", dtype="qint4", add_hooks=False)
 if k == "3bit-hqq":
     m = Model("NousResearch/Meta-Llama-3-8B-Instruct", dtype="hqq3", add_hooks=False, device_map="cuda")
 
