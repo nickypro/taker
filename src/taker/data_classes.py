@@ -9,6 +9,7 @@ import wandb
 from welford_torch import Welford
 from transformers import BitsAndBytesConfig
 from transformers import HqqConfig
+from transformers import QuantoConfig
 
 ######################################################################################
 # Functional Conversion Data Classes
@@ -29,6 +30,11 @@ class QDtypeConfigs:
     hqq4_0 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=0)
     hqq4_1 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=1)
     hqq3   = HqqConfig(nbits=3, group_size=32, quant_zero=False, quant_scale=False)
+    qfp8   = QuantoConfig("float8")
+    qint8  = QuantoConfig(weights="int8")
+    qint4  = QuantoConfig(weights="int4")
+    qint2  = QuantoConfig(weights="int2")
+
 
 
 class DtypeMap():
@@ -55,6 +61,10 @@ class DtypeMap():
             "hqq4": torch.bfloat16,
             "hqq4_1": torch.bfloat16,
             "hqq8": torch.bfloat16,
+            "qfp8": torch.float16,
+            "qint8": torch.float16,
+            "qint4": torch.float16,
+            "qint2": torch.float16,
         }
         return dtype_map[self.str_dtype]
 
@@ -69,19 +79,23 @@ class DtypeMap():
 
         # Auto type from string
         args = {
-            "hqq3" : {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq3},
-            "nf4" : {dtype_key: self._dtype, quant_conf: QDtypeConfigs.nf4},
-            "int4": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.int4},
-            "hqq4": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq4_0},
-            "hqq4_1": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq4_1},
-            "int8": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.int8},
-            "hqq8": {dtype_key: self._dtype, quant_conf: QDtypeConfigs.hqq8},
-            "fp16": {dtype_key: self._dtype},
-            "fp32": {dtype_key: self._dtype},
-            "fp64": {dtype_key: self._dtype},
-            "bfp16": {dtype_key: self._dtype},
+            "nf4" :  {quant_conf: QDtypeConfigs.nf4},
+            "int4":  {quant_conf: QDtypeConfigs.int4},
+            "int8":  {quant_conf: QDtypeConfigs.int8},
+            "hqq3" : {quant_conf: QDtypeConfigs.hqq3},
+            "hqq4":  {quant_conf: QDtypeConfigs.hqq4_0},
+            "hqq4_1":{quant_conf: QDtypeConfigs.hqq4_1},
+            "hqq8":  {quant_conf: QDtypeConfigs.hqq8},
+            "qfp8":  {quant_conf: QDtypeConfigs.qfp8},
+            "qint8": {quant_conf: QDtypeConfigs.qint8},
+            "qint4": {quant_conf: QDtypeConfigs.qint4},
+            "qint2": {quant_conf: QDtypeConfigs.qint2},
+            "fp16": {},
+            "fp32": {},
+            "fp64": {},
+            "bfp16": {},
         }
-        return args[self.str_dtype]
+        return {dtype_key: self._dtype, **args[self.str_dtype]}
 
     def compile(self, model):
         " Function that takes model -> returns compiled model"
