@@ -19,9 +19,6 @@ import numpy as np
 from welford_torch import Welford
 from tqdm import tqdm
 
-# Import matplotlib and set dpi to 300
-import matplotlib as mpl
-
 # Import from inside module
 from .model_repos import supported_model_repos
 from .nn import InverseLinear, \
@@ -29,8 +26,6 @@ from .nn import InverseLinear, \
     mlp_delete_rows_raw, mlp_svd_two_layer_raw, mlp_delete_columns_raw
 from .model_maps import convert_hf_model_config, ModelMap, ConfigClass
 from .data_classes import DtypeMap, EvalOutput
-
-mpl.rcParams['figure.dpi'] = 300
 
 # Return with the output tensors detached from gpu
 def detached( output ):
