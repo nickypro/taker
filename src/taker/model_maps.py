@@ -1678,6 +1678,8 @@ class ModelLayerMap:
         key = self.key_map[__name]
 
         if isinstance(key, str):
+            if key == "layer":
+                return self.layer
             return get_attrs(self.layer, key)
 
         if isinstance(key, Callable):
