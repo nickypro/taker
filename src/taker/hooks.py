@@ -10,8 +10,71 @@ from torch import Tensor
 ######################################################################################
 
 # Model way of storing hooks that are currently in use
-class ActiveHooks:
-    def __init__(self):
+class HookConfig:
+    def __init__(self, n_layers=None):
+        self.hook_points = {
+            "pre_attn": {},
+            "attn_pre_out": {},
+            "post_attn": {},
+            "pre_mlp": {},
+            "mlp_pre_out": {},
+            "post_mlp": {},
+            "pre_decoder": {},
+            "post_decoder": {},
+        }
+        self.n_layers = n_layers
+
+    def add_hook(self, point, hook_type, layer=None):
+        if point not in self.hook_points:
+            raise ValueError(f"Invalid hook point: {point}")
+        if layer is None:
+            if 'all' not in self.hook_points[point]:
+                self.hook_points[point]['all'] = []
+            self.hook_points[point]['all'].append(hook_type)
+        else:
+            if layer not in self.hook_points[point]:
+                self.hook_points[point][layer] = []
+            self.hook_points[point][layer].append(hook_type)
+
+    def from_string(self, config_string):
+        for line in config_string.strip().split('\n'):
+            parts = line.split(':')
+            if len(parts) == 2:
+                point, hooks = parts
+                layer = None
+            elif len(parts) == 3:
+                point, layer, hooks = parts
+                layer = int(layer.strip())
+            else:
+                raise ValueError(f"Invalid config line: {line}")
+
+            point = point.strip()
+            hooks = hooks.strip()
+            if hooks:  # Only add hooks if the string is not empty
+                for hook in hooks.split(','):
+                    self.add_hook(point, hook.strip(), layer)
+        return self
+
+    def __str__(self):
+        result = []
+        for point, layers in self.hook_points.items():
+            for layer, hooks in layers.items():
+                if hooks:
+                    if layer == 'all':
+                        result.append(f"{point}: {', '.join(hooks)}")
+                    else:
+                        result.append(f"{point}: {layer}: {', '.join(hooks)}")
+        return '\n'.join(result)
+
+    def get_hooks(self, point, layer):
+        hooks = self.hook_points[point].get('all', [])
+        hooks += self.hook_points[point].get(layer, [])
+        return hooks
+
+class HookMap:
+    """Class that holds all hooks."""
+    def __init__(self, hook_config):
+        self.hook_config: HookConfig = hook_config
         self.collects = {}
         self.neuron_masks = {}
         self.neuron_actadds = {}
@@ -19,6 +82,7 @@ class ActiveHooks:
         self.neuron_offsets = {}
         self.neuron_unoffsets = {}
         self.neuron_replace = {}
+        self.handles: list = []
 
     def __str__(self):
         attributes = []
@@ -26,6 +90,164 @@ class ActiveHooks:
             attributes.append(f"{attr}: {value}")
 
         return f"ActiveHooks({', '.join(attributes)})"
+
+    def __getitem__(self, component: str):
+        return HookMapComponent(self, component)
+
+    @property
+    def hooks_raw(self):
+        return {
+            "collect":  self.collects,
+            "mask":     self.neuron_masks,
+            "actadd":   self.neuron_actadds,
+            "postbias": self.neuron_postbiases,
+            "offset":   self.neuron_offsets,
+            "unoffset": self.neuron_offsets,
+            "replace":  self.neuron_replace,
+        }
+
+    def get_hook_fn(self, hook_type, name, activation, device, dtype):
+        _hooks = self.hooks_raw[hook_type]
+        if name not in _hooks:
+            if hook_type == "collect":
+                _hooks[name] = NeuronSave()
+            elif hook_type == "mask":
+                _hooks[name] = NeuronMask(activation.shape[2:]).to(device, dtype)
+            elif hook_type == "actadd":
+                _hooks[name] = NeuronActAdd(device, dtype)
+            elif hook_type == "postbias":
+                _hooks[name] = NeuronPostBias(activation.shape[2:]).to(device, dtype)
+            elif hook_type == "offset":
+                _hooks[name] = NeuronOffset(activation.shape[2:]).to(device, dtype)
+            elif hook_type == "unoffset":
+                assert name in self.neuron_offsets
+                _hooks[name] = self.neuron_offsets[name]
+            elif hook_type == "replace":
+                _hooks[name] = NeuronReplace(device, dtype)
+
+        curr_hook = _hooks[name]
+        if hook_type == "unoffset":
+            return curr_hook.undo
+        return curr_hook
+
+    def get_data(self, name=None, data_type=None):
+        if data_type == "collect":
+            # collect is desctructively gotten (to save memory)
+            if name in self.collects:
+                data = self.collects[name].activation
+                self.collects[name].activation = None
+                return data
+            return None
+        elif data_type in self.data_types:
+            return self.data_dict["data_type"][name]
+        else:
+            raise ValueError(f"Unknown data type: {data_type}")
+
+    def set_hook_parameter(self, name, param_type, value):
+        if param_type == "mask":
+            self.neuron_masks[name].set_mask(value)
+        elif param_type == "actadd":
+            self.neuron_actadds[name].set_actadd(value)
+        elif param_type == "postbias":
+            self.neuron_postbiases[name].param.data = value
+        else:
+            raise ValueError(f"Unknown parameter type: {param_type}")
+
+    def get_layer_names(self, component, layers=None):
+        layers = range(self.hook_config.n_layers) if layers is None else layers
+        return [f"layer_{i}_{component}" for i in layers]
+
+    def get_all_layer_activations(self, component, layers=None):
+        layer_names = self.get_layer_names(component, layers)
+        return [self.get_data(name, "collect") for name in layer_names]
+
+    def get_all_layer_data(self, component, data_type, layers=None):
+        layer_names = self.get_layer_names(component, layers)
+        return [self.get_data(name, data_type) for name in layer_names]
+
+    def set_all_layer_parameters(self, component, param_type, values, layers=None):
+        layer_names = self.get_layer_names(component, layers)
+        for name, value in zip(layer_names, values):
+            self.set_hook_parameter(name, param_type, value)
+
+    def disable_all_collect_hooks(self):
+        for name, hook in self.collects.items():
+            hook.enabled = False
+
+    def enable_collect_hooks(self, components=None, layers=None):
+        if components is None:
+            components = self.hook_config.hook_points.keys()
+        if layers is None:
+            layers = range(self.hook_config.n_layers)
+        if isinstance(layers, int):
+            layers = [layer]
+
+        for component in components:
+            for layer in layers:
+                hook_name = f"layer_{layer}_{component}"
+                if hook_name in self.collects:
+                    self.collects[hook_name].enabled = True
+
+    def delete_mlp_neurons(self, remove_indices, layer: int = None):
+        return self["mlp_pre_out"].delete_neurons(remove_indices, layer)
+
+    def delete_attn_neurons(self, remove_indices, layer: int = None):
+        return self["attn_pre_out"].delete_neurons(remove_indices, layer)
+
+class HookMapComponent:
+    def __init__(self, model, component):
+        self.model = model
+        self.component = component
+
+    def __getitem__(self, data_type):
+        layers = None
+        if isinstance(data_type, tuple):
+            data_type, layer = data_type
+            layers = [layer]
+        if data_type == "collect":
+            data = self.model.get_all_layer_activations(self.component, layers)
+        elif data_type in ["mask", "actadd", "postbias", "offset"]:
+            data = self.model.get_all_layer_data(self.component, data_type, layers)
+        else:
+            raise ValueError(f"Unknown data type: {data_type}")
+        if len(data) == 1:
+            return data[0]
+        return data
+
+    def __setitem__(self, data_type, value):
+        if data_type in ["mask", "actadd", "postbias", "offset"]:
+            self.model.set_all_layer_parameters(self.component, data_type, value)
+        else:
+            raise ValueError(f"Cannot set data type: {data_type}")
+
+    def _prepare_vector_shape(self, vector: torch.Tensor, desired_shape: torch.Size) -> torch.Tensor:
+        if vector.shape != desired_shape:
+            vector = vector.reshape(desired_shape)
+        return vector
+
+    def delete_neurons(self, remove_indices, layer: int = None):
+        def delete_layer_neurons(nn_mask, layer_remove_indices):
+            layer_remove_indices = self._prepare_vector_shape(
+                layer_remove_indices.to(self.model.device, dtype=bool),
+                nn_mask.param.shape
+            )
+            keep_indices = torch.logical_not(layer_remove_indices)
+            nn_mask.delete_neurons(keep_indices)
+        nn_masks = self["mask"]
+        if layer is not None:
+            return delete_layer_neurons(nn_mask[layer], remove_indices)
+        for layer, nn_mask in enumerate(nn_masks):
+            delete_layer_neurons(nn_mask, remove_indices[layer])
+
+    def set_offsets(self, offset_val, layer:int = None):
+        def set_layer_offset(nn_offset, val):
+            val = self._prepare_vector_shape(val.to(self.model.device, self.model.dtype), nn_offset.shape)
+            nn_offset.set_offset(val)
+        neuron_offsets = self["offset"]
+        if layer is not None:
+            return set_layer_offset(neuron_offsets[layer], offset_val)
+        for layer, neuron_offset in enumerate(neuron_offsets):
+            set_layer_offset(neuron_offset, offset_val[layer])
 
 # Class for holding the hook classes
 class NeuronFunctionList(torch.nn.Module):
@@ -262,16 +484,10 @@ class NeuronOffset(torch.nn.Module):
         _vec = torch.zeros(shape, dtype=torch.float32)
         self.param = torch.nn.Parameter(_vec)
 
-    def get_bias(self, x):
-        shape = x.shape
-        bias  = self.param
-        if self.shape == shape:
-            return bias
-        try:
-            bias = bias.view(shape[-1]) # normal shape
-        except:
-            bias = bias.view(-1, shape[-1]) # multi head attention shape
-        return bias
+    def set_offset(self, offset: Tensor):
+        params: Dict[str, Tensor] = self.state_dict()
+        params["param"] = offset.view(self.shape)
+        self.load_state_dict(params)
 
     def forward(self, x):
         return x + self.param
