@@ -34,6 +34,35 @@ most_common_pile_tokens          = llama_most_common_tokens["all"]["skip50"]["to
 most_common_pile_codeless_tokens = llama_most_common_tokens["only_text"]["skip50"]["tokens_str"]
 most_common_code_tokens          = llama_most_common_tokens["only_code"]["skip50"]["tokens_str"]
 PILE_DATASET_REPO = "JeanKaddour/minipile" # "monology/pile-uncopyrighted"
+PILE_DATASET_SPLIT_REPO = "nickypro/minipile-split" # "ArmelR/the-pile-splitted"
+PILE_SUBSETS = [
+    "ArXiv", "BookCorpus2", "Books3", "DM Mathematics", "Enron Emails",
+    "EuroParl", "FreeLaw", "Github", "Gutenberg (PG-19)", "HackerNews",
+    "NIH ExPorter", "OpenSubtitles", "OpenWebText2", "PhilPapers", "Pile-CC",
+    "PubMed Abstracts", "PubMed Central", "StackExchange", "USPTO Backgrounds",
+    "Ubuntu IRC", "Wikipedia (en)", "YoutubeSubtitles"
+]
+
+CIFAR20_SUBSETS = [
+    "aquatic_mammals", "fish", "flowers", "food_containers", "fruit_and_vegetables",
+    "household_electrical_devices", "household_furniture", "insects", "large_carnivores", "large_manmade",
+    "large_outdoor", "large_omnivores_and_herbivores", "medium_mammals", "non_insect_invertebrates", "people",
+    "reptiles", "small_mammals", "trees", "veh1", "veh2"
+]
+
+import difflib
+def find_closest_string(data_list, data_name):
+    closest_match = None
+    highest_ratio = 0
+
+    for item in data_list:
+        ratio = difflib.SequenceMatcher(None, data_name, item).ratio()
+        if ratio > highest_ratio:
+            highest_ratio = ratio
+            closest_match = item
+
+    return closest_match
+
 
 class DatasetFilters:
     @staticmethod
@@ -125,18 +154,34 @@ class DatasetFilters:
             return _dataset.filter(filter_example)
         return filter_dataset
 
+
 def get_cifar_dataset_configs():
-    cifar20_datasets = ["aquatic_mammals", "fish", "flowers", "food_containers", "fruit_and_vegetables", "household_electrical_devices", "household_furniture", "insects", "large_carnivores", "large_outdoor", "large_omnivores_and_herbivores", "medium_mammals", "non_insect_invertebrates", "people", "reptiles", "small_mammals", "trees", "veh1", "veh2"]
-    return [EvalConfig(f"cifar20-{dataset}",
-                       dataset_repo = "cifar100",
-                       dataset_type = "image-classification",
-                       dataset_split = ["train", "test"],
-                       is_train_mode = True,
-                       dataset_image_key = "img",
-                       streaming = False,
-                       dataset_image_label_key = "coarse_label",
-                       dataset_filter=DatasetFilters.filter_cifar(count),
-                       ) for count, dataset in enumerate(cifar20_datasets)]
+    cifar20_datasets = CIFAR20_SUBSETS
+    return [
+        EvalConfig(f"cifar20-{dataset}",
+            dataset_repo = "cifar100",
+            dataset_type = "image-classification",
+            dataset_split = ["train", "test"],
+            is_train_mode = True,
+            dataset_image_key = "img",
+            streaming = False,
+            dataset_image_label_key = "fine_label", # "coarse_label" can be used also?
+            dataset_filter=DatasetFilters.filter_cifar(count),
+        ) for count, dataset in enumerate(cifar20_datasets)
+    ]
+
+
+def get_pile_dataset_configs():
+    return [
+        EvalConfig(f"pile_{subset.split('(')[0].strip().replace(' ', '_')}",
+            dataset_repo = PILE_DATASET_SPLIT_REPO,
+            dataset_subset = subset,
+            dataset_text_key = "text",
+            streaming = False,
+            # dataset_filter = lambda __dataset : DatasetFilters.filter_pile_general(__dataset, subset),
+            skip_token_strings = most_common_pile_tokens,
+        ) for subset in PILE_SUBSETS
+    ]
 
 def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
     eval_configs = [
@@ -328,7 +373,7 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_image_key = "img",
             dataset_image_label_key = "coarse_label",
         ),
-        EvalConfig("bio",
+        EvalConfig("biology",
             dataset_repo           = "camel-ai/biology",
             dataset_text_key       = "message_2",
             dataset_has_test_split = False,
@@ -339,8 +384,31 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_text_key = "text",
             dataset_text_label_key = "label",
             dataset_has_test_split = True,
-        )
-    ] + get_cifar_dataset_configs()
+        ),
+        EvalConfig("physics",
+            dataset_repo = "camel-ai/physics",
+            dataset_text_key = "message_2",
+            dataset_has_test_split = False,
+        ),
+        EvalConfig("chemistry",
+            dataset_repo = "camel-ai/chemistry",
+            dataset_text_key = "message_2",
+            dataset_has_test_split = False,
+        ),
+        EvalConfig("math",
+            dataset_repo = "camel-ai/math",
+            dataset_text_key = "message_2",
+            dataset_has_test_split = False,
+        ),
+        EvalConfig("poems",
+            #  dataset_repo = "sadFaceEmoji/english-poems",
+            dataset_repo = "Ozziey/poems_dataset",
+            dataset_text_key = "poem content",
+            dataset_has_test_split = False,
+        ),
+    ]
+    eval_configs += get_cifar_dataset_configs()
+    eval_configs += get_pile_dataset_configs()
 
     # Convert into searchable dict
     labeled_eval_configs = dict([(c.dataset_name, c) for c in eval_configs])
@@ -349,7 +417,8 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
     if dataset_name in labeled_eval_configs:
         eval_config = labeled_eval_configs[dataset_name]
     else:
-        eval_config = EvalConfig(dataset_name)
+        closest_str = find_closest_string(list(labeled_eval_configs.keys()), dataset_name)
+        raise ValueError(f"Did not find dataset config: {dataset_name}. Did you mean {closest_str}?")
 
     # Add subset data
     if dataset_subset is not None:
@@ -363,19 +432,32 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
 
 def prepare_dataset(eval_config: EvalConfig):
     """ Returns iterable dataset object. """
+    assert eval_config is not None
+    assert isinstance(eval_config, EvalConfig)
 
     # check if it has test split, or only a train split
     split = eval_config.dataset_split
     if split is None:
         split = "test" if eval_config.dataset_has_test_split else "train"
+    if eval_config.is_train_mode:
+        split = "train"
 
     # Load the dataset
-    _dataset = load_dataset(
-        eval_config.dataset_repo,
-        eval_config.dataset_subset,
-        trust_remote_code=True, # TODO: probably fix at some point
-        streaming=eval_config.streaming,
-    )
+    try:
+        _dataset = load_dataset(
+            eval_config.dataset_repo,
+            eval_config.dataset_subset,
+            trust_remote_code=True, # TODO: probably fix at some point
+            streaming=eval_config.streaming,
+        )
+    except Exception as e:
+        print(f"Mis-specified EvalConfig: \n{eval_config}\n Trying Again...")
+        _dataset = load_dataset(
+            eval_config.dataset_repo,
+            eval_config.dataset_subset,
+            trust_remote_code=True, # TODO: probably fix at some point
+            streaming=eval_config.streaming,
+        )
 
     # Post-split processing
     if isinstance(split, list) or isinstance(split, tuple):
@@ -399,10 +481,10 @@ def prepare_dataset(eval_config: EvalConfig):
             indices = list(range(eval_config.num_texts_to_skip, len(_dataset)))
             _dataset = _dataset.select(indices)
 
-    # Skip tokens is no split
+    # Skip tokens if no split
     if split == "train" and not eval_config.is_train_mode:
         skip_n = int(eval_config.num_tokens_to_skip//100)
-        print( "Warning: 'pile_deduped' has no 'test' split.",
+        print(f"Warning: '{eval_config.dataset_name}' has no 'test' split.",
               f"Using 'train' split and skipping {skip_n} texts instead.")
         _dataset = _dataset.skip(skip_n) # Conservative skip limit
 
