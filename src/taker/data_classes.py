@@ -8,8 +8,8 @@ import pandas as pd
 import wandb
 from welford_torch import Welford
 from transformers import BitsAndBytesConfig
-from transformers import HqqConfig
-from transformers import QuantoConfig
+# from transformers import HqqConfig
+# from transformers import QuantoConfig
 
 ######################################################################################
 # Functional Conversion Data Classes
@@ -26,14 +26,14 @@ class QDtypeConfigs:
         bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=torch.bfloat16
     )
-    hqq8   = HqqConfig(nbits=8, group_size=64, quant_zero=False, quant_scale=False)
-    hqq4_0 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=0)
-    hqq4_1 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=1)
-    hqq3   = HqqConfig(nbits=3, group_size=32, quant_zero=False, quant_scale=False)
-    qfp8   = QuantoConfig("float8")
-    qint8  = QuantoConfig(weights="int8")
-    qint4  = QuantoConfig(weights="int4")
-    qint2  = QuantoConfig(weights="int2")
+    # hqq8   = HqqConfig(nbits=8, group_size=64, quant_zero=False, quant_scale=False)
+    # hqq4_0 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=0)
+    # hqq4_1 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=1)
+    # hqq3   = HqqConfig(nbits=3, group_size=32, quant_zero=False, quant_scale=False)
+    # qfp8   = QuantoConfig("float8")
+    # qint8  = QuantoConfig(weights="int8")
+    # qint4  = QuantoConfig(weights="int4")
+    # qint2  = QuantoConfig(weights="int2")
 
 
 
@@ -82,14 +82,14 @@ class DtypeMap():
             "nf4" :  {quant_conf: QDtypeConfigs.nf4},
             "int4":  {quant_conf: QDtypeConfigs.int4},
             "int8":  {quant_conf: QDtypeConfigs.int8},
-            "hqq3" : {quant_conf: QDtypeConfigs.hqq3},
-            "hqq4":  {quant_conf: QDtypeConfigs.hqq4_0},
-            "hqq4_1":{quant_conf: QDtypeConfigs.hqq4_1},
-            "hqq8":  {quant_conf: QDtypeConfigs.hqq8},
-            "qfp8":  {quant_conf: QDtypeConfigs.qfp8},
-            "qint8": {quant_conf: QDtypeConfigs.qint8},
-            "qint4": {quant_conf: QDtypeConfigs.qint4},
-            "qint2": {quant_conf: QDtypeConfigs.qint2},
+            # "hqq3" : {quant_conf: QDtypeConfigs.hqq3},
+            # "hqq4":  {quant_conf: QDtypeConfigs.hqq4_0},
+            # "hqq4_1":{quant_conf: QDtypeConfigs.hqq4_1},
+            # "hqq8":  {quant_conf: QDtypeConfigs.hqq8},
+            # "qfp8":  {quant_conf: QDtypeConfigs.qfp8},
+            # "qint8": {quant_conf: QDtypeConfigs.qint8},
+            # "qint4": {quant_conf: QDtypeConfigs.qint4},
+            # "qint2": {quant_conf: QDtypeConfigs.qint2},
             "fp16": {},
             "fp32": {},
             "fp64": {},
@@ -168,6 +168,7 @@ class EvalConfig:
     mia_forget_split: str = None
     mia_test: str = None
     mia_test_split: str = None
+    dataset_custom_load_fn: callable = None
     misc: Optional[Dict[str, any]] = None
 
     def to_dict(self):

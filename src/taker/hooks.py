@@ -82,6 +82,8 @@ class HookMap:
         self.neuron_offsets = {}
         self.neuron_unoffsets = {}
         self.neuron_replace = {}
+        self.neuron_whiten = {}
+        self.neuron_unwhiten = {}
         self.handles: list = []
 
     def __str__(self):
@@ -104,6 +106,8 @@ class HookMap:
             "offset":   self.neuron_offsets,
             "unoffset": self.neuron_offsets,
             "replace":  self.neuron_replace,
+            "whiten":   self.neuron_whiten,
+            "unwhiten": self.neuron_unwhiten,
         }
 
     def get_hook_fn(self, hook_type, name, activation, device, dtype):
@@ -124,9 +128,16 @@ class HookMap:
                 _hooks[name] = self.neuron_offsets[name]
             elif hook_type == "replace":
                 _hooks[name] = NeuronReplace(device, dtype)
+            elif hook_type == "whiten":
+                _hooks[name] = NeuronWhiten(activation.shape[2:]).to(device, dtype)
+            elif hook_type == "unwhiten":
+                assert name in self.neuron_whiten
+                _hooks[name] = self.neuron_whiten[name]
 
         curr_hook = _hooks[name]
         if hook_type == "unoffset":
+            return curr_hook.undo
+        if hook_type == "unwhiten":
             return curr_hook.undo
         return curr_hook
 
@@ -518,3 +529,38 @@ class NeuronPostBias(torch.nn.Module):
 
     def forward(self, x):
         return x + self.get_bias(x)
+
+class NeuronWhiten(torch.nn.Module):
+    def __init__(self, shape):
+        super(NeuronWhiten, self).__init__()
+        self.shape = shape
+        self.d_model = self.shape.numel()
+        self.offset   = torch.nn.Parameter(torch.zeros(self.shape))
+        self.rotate   = torch.nn.Linear(self.d_model, self.d_model, bias=False)
+        self.scale    = torch.nn.Parameter(torch.ones(self.d_model))
+        self.rotate_inv = torch.nn.Linear(self.d_model, self.d_model, bias=False)
+        self.reset()
+
+    def reset(self):
+        self.offset.data = torch.zeros(self.shape)
+        self.rotate.weight.data = torch.diag(torch.ones(self.d_model))
+        self.scale.data = torch.ones(self.d_model)
+        self.rotate_inv.weight.data = torch.diag(torch.ones(self.d_model))
+
+    @property
+    def unscale(self):
+        return torch.clamp( self.scale ** -1, max=1e6 )
+
+    def forward(self, x):
+        x = x + self.offset
+        x = x.reshape([*x.shape[:2], -1])
+        x = self.rotate(x)
+        x = x * self.scale
+        return x
+
+    def undo(self, x):
+        x = x * self.unscale
+        x = self.rotate_inv(x)
+        x = x.reshape(x.shape[:2] + self.shape)
+        x = x - self.offset
+        return x

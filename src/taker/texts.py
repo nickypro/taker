@@ -6,7 +6,7 @@ That is, the 'codeparrot-clean' and 'the pile' datasets.
 import os
 import json
 import argparse
-from datasets import load_dataset, concatenate_datasets
+from datasets import load_dataset, concatenate_datasets, DatasetDict, Dataset
 
 from .data_classes import EvalConfig
 from .model import Model
@@ -185,6 +185,12 @@ def get_pile_dataset_configs():
 
 def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
     eval_configs = [
+        EvalConfig("pytest-pile-local",
+            dataset_custom_load_fn=lambda:DatasetDict.load_from_disk(script_path('data/pytest-pile-local')),
+        ),
+        EvalConfig("pytest-code-local",
+            dataset_custom_load_fn=lambda:DatasetDict.load_from_disk(script_path('data/pytest-code-local')),
+        ),
         EvalConfig("pile_codeless",
             dataset_repo = PILE_DATASET_REPO,
             skip_token_strings = most_common_pile_codeless_tokens,
@@ -430,6 +436,18 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
 
     return eval_config
 
+def __load_dataset_from_eval_config(eval_config: EvalConfig):
+    if eval_config.dataset_custom_load_fn is not None:
+        _dataset = eval_config.dataset_custom_load_fn()
+    else:
+        _dataset = load_dataset(
+            eval_config.dataset_repo,
+            eval_config.dataset_subset,
+            trust_remote_code=True, # TODO: probably fix at some point
+            streaming=eval_config.streaming,
+        )
+    return _dataset
+
 def prepare_dataset(eval_config: EvalConfig):
     """ Returns iterable dataset object. """
     assert eval_config is not None
@@ -444,20 +462,10 @@ def prepare_dataset(eval_config: EvalConfig):
 
     # Load the dataset
     try:
-        _dataset = load_dataset(
-            eval_config.dataset_repo,
-            eval_config.dataset_subset,
-            trust_remote_code=True, # TODO: probably fix at some point
-            streaming=eval_config.streaming,
-        )
+        _dataset = __load_dataset_from_eval_config(eval_config)
     except Exception as e:
         print(f"Mis-specified EvalConfig: \n{eval_config}\n Trying Again...")
-        _dataset = load_dataset(
-            eval_config.dataset_repo,
-            eval_config.dataset_subset,
-            trust_remote_code=True, # TODO: probably fix at some point
-            streaming=eval_config.streaming,
-        )
+        _dataset = __load_dataset_from_eval_config(eval_config)
 
     # Post-split processing
     if isinstance(split, list) or isinstance(split, tuple):
@@ -482,7 +490,9 @@ def prepare_dataset(eval_config: EvalConfig):
             _dataset = _dataset.select(indices)
 
     # Skip tokens if no split
-    if split == "train" and not eval_config.is_train_mode:
+    if split == "train" \
+            and not eval_config.is_train_mode \
+            and not eval_config.dataset_has_test_split:
         skip_n = int(eval_config.num_tokens_to_skip//100)
         print(f"Warning: '{eval_config.dataset_name}' has no 'test' split.",
               f"Using 'train' split and skipping {skip_n} texts instead.")
@@ -490,8 +500,9 @@ def prepare_dataset(eval_config: EvalConfig):
 
     return _dataset
 
-def prepare(dataset_name):
+def prepare(dataset_name, split="train"):
     eval_config = infer_dataset_config(dataset_name)
-    eval_config.dataset_split = "train"
+    eval_config.dataset_split = split
+    eval_config.is_train_mode = (split == "train")
     _dataset = prepare_dataset(eval_config)
     return _dataset, eval_config.dataset_text_key, eval_config.skip_token_strings

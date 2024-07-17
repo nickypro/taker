@@ -1,0 +1,32 @@
+{
+  "citation": "",
+  "description": "",
+  "features": {
+    "code": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "repo_name": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "path": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "language": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "license": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "size": {
+      "dtype": "int64",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": ""
+}

@@ -78,13 +78,7 @@ class Model:
         if self.compile:
             torch._dynamo.config.suppress_errors = True
             self.predictor = self.dtype_map.compile(self.predictor)
-        with torch.no_grad():
-            if self.cfg.model_modality == "language":
-                self.get_outputs_embeds(".")
-            if self.cfg.model_modality == "vision":
-                self.get_outputs_embeds(
-                    pixel_values=torch.randn([1,3,self.cfg.image_size,self.cfg.image_size], dtype=self.dtype, device=self.device)
-                )
+        self.run_example_input()
 
     @staticmethod
     def default_config():
@@ -157,6 +151,15 @@ class Model:
     def __setitem__(self, key, value):
         self.map[key] = value
 
+    def run_example_input(self):
+        with torch.no_grad():
+            if self.cfg.model_modality == "language":
+                self.get_outputs_embeds(".")
+            if self.cfg.model_modality == "vision":
+                self.get_outputs_embeds(
+                    pixel_values=torch.randn([1,3,self.cfg.image_size,self.cfg.image_size], dtype=self.dtype, device=self.device)
+                )
+
     def init_image_processor(self, device_map):
         """ Initialize processor from raw pixel values to normalised tensors"""
         try:
@@ -169,22 +172,30 @@ class Model:
         return self.processor
 
     def init_hooks(self):
+        num_hooks = 0
         for layer_idx, layer in enumerate(self.layers):
             for point in self.hook_config.hook_points.keys():
                 hooks = self.hook_config.get_hooks(point, layer_idx)
                 if hooks:
                     io_type, module = self.get_module_for_hook_point(layer, point)
                     self.register_hooks(f"layer_{layer_idx}_{point}", module, hooks, io_type)
+                    num_hooks += len(hooks)
         self.hook_config.n_layers = self.cfg.n_layers
-        print(f"- Added hooks for {layer_idx+1} layers")
+        print(f"- Added {num_hooks} hooks across {layer_idx+1} layers")
 
-    def set_hook_config(self, config):
+    def remove_hooks(self):
         for handle in self.hooks.handles:
             handle.remove()
         self.hooks.handles.clear()
+
+    def set_hook_config(self, config: HookConfig):
+        self.remove_hooks()
+        if isinstance(config, str):
+            config = HookConfig().from_string(config)
         self.hook_config = config
         self.hooks = HookMap(config)
         self.init_hooks()
+        self.run_example_input()
 
     # Transformers parity methods
     def center_unembed(self):
