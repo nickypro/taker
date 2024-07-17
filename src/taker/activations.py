@@ -97,18 +97,18 @@ def get_midlayer_data(opt: Model,
     do_collect = collect_ff or collect_attn or collect_ids
 
     # Get things ready for collection
-    opt.disable_all_collect_hooks()
+    opt.hooks.disable_all_collect_hooks()
 
     if do_ff:
         ff_shape = (opt.cfg.n_layers, opt.cfg.d_mlp)
         ff_data = ActivationCollector( ff_shape, opt.output_device, collect_ff )
-        opt.enable_collect_hooks(["mlp_pre_out"])
+        opt.hooks.enable_collect_hooks(["mlp_pre_out"])
 
     # self-attention activation collector
     if do_attn:
         attn_shape = (opt.cfg.n_layers, opt.cfg.n_heads, opt.cfg.d_head)
         attn_data = ActivationCollector( attn_shape, opt.output_device, collect_attn )
-        opt.enable_collect_hooks(["attn_pre_out"])
+        opt.hooks.enable_collect_hooks(["attn_pre_out"])
 
     if do_collect:
         criteria_raw = []

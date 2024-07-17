@@ -138,8 +138,8 @@ class HookMap:
                 self.collects[name].activation = None
                 return data
             return None
-        elif data_type in self.data_types:
-            return self.data_dict["data_type"][name]
+        elif data_type in self.hooks_raw:
+            return self.hooks_raw[data_type][name]
         else:
             raise ValueError(f"Unknown data type: {data_type}")
 
@@ -195,8 +195,8 @@ class HookMap:
         return self["attn_pre_out"].delete_neurons(remove_indices, layer)
 
 class HookMapComponent:
-    def __init__(self, model, component):
-        self.model = model
+    def __init__(self, hooks, component):
+        self.hooks = hooks
         self.component = component
 
     def __getitem__(self, data_type):
@@ -205,9 +205,9 @@ class HookMapComponent:
             data_type, layer = data_type
             layers = [layer]
         if data_type == "collect":
-            data = self.model.get_all_layer_activations(self.component, layers)
+            data = self.hooks.get_all_layer_activations(self.component, layers)
         elif data_type in ["mask", "actadd", "postbias", "offset"]:
-            data = self.model.get_all_layer_data(self.component, data_type, layers)
+            data = self.hooks.get_all_layer_data(self.component, data_type, layers)
         else:
             raise ValueError(f"Unknown data type: {data_type}")
         if len(data) == 1:
@@ -216,7 +216,7 @@ class HookMapComponent:
 
     def __setitem__(self, data_type, value):
         if data_type in ["mask", "actadd", "postbias", "offset"]:
-            self.model.set_all_layer_parameters(self.component, data_type, value)
+            self.hooks.set_all_layer_parameters(self.component, data_type, value)
         else:
             raise ValueError(f"Cannot set data type: {data_type}")
 
@@ -228,20 +228,20 @@ class HookMapComponent:
     def delete_neurons(self, remove_indices, layer: int = None):
         def delete_layer_neurons(nn_mask, layer_remove_indices):
             layer_remove_indices = self._prepare_vector_shape(
-                layer_remove_indices.to(self.model.device, dtype=bool),
+                layer_remove_indices.to(nn_mask.param.device, dtype=bool),
                 nn_mask.param.shape
             )
             keep_indices = torch.logical_not(layer_remove_indices)
             nn_mask.delete_neurons(keep_indices)
         nn_masks = self["mask"]
         if layer is not None:
-            return delete_layer_neurons(nn_mask[layer], remove_indices)
+            return delete_layer_neurons(nn_masks[layer], remove_indices)
         for layer, nn_mask in enumerate(nn_masks):
             delete_layer_neurons(nn_mask, remove_indices[layer])
 
     def set_offsets(self, offset_val, layer:int = None):
         def set_layer_offset(nn_offset, val):
-            val = self._prepare_vector_shape(val.to(self.model.device, self.model.dtype), nn_offset.shape)
+            val = self._prepare_vector_shape(val.to(nn_offset.param.device, nn_offset.param.dtype), nn_offset.shape)
             nn_offset.set_offset(val)
         neuron_offsets = self["offset"]
         if layer is not None:
