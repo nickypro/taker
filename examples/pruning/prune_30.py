@@ -1,6 +1,6 @@
-from separability.data_classes import PruningConfig
-from separability.parser import cli_parser
-from separability.prune import run_pruning
+from taker.data_classes import PruningConfig
+from taker.parser import cli_parser
+from taker.prune import run_pruning
 import torch
 
 # Configure initial model and tests
