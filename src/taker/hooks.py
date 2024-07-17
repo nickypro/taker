@@ -110,6 +110,14 @@ class HookMap:
             "unwhiten": self.neuron_unwhiten,
         }
 
+    @property
+    def all_hooks(self):
+        hook_list = []
+        for _hook_type_dict in self.hooks_raw.values():
+            for _location, hook in _hook_type_dict.items():
+                hook_list.append(hook)
+        return hook_list
+
     def get_hook_fn(self, hook_type, name, activation, device, dtype):
         _hooks = self.hooks_raw[hook_type]
         if name not in _hooks:

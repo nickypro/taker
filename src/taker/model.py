@@ -154,7 +154,7 @@ class Model:
     def run_example_input(self):
         with torch.no_grad():
             if self.cfg.model_modality == "language":
-                self.get_outputs_embeds(".")
+                self.get_outputs_embeds("a b")
             if self.cfg.model_modality == "vision":
                 self.get_outputs_embeds(
                     pixel_values=torch.randn([1,3,self.cfg.image_size,self.cfg.image_size], dtype=self.dtype, device=self.device)
@@ -171,8 +171,18 @@ class Model:
             self.processor = SsdVitProcessor()
         return self.processor
 
+    # Functions for hooks
+    def set_hook_config(self, config: HookConfig):
+        self.remove_hooks()
+        if isinstance(config, str):
+            config = HookConfig().from_string(config)
+        self.hook_config = config
+        self.hooks = HookMap(config)
+        self.init_hooks()
+        self.run_example_input()
+
     def init_hooks(self):
-        num_hooks = 0
+        num_hooks: int = 0
         for layer_idx, layer in enumerate(self.layers):
             for point in self.hook_config.hook_points.keys():
                 hooks = self.hook_config.get_hooks(point, layer_idx)
@@ -183,30 +193,40 @@ class Model:
         self.hook_config.n_layers = self.cfg.n_layers
         print(f"- Added {num_hooks} hooks across {layer_idx+1} layers")
 
-    def remove_hooks(self):
-        for handle in self.hooks.handles:
-            handle.remove()
-        self.hooks.handles.clear()
+    def register_hooks(self, name, module, hooks, io_type):
+        hook_fn = self.get_hook_fn(name, hooks, io_type)
+        if io_type == "in":
+            handle = module.register_forward_pre_hook(hook_fn)
+        elif io_type == "out":
+            handle = module.register_forward_hook(hook_fn)
+        self.hooks.handles.append(handle)
 
-    def set_hook_config(self, config: HookConfig):
-        self.remove_hooks()
-        if isinstance(config, str):
-            config = HookConfig().from_string(config)
-        self.hook_config = config
-        self.hooks = HookMap(config)
-        self.init_hooks()
-        self.run_example_input()
+    def get_hook_fn(self, name, hooks, io_type="in"):
+        def hook_fn(module, __input, __output=None):
+            # Is this input or output?
+            __act = __input if io_type=="in" else __output
+            activation = __act[0] if isinstance(__act, tuple) else __act
 
-    # Transformers parity methods
-    def center_unembed(self):
-        with torch.no_grad():
-            if "unembed" in self.map:
-                lm_head = self.map["unembed"]
-            else:
-                lm_head = self.model.get_output_embeddings()
-            embed = self.map["embed"]
-            assert embed is not lm_head, "centering unembedding not yet supported for tied weights"
-            lm_head.weight = torch.nn.Parameter(lm_head.weight - lm_head.weight.mean(dim=-1, keepdim=True))
+            # Does the module not use batch index? if so, we fix this
+            has_batch = f"has_batch_index_{io_type}"
+            if not hasattr(module, has_batch): # init run has 1 batch only
+                setattr(module, has_batch, activation.shape[0] == 1)
+            if not getattr(module, has_batch):
+                activation = activation.unsqueeze(dim=0)
+
+            if "attn_pre_out" in name:
+                activation = self.split_attn_head_dims(activation)
+
+            for hook in hooks:
+                # split attention to [n_heads, d_head]
+                curr_hook  = self.hooks.get_hook_fn(hook, name, activation, self.device, self.dtype)
+                activation = curr_hook(activation)
+
+            if "attn_pre_out" in name:
+                activation = self.join_attn_head_dims(activation)
+            return (activation,) + __act[1:] if isinstance(__act, tuple) else activation
+
+        return hook_fn
 
     # Hook-specific methods
     def get_module_for_hook_point(self, layer, point):
@@ -233,6 +253,13 @@ class Model:
         else:
             raise ValueError(f"Unknown hook point: {point}")
 
+    def remove_hooks(self):
+        for handle in self.hooks.handles:
+            handle.remove()
+        self.hooks.handles.clear()
+
+
+    # Helper functions for reshaping activations
     def split_attn_head_dims(self, activation):
         if activation.shape[-1] == self.cfg.d_model:
             activation = einops.rearrange(
@@ -247,32 +274,16 @@ class Model:
                 n_heads=self.cfg.n_heads, d_head=self.cfg.d_head)
         return activation
 
-    def get_hook_fn(self, name, hooks, io_type="in"):
-        def hook_fn(module, __input, __output=None):
-            __act = __input if io_type=="in" else __output
-            activation = __act[0] if isinstance(__act, tuple) else __act
-
-            for hook in hooks:
-                # split attention to [n_heads, d_head]
-                if "attn_pre_out" in name:
-                    activation = self.split_attn_head_dims(activation)
-
-                curr_hook  = self.hooks.get_hook_fn(hook, name, activation, self.device, self.dtype)
-                activation = curr_hook(activation)
-
-            if "attn_pre_out" in name:
-                activation = self.join_attn_head_dims(activation)
-            return (activation,) + __act[1:] if isinstance(__act, tuple) else activation
-
-        return hook_fn
-
-    def register_hooks(self, name, module, hooks, io_type):
-        hook_fn = self.get_hook_fn(name, hooks, io_type)
-        if io_type == "in":
-            handle = module.register_forward_pre_hook(hook_fn)
-        elif io_type == "out":
-            handle = module.register_forward_hook(hook_fn)
-        self.hooks.handles.append(handle)
+    # Functions for symmetrically altering model.
+    def center_unembed(self):
+        with torch.no_grad():
+            if "unembed" in self.map:
+                lm_head = self.map["unembed"]
+            else:
+                lm_head = self.model.get_output_embeddings()
+            embed = self.map["embed"]
+            assert embed is not lm_head, "centering unembedding not yet supported for tied weights"
+            lm_head.weight = torch.nn.Parameter(lm_head.weight - lm_head.weight.mean(dim=-1, keepdim=True))
 
     # Get "normal" Model Activations
     # text           --[tokenizer]-----> input_ids
@@ -304,13 +315,14 @@ class Model:
 
     # inputs_embeds  --[model.model]---> outputs_embeds
     def get_outputs_embeds(self, text:str=None, input_ids:TT=None, raw_img=None, pixel_values=None, inputs_embeds:TT=None):
-        """Get output logits from input token ids"""
-        inputs_embeds = self.get_inputs_embeds(text, input_ids, raw_img, pixel_values) \
-            if inputs_embeds is None else inputs_embeds
+        """Get output logits from input text/image"""
         if self.cfg.model_modality == "vision":
+            pixel_values = self.get_pixel_values(raw_img) if pixel_values is None else pixel_values
             return self.model(pixel_values, output_hidden_states=False ).last_hidden_state
-        outputs = self.model( inputs_embeds=inputs_embeds, output_hidden_states=False ).last_hidden_state
-        return outputs
+
+        inputs_embeds = self.get_inputs_embeds(text, input_ids) \
+            if inputs_embeds is None else inputs_embeds
+        return self.model( inputs_embeds=inputs_embeds, output_hidden_states=False ).last_hidden_state
 
     # outputs_embeds --[model.lm_head]-> logits
     def unembed(self, embedded_outputs: TT):
@@ -472,6 +484,27 @@ class Model:
 
     def get_text_activations(self, text=None, input_ids=None):
         return self.get_residual_diffs(text=text, input_ids=input_ids)
+
+    def components_loop(self):
+        yield self.predictor
+        yield self.model
+        for hook in self.hooks.all_hooks:
+            yield hook
+
+    def to( self, device ):
+        if self.use_accelerator: # If using accelerator, init handles multi-device
+            return
+        if self.dtype_map.is_low_precision: # 8bit & 4bit mode handled by accelerator
+            return
+        if self.use_quantization:
+            return
+        orig_device = self.device
+        self.device = device
+        if self.output_device == orig_device:
+            self.output_device = self.device
+        for component in self.components_loop():
+            component.to(self.device)
+        return self
 
     def forward(self, input_ids):
         input_ids = input_ids.to(self.device)
