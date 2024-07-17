@@ -237,7 +237,7 @@ def convert_hf_model_config(official_model_name: str):
         cfg_dict["rotary_dim"] = round(rotary_pct * cfg_dict["d_head"])
     elif architecture == "RobertaForMaskedLM":
         cfg_dict = {
-            "model_type": "seq2seq",
+            "model_type": "masked",
             "d_model": hf_config.hidden_size,
             "d_head": hf_config.hidden_size // hf_config.num_attention_heads,
             "n_heads": hf_config.num_attention_heads,
@@ -1251,7 +1251,7 @@ def build_gpt2_layer_map(cfg: ConfigClass):
     return gpt2_layer_map
 
 #####################################################################################
-# Seq2Seq "Masked LM" Models
+# "Masked LM" Models
 #####################################################################################
 
 # Roberta Model Map

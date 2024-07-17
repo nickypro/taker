@@ -16,7 +16,7 @@ from tqdm import tqdm
 from .texts import prepare_dataset, infer_dataset_config
 from .model import Model
 from .data_classes import RunDataItem, ActivationCollector, ActivationSummaryHolder, ActivationOverview, EvalConfig
-from .eval import evaluate_all
+from .eval import evaluate_all, Generators
 
 ######################################################################################
 # New code for getting attention activations and evaluating model
@@ -29,27 +29,30 @@ def get_input_activations(opt: Model, eval_config: EvalConfig, dataset_item: dic
 
     if model_modality == "vision":
         raw_img   = dataset_item[eval_config.dataset_image_key]
-        img_label = dataset_item[eval_config.dataset_image_label]
-        _outputs_embeds = opt.get_outputs_embeds(raw_img=raw_img)
-        return img_label
+        img_label = dataset_item[eval_config.dataset_image_label_key]
 
-        # TODO: fix this
-        input_ids = [img_label]*100
-        expected_ids = [img_label, *([-1]*100)]
-        return input_ids, other_data
+        pixel_values = opt.get_pixel_values(raw_img)
+        inputs_embeds = opt.get_inputs_embeds(pixel_values=pixel_values)
+        [_batch, _num_tokens, _d_model] = inputs_embeds.shape
+        _outputs_embeds = opt.get_outputs_embeds(pixel_values=pixel_values)
+
+        input_ids    = torch.tensor([[img_label]*_num_tokens])
+        expected_ids = torch.tensor([[img_label, *([-1]*(_num_tokens-1))]])
+        return input_ids, expected_ids
 
     if model_modality == "language":
         text  = dataset_item[eval_config.dataset_text_key]
         input_ids = opt.get_ids(text).detach()
-        _outputs_embeds = opt.get_outputs_embeds(input_ids=input_ids)
-        return input_ids, other_data
 
-        # TODO: fix this
-        if opt.cfg.masked_model:
-            orig_ids, input_ids, indices = opt.roberta_masked_ids(input_ids=input_ids)
+        if opt.cfg.model_type == "masked":
+            orig_ids = input_ids
+            input_ids, indices = \
+                Generators.run_random_masking(opt, eval_config, orig_ids)
             other_data["expected_ids"] = orig_ids
         else:
             other_data["expected_ids"] = input_ids[..., 1:]
+
+        _outputs_embeds = opt.get_outputs_embeds(input_ids=input_ids)
         return input_ids, other_data
 
     raise NotImplementedError(f"Invalid model modality {model_modality}")
@@ -120,13 +123,17 @@ def get_midlayer_data(opt: Model,
     curr_count = 0
     texts_viewed = 0
 
-    with tqdm(total=sample_size) as pbar:
+    with tqdm(total=sample_size, desc=eval_config.dataset_name) as pbar:
         for data in dataset:
             texts_viewed += 1
             with torch.no_grad():
 
                 # Get activations
-                input_ids, other_data = get_input_activations(opt, eval_config, data)
+                try:
+                    input_ids, other_data = get_input_activations(opt, eval_config, data)
+                except:
+                    print("Error processing dataset input. Skipping...")
+                    continue
 
                 if do_ff:
                     ff_acts = opt.collect_recent_mlp_pre_out()

@@ -107,6 +107,34 @@ class Generators:
         ids = model.tokenizer.convert_tokens_to_ids(buffer_tokens[:buffer_size])
         yield get_sliding_window_outputs(model, ids)
 
+    @staticmethod
+    def run_random_masking(model: Model, c: EvalConfig, orig_ids):
+        if c.masked_token_id is None:
+            c.masked_token_id = \
+                model.get_ids(text=c.masked_token_str)[0, 1].item()
+
+        # Number of random elements to select
+        n_tokens = ( orig_ids.shape[-1] - 2 )
+        f_chosen     = n_tokens * c.masked_frac_chosen
+        n_chosen     = int(f_chosen)
+        n_masked     = int(f_chosen * c.masked_frac_chosen_masked)
+        n_randomized = int(f_chosen * c.masked_frac_chosen_randomized)
+        n_unchanged  = n_chosen - n_masked - n_randomized
+
+        # Shuffle and select the first n_tokens indices, excluding padding
+        indices = torch.randperm(n_tokens)[:n_chosen] + 1
+        indices_masked     = indices[:n_masked]
+        indices_randomized = indices[n_masked:n_masked+n_randomized]
+        indices_unchanged  = indices[n_masked+n_randomized:]
+
+        input_ids = orig_ids.clone()
+        device = input_ids.device
+        input_ids[0, indices_masked] = c.masked_token_id
+        input_ids[0, indices_randomized] = \
+            torch.randint(4, model.cfg.d_vocab-1, (n_randomized,)).to(device)
+
+        return input_ids, indices
+
     # Eval for masked models like BERT/RoBERTa
     @staticmethod
     def get_masked_generator(
@@ -118,38 +146,11 @@ class Generators:
 
         c = eval_config
 
-        if c.masked_token_id is None:
-            c.masked_token_id = \
-                model.get_ids(text=c.masked_token_str)[0, 1].item()
-
-        def run_random_masking(orig_ids):
-            # Number of random elements to select
-            n_tokens = ( orig_ids.shape[-1] - 2 )
-            f_chosen     = n_tokens * c.masked_frac_chosen
-            n_chosen     = int(f_chosen)
-            n_masked     = int(f_chosen * c.masked_frac_chosen_masked)
-            n_randomized = int(f_chosen * c.masked_frac_chosen_randomized)
-            n_unchanged  = n_chosen - n_masked - n_randomized
-
-            # Shuffle and select the first n_tokens indices, excluding padding
-            indices = torch.randperm(n_tokens)[:n_chosen] + 1
-            indices_masked     = indices[:n_masked]
-            indices_randomized = indices[n_masked:n_masked+n_randomized]
-            indices_unchanged  = indices[n_masked+n_randomized:]
-
-            input_ids = orig_ids.clone()
-            device = input_ids.device
-            input_ids[0, indices_masked] = eval_config.masked_token_id
-            input_ids[0, indices_randomized] = \
-                torch.randint(4, model.cfg.d_vocab-1, (n_randomized,)).to(device)
-
-            return input_ids, indices
-
         for data in dataset:
             text = data[c.dataset_text_key]
 
             orig_ids = model.get_ids(text=text)
-            input_ids, indices_chosen = run_random_masking(orig_ids)
+            input_ids, indices_chosen = Generators.run_random_masking(model, c, orig_ids)
             logits = model.get_logits(input_ids=input_ids)
 
             expected_ids = orig_ids[..., indices_chosen]
