@@ -24,18 +24,6 @@ class HookConfig:
         }
         self.n_layers = n_layers
 
-    def add_hook(self, point, hook_type, layer=None):
-        if point not in self.hook_points:
-            raise ValueError(f"Invalid hook point: {point}")
-        if layer is None:
-            if 'all' not in self.hook_points[point]:
-                self.hook_points[point]['all'] = []
-            self.hook_points[point]['all'].append(hook_type)
-        else:
-            if layer not in self.hook_points[point]:
-                self.hook_points[point][layer] = []
-            self.hook_points[point][layer].append(hook_type)
-
     def from_string(self, config_string):
         for line in config_string.strip().split('\n'):
             parts = line.split(':')
@@ -54,6 +42,18 @@ class HookConfig:
                 for hook in hooks.split(','):
                     self.add_hook(point, hook.strip(), layer)
         return self
+
+    def add_hook(self, point, hook_type, layer=None):
+        if point not in self.hook_points:
+            raise ValueError(f"Invalid hook point: {point}")
+        if layer is None:
+            if 'all' not in self.hook_points[point]:
+                self.hook_points[point]['all'] = []
+            self.hook_points[point]['all'].append(hook_type)
+        else:
+            if layer not in self.hook_points[point]:
+                self.hook_points[point][layer] = []
+            self.hook_points[point][layer].append(hook_type)
 
     def __str__(self):
         result = []
@@ -141,6 +141,7 @@ class HookMap:
             return curr_hook.undo
         return curr_hook
 
+    # Generic Helper functions for get/set hook data
     def get_data(self, name=None, data_type=None):
         if data_type == "collect":
             # collect is desctructively gotten (to save memory)
@@ -168,10 +169,6 @@ class HookMap:
         layers = range(self.hook_config.n_layers) if layers is None else layers
         return [f"layer_{i}_{component}" for i in layers]
 
-    def get_all_layer_activations(self, component, layers=None):
-        layer_names = self.get_layer_names(component, layers)
-        return [self.get_data(name, "collect") for name in layer_names]
-
     def get_all_layer_data(self, component, data_type, layers=None):
         layer_names = self.get_layer_names(component, layers)
         return [self.get_data(name, data_type) for name in layer_names]
@@ -180,6 +177,11 @@ class HookMap:
         layer_names = self.get_layer_names(component, layers)
         for name, value in zip(layer_names, values):
             self.set_hook_parameter(name, param_type, value)
+
+    # Methods for specific hook types
+    def get_all_layer_activations(self, component, layers=None):
+        layer_names = self.get_layer_names(component, layers)
+        return [self.get_data(name, "collect") for name in layer_names]
 
     def disable_all_collect_hooks(self):
         for name, hook in self.collects.items():
@@ -191,7 +193,7 @@ class HookMap:
         if layers is None:
             layers = range(self.hook_config.n_layers)
         if isinstance(layers, int):
-            layers = [layer]
+            layers = [layers]
 
         for component in components:
             for layer in layers:
@@ -231,18 +233,12 @@ class HookMapComponent:
         else:
             raise ValueError(f"Cannot set data type: {data_type}")
 
-    def _prepare_vector_shape(self, vector: torch.Tensor, desired_shape: torch.Size) -> torch.Tensor:
-        if vector.shape != desired_shape:
-            vector = vector.reshape(desired_shape)
-        return vector
-
+    # Hook-specific functions
     def delete_neurons(self, remove_indices, layer: int = None):
-        def delete_layer_neurons(nn_mask, layer_remove_indices):
-            layer_remove_indices = self._prepare_vector_shape(
-                layer_remove_indices.to(nn_mask.param.device, dtype=bool),
-                nn_mask.param.shape
-            )
-            keep_indices = torch.logical_not(layer_remove_indices)
+        def delete_layer_neurons(nn_mask, rm_idx):
+            device, dtype = nn_mask.param.device, bool
+            rm_idx = rm_idx.to(device, dtype).reshape(nn_mask.param.shape)
+            keep_indices = torch.logical_not(rm_idx)
             nn_mask.delete_neurons(keep_indices)
         nn_masks = self["mask"]
         if layer is not None:
@@ -252,7 +248,8 @@ class HookMapComponent:
 
     def set_offsets(self, offset_val, layer:int = None):
         def set_layer_offset(nn_offset, val):
-            val = self._prepare_vector_shape(val.to(nn_offset.param.device, nn_offset.param.dtype), nn_offset.shape)
+            device, dtype = nn_offset.param.device, nn_offset.param.dtype
+            val = val.to(device, dtype).reshape(nn_offset.shape)
             nn_offset.set_offset(val)
         neuron_offsets = self["offset"]
         if layer is not None:
@@ -260,7 +257,10 @@ class HookMapComponent:
         for layer, neuron_offset in enumerate(neuron_offsets):
             set_layer_offset(neuron_offset, offset_val[layer])
 
-# Class for holding the hook classes
+#####################################################################################
+# Define Hook Classes
+#####################################################################################
+
 class NeuronFunctionList(torch.nn.Module):
     """ Class for storing all the Neuron Masks"""
 
