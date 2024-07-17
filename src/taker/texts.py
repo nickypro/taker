@@ -33,7 +33,7 @@ with open(json_file_path, 'r') as file:
 most_common_pile_tokens          = llama_most_common_tokens["all"]["skip50"]["tokens_str"]
 most_common_pile_codeless_tokens = llama_most_common_tokens["only_text"]["skip50"]["tokens_str"]
 most_common_code_tokens          = llama_most_common_tokens["only_code"]["skip50"]["tokens_str"]
-PILE_DATASET_REPO = "JeanKaddour/minipile" # "monology/pile-uncopyrighted"
+PILE_DATASET_REPO = "nickypro/minipile" # "monology/pile-uncopyrighted"
 PILE_DATASET_SPLIT_REPO = "nickypro/minipile-split" # "ArmelR/the-pile-splitted"
 PILE_SUBSETS = [
     "ArXiv", "BookCorpus2", "Books3", "DM Mathematics", "Enron Emails",
