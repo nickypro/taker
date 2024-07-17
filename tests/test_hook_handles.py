@@ -17,9 +17,10 @@ class TestHookHandles:
 
         # modify the masks
         #mask0 = m.hooks_raw["attn_pre_out"][0]
-        mask0 = m.hooks_raw.neuron_masks["layer_0_attn_pre_out"]
+        mask0 = m.hooks.neuron_masks["layer_0_attn_pre_out"]
         mask0.delete_neurons(
-            keep_indices=torch.zeros([m.cfg.d_model])
+            #keep_indices=torch.zeros([m.cfg.d_model])
+            keep_indices=torch.zeros([m.cfg.n_heads, m.cfg.d_head])
         )
 
         # get modified input
@@ -28,7 +29,7 @@ class TestHookHandles:
         assert not torch.allclose(res_0, res_1)
 
         # register new masks, check that they are replaced
-        m.register_masks()
+        m.set_hook_config(m.hook_config)
         res_2 = m.get_residual_stream(text)
 
         assert torch.allclose(res_0, res_2)
