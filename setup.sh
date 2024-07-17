@@ -9,7 +9,7 @@ then
 
   fi
   if [ $1 = "-i" ]
-  then	  
+  then
     # Weights & Biases
     echo "
     machine api.wandb.ai
@@ -21,6 +21,7 @@ then
     echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
     echo 'alias py="poetry run python"' >> ~/.bashrc
     echo 'alias t0="tmux attach-session -t 0 || tmux new -s 0"' >> ~/.bashrc
+    echo 'export WANDB_ENTITY=seperability' >> ~/.bashrc
 
     # Add poetry to current bash session PATH
     export PATH="$HOME/.local/bin:$PATH"
