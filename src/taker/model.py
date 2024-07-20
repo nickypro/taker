@@ -182,6 +182,7 @@ class Model:
         self.run_example_input()
 
     def init_hooks(self):
+        # (x) [attn_out] (y) -> (x) [layer] (y)
         num_hooks: int = 0
         for layer_idx, layer in enumerate(self.layers):
             for point in self.hook_config.hook_points.keys():
