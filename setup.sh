@@ -45,4 +45,3 @@ curl -sSL https://install.python-poetry.org | python -
 poetry config virtualenvs.in-project true
 poetry install
 poetry run pip install torch
-poetry run pip install --no-deps detoxify -q
