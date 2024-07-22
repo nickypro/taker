@@ -215,6 +215,9 @@ class HookMap:
     def delete_attn_neurons(self, remove_indices, layer: int = None):
         return self["attn_pre_out"].delete_neurons(remove_indices, layer)
 
+    def reset_neuron_replace(self):
+        [h.reset() for h in self.neuron_replace.values()]
+
 class HookMapComponent:
     def __init__(self, hooks, component):
         self.hooks = hooks
@@ -486,7 +489,7 @@ class NeuronReplace(torch.nn.Module):
         # othewise, do the neuron replacement stuff with remaining vectors left
         tokens_left = self.max_tokens - self.tokens_seen
         n_tokens    = min([tokens_left, n_new_tokens])
-        print(f"Got {n_new_tokens}, already saw {self.tokens_seen}, checking {n_tokens} out of max {self.max_tokens}")
+        # print(f"Got {n_new_tokens}, already saw {self.tokens_seen}, checking {n_tokens} out of max {self.max_tokens}")
         for local_index in range(n_tokens):
             token_index = local_index + self.tokens_seen
             if token_index not in self.param:
