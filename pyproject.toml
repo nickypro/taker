@@ -12,14 +12,13 @@ classifiers = [
 repository = "https://github.com/nickypro/taker"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<=3.13"
-torch = "^2.3.1"
+python = ">=3.9"
+torch = "^2.0.0"
 numpy = "^1.23"
 pandas = "^1.5.3"
 scipy = "^1.11.1"
 welford-torch = "^0.2.4"
 numexpr = "^2.7.0"
-dict-deep = "^4.1.2"
 accelerate = "^0.31.0"
 transformers = "^4.41.0"
 tokenizers = "^0.19.1"
