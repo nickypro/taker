@@ -677,8 +677,8 @@ gemma_model_map = {
 "pos_embed.W" : "model.embed_positions.weight",
 "ln_final" : "model.norm",
 "ln_final.w" : "model.norm.weight",
-"unembed"     : "model.lm_head",
-"unembed.W_U" : "model.lm_head.weight.T",
+"unembed"     : "lm_head",
+"unembed.W_U" : "lm_head.weight.T",
 "unembed.b_U" : None,
 }
 
