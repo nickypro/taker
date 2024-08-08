@@ -325,6 +325,15 @@ class Model:
             if inputs_embeds is None else inputs_embeds
         return self.model( inputs_embeds=inputs_embeds, output_hidden_states=False ).last_hidden_state
 
+    def get_attn_weights(self, text=None, input_ids=None, inputs_embeds=None):
+        inputs_embeds = inputs_embeds if inputs_embeds is not None \
+            else self.get_inputs_embeds(text=text, input_ids=input_ids)
+        outputs = self.model(inputs_embeds=inputs_embeds, output_attentions=True)
+        return einops.rearrange(torch.stack(outputs.attentions),
+            "layer batch head tok_i tok_j -> batch layer head tok_i tok_j",
+            layer=self.cfg.n_layers, head=self.cfg.n_heads,
+        )
+
     # outputs_embeds --[model.lm_head]-> logits
     def unembed(self, embedded_outputs: TT):
         """ Converts outputs_embeds -> token logits. Is also basically LogitLens."""
