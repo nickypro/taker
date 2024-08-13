@@ -7,9 +7,16 @@ from torch import Tensor
 import pandas as pd
 import wandb
 from welford_torch import Welford
+class NoneConfig:
+    def __init__(self, *args, **kwargs) -> None:
+        pass
+
 from transformers import BitsAndBytesConfig
-from transformers import HqqConfig
 from transformers import QuantoConfig
+try:
+    from transformers import HqqConfig
+except:
+    HqqConfig = NoneConfig
 
 ######################################################################################
 # Functional Conversion Data Classes
@@ -95,7 +102,10 @@ class DtypeMap():
             "fp64": {},
             "bfp16": {},
         }
-        return {dtype_key: self._dtype, **args[self.str_dtype]}
+        args_out = {dtype_key: self._dtype, **args[self.str_dtype]}
+        if quant_conf in args_out and isinstance(args_out[quant_conf], NoneConfig):
+            raise ImportError(f"Warning: package not installed for {dtype_key}")
+        return args_out
 
     def compile(self, model):
         " Function that takes model -> returns compiled model"
