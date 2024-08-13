@@ -30,6 +30,7 @@ einops = "^0.6.0"
 wandb = "^0.13.9"
 lm-eval = "^0.4.3"
 antlr4-python3-runtime = "4.11.1" # required for lm-eval
+hqq = "^0.1.7"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.21.1"
@@ -47,7 +48,6 @@ sphinx-rtd-theme = "^1.2.0"
 ansible = "^8.4.0"
 phate = "^1.0.11"
 umap-learn = "^0.5.6"
-hqq = "^0.1.7"
 quanto = "^0.2.0"
 bitsandbytes = "^0.40.2"
 
