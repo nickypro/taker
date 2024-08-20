@@ -449,8 +449,8 @@ class NeuronReplace(torch.nn.Module):
         self.device = device
         self.dtype = dtype
 
-        # leave as uninitialised initially
-        self.param = {}
+        # Use a ParameterDict to store parameters
+        self.param = torch.nn.ParameterDict()
         self.max_tokens = 0
 
         self.tokens_seen = 0
@@ -461,18 +461,19 @@ class NeuronReplace(torch.nn.Module):
 
     def reset(self):
         self.max_tokens = 0
-        self.param = {}
+        self.param.clear()
         self.restart()
 
     def add_token(self, token_index, value):
-        self.param[token_index] = value.to(self.device, self.dtype)
+        # Convert the value to a Parameter before adding
+        self.param[str(token_index)] = torch.nn.Parameter(value.to(self.device, self.dtype))
         self.max_tokens = max([self.max_tokens, token_index+1])
 
     def to(self, device=None, dtype=None, *args, **kwargs):
         super(NeuronReplace, self).to(device, dtype, *args, **kwargs)
-        if not device is None:
+        if device is not None:
             self.device = device
-        if not dtype is None:
+        if dtype is not None:
             self.dtype = dtype
 
     def forward(self, x):
@@ -489,12 +490,10 @@ class NeuronReplace(torch.nn.Module):
         # othewise, do the neuron replacement stuff with remaining vectors left
         tokens_left = self.max_tokens - self.tokens_seen
         n_tokens    = min([tokens_left, n_new_tokens])
-        # print(f"Got {n_new_tokens}, already saw {self.tokens_seen}, checking {n_tokens} out of max {self.max_tokens}")
         for local_index in range(n_tokens):
             token_index = local_index + self.tokens_seen
-            if token_index not in self.param:
-                continue
-            x[:, local_index] = self.param[token_index].reshape(x.shape[2:])
+            if str(token_index) in self.param:
+                x[:, local_index] = self.param[str(token_index)].reshape(x.shape[2:])
 
         self.tokens_seen += n_tokens
         return x
