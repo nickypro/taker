@@ -117,7 +117,7 @@ def convert_hf_model_config(official_model_name: str):
         # Architecture for Gemma-2 9b and Gemma-2 27b models
         cfg_dict = {
             "d_model": hf_config.hidden_size,
-            "d_head": hf_config.hidden_size // hf_config.num_attention_heads,
+            "d_head": hf_config.head_dim,
             "n_heads": hf_config.num_attention_heads,
             "d_mlp": hf_config.intermediate_size,
             "n_layers": hf_config.num_hidden_layers,
@@ -521,6 +521,14 @@ def build_llama_layer_map(cfg: ConfigClass):
         _proj = get_attrs(mlp, mlp_proj_map[key]).weight
         b = torch.zeros(_proj.shape[:-1], dtype=_proj.dtype, device=_proj.device)
         return b
+
+    def get_attn_weights(attn_outputs):
+        attn_out, attn_weights, past_key_value = attn_outputs
+        return attn_weights
+
+    def set_attn_weights(attn_weights, orig_output):
+        return orig_output[0], attn_weights, orig_output[2]
+
 
     llama_layer_map = {
         "attn.ln_in"           : "input_layernorm",
@@ -1219,6 +1227,12 @@ def build_gpt2_layer_map(cfg: ConfigClass):
 
     def gpt2_mlp_out_weight(layer, inpt=None):
         return conv1d_weight(layer.mlp.c_proj, inpt)
+
+    def get_attn_weight(attn_outputs):
+            # outputs # a, present, (attentions)
+            # TODO: make sure use_cache is true!
+            attn_out, key_value_cache, attn_weights = attn_outputs
+            return attn_weights
 
 
     gpt2_layer_map = {

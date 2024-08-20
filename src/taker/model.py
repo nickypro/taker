@@ -217,6 +217,7 @@ class Model:
 
             if "attn_pre_out" in name:
                 activation = self.split_attn_head_dims(activation)
+                print(activation.shape)
 
             for hook in hooks:
                 # split attention to [n_heads, d_head]
@@ -262,7 +263,7 @@ class Model:
 
     # Helper functions for reshaping activations
     def split_attn_head_dims(self, activation):
-        if activation.shape[-1] == self.cfg.d_model:
+        if activation.shape[-1] == (self.cfg.n_heads * self.cfg.d_head):
             activation = einops.rearrange(
                 activation, "... (n_heads d_head) -> ... n_heads d_head",
                 n_heads=self.cfg.n_heads, d_head=self.cfg.d_head)
@@ -352,14 +353,27 @@ class Model:
 
     def generate(self, text:str=None, num=10, max_length=None,
             input_ids: TT = None,
+            inputs_embeds: TT = None,
             do_sample: bool = True,
             temperature: float = 0.7,
             **kwargs,
         ):
         """ Predict the next {num} tokens from an input {text}."""
 
-        if input_ids is None:
+        if text is not None:
             input_ids = self.get_ids(text).to(self.device)
+
+        if input_ids is not None:
+            inputs_embeds = self.get_inputs_embeds(input_ids=input_ids).to(self.device)
+
+        if input_ids is None:
+            text_before = ""
+            input_ids = torch.zeros(inputs_embeds.shape[:-1], dtype=torch.long).to(self.device)
+        else:
+            text_before = self.tokenizer.batch_decode( input_ids,
+                skip_special_tokens=True, clean_up_tokenization_spaces=False )[0]
+
+        assert inputs_embeds is not None, "must pass text, input_ids, or inputs_embeds"
 
         # Write an attention mask so that the tokenizer doesn't complain
         attn_mask = None
@@ -375,17 +389,13 @@ class Model:
                 kwargs["pad_token_id"] = 50256
 
         new_length = len(input_ids[0])+num if max_length is None else max_length
-        generate_ids = self.predictor.generate( input_ids, max_length=new_length,
+        generate_ids = self.predictor.generate(inputs_embeds=inputs_embeds, max_length=new_length,
             do_sample=do_sample, temperature=temperature,
             attention_mask=attn_mask, **kwargs)
 
-        # return in format (before, after)
-        before = self.tokenizer.batch_decode( input_ids,
+        text_after  = self.tokenizer.batch_decode( generate_ids,
             skip_special_tokens=True, clean_up_tokenization_spaces=False )[0]
-        after  = self.tokenizer.batch_decode( generate_ids,
-            skip_special_tokens=True, clean_up_tokenization_spaces=False )[0]
-        after = after[ len(before): ]
-        return before, after
+        return text_before, text_after
 
     # Get intermediate activaitons (using HOOKS!!!)
     def get_midlayer_activations(self, text=None, input_ids=None, raw_img=None, pixel_values=None):
