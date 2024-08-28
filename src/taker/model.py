@@ -1,7 +1,6 @@
 from collections import defaultdict
 from typing import List
 import torch
-import torch._dynamo
 import torch.nn as nn
 from torch import Tensor as TT
 import einops
@@ -76,6 +75,7 @@ class Model:
         self.init_model(add_hooks=add_hooks)
         self.compile = compile
         if self.compile:
+            from torch import _dynamo
             torch._dynamo.config.suppress_errors = True
             self.predictor = self.dtype_map.compile(self.predictor)
         self.run_example_input()

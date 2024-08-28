@@ -364,6 +364,7 @@ class NeuronMask(torch.nn.Module):
         return x * inv_mask
 
     def forward(self, x):
+        self.to(x.device)
         mask = self.get_mask()
         offset = self.get_offset(x)
         return x * mask + offset
@@ -511,6 +512,7 @@ class NeuronOffset(torch.nn.Module):
         self.load_state_dict(params)
 
     def forward(self, x):
+        self.to(x.device)
         return x + self.param
 
     def undo(self, x):
