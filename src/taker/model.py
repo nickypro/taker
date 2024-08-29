@@ -423,13 +423,13 @@ class Model:
         }
 
     def collect_recent_mlp_pre_out(self):
-        mlp_activations = torch.stack(self.hooks["mlp_pre_out"]["collect"])
+        mlp_activations = torch.stack([x.to(self.device) for x in self.hooks["mlp_pre_out"]["collect"]])
         mlp_activations = einops.rearrange(mlp_activations,
             "layer batch token dim -> batch layer token dim")
         return mlp_activations
 
     def collect_recent_attn_pre_out(self):
-        attn_activations = torch.stack(self.hooks["attn_pre_out"]["collect"])
+        attn_activations = torch.stack([x.to(self.device) for x in self.hooks["attn_pre_out"]["collect"]])
         attn_activations = einops.rearrange(attn_activations,
             "layer batch token n_heads d_head -> batch layer token n_heads d_head",
             n_heads=self.cfg.n_heads, d_head=self.cfg.d_head
