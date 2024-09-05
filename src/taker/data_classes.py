@@ -488,6 +488,7 @@ class ActivationSummaryHolder:
     orig: ActivationSummary
     loss_normed: ActivationSummary = None
     log_loss_normed: ActivationSummary = None
+    peak_centered: ActivationSummary = None
     misc: dict = None
 
     def __getitem__(self, key):
