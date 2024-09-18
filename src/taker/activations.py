@@ -176,12 +176,12 @@ def get_midlayer_data(opt: Model,
                 if do_ff:
                     ff_data.add_all(ff_acts[criteria_indices])
                     if ff_peak is not None:
-                        ff_data_peak_centered.add(ff_acts - ff_peak)
+                        ff_data_peak_centered.add_all((ff_acts - ff_peak)[criteria_indices])
 
                 if do_attn:
                     attn_data.add_all(attn_acts[criteria_indices])
                     if attn_peak is not None:
-                        attn_data_peak_centered.add(attn_acts - attn_peak)
+                        attn_data_peak_centered.add_all((attn_acts - attn_peak)[criteria_indices])
                 if do_collect:
                     for criterion in criteria:
                         criteria_raw.append(criterion.cpu())
