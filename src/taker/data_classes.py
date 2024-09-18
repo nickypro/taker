@@ -539,6 +539,8 @@ class ActivationCollector:
 
     def add(self, data_point: Tensor):
         # Add mean and variance of data_point to all_activation
+        assert data_point.shape == self.shape, \
+            f"Data point shape {data_point.shape} does not match collector shape {self.shape}"
         self.n_points += 1
         self.all.add(data_point)
         self.sqrt.add(data_point.abs().sqrt())
@@ -557,6 +559,8 @@ class ActivationCollector:
 
     def add_all(self, data_points):
         # TODO: reimplement with ".add_all()" methods
+        assert data_points.shape[1:] == self.shape, \
+            f"Data points shape {data_points.shape} do not match collector shape {self.shape}"
         for data_point in data_points:
             self.add(data_point)
 
