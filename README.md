@@ -148,37 +148,134 @@ This example demonstrates how to access and modify various components of the mod
 Advanced users can extend model maps for new architectures or modify existing
 ones. For this, see `src/taker/model_maps.py`.
 
-## Advanced Usage: Hooks
+## Advanced Hook Operations
 
-Taker provides various hooks for manipulating model behavior:
-
-### Neuron Masking
-
-```python
-import torch
-
-# Create a mask for MLP neurons in layer 2
-neurons_to_keep = torch.ones(model.cfg.d_mlp)
-neurons_to_keep[:10] = 0  # Mask the first 10 neurons
-
-model.hooks["mlp_pre_out"][2].delete_neurons(keep_indices=neurons_to_keep)
-```
+`taker` provides powerful hooks for manipulating model behavior. Here's an in-depth look at Activation Addition, Neuron Replacement, and related operations.
 
 ### Activation Addition
 
+Activation Addition allows you to modify neuron activations at specific positions in the input sequence.
+
 ```python
+from taker import Model
+import torch
+
+model = Model("facebook/opt-125m")
+
 # Add a custom activation to a specific token position
 custom_activation = torch.randn(model.cfg.d_mlp)
 model.hooks["mlp_pre_out"][2].add_token(token_index=0, value=custom_activation)
+
+# Add activations for multiple tokens
+token_activations = torch.randn(5, model.cfg.d_mlp)  # 5 tokens
+for i in range(5):
+    model.hooks["mlp_pre_out"][2].add_token(token_index=i, value=token_activations[i])
+
+# Reset the activation additions
+model.hooks["mlp_pre_out"][2].reset()
+
+# Manually set all activation additions
+all_token_activations = torch.randn(10, model.cfg.d_mlp)  # 10 tokens
+model.hooks["mlp_pre_out"][2].set_actadd(all_token_activations)
+
+# Restart the token counter (useful for processing multiple sequences)
+model.hooks["mlp_pre_out"][2].restart()
 ```
 
 ### Neuron Replacement
+
+Neuron Replacement allows you to completely replace neuron activations at specific positions.
 
 ```python
 # Replace neuron activations at a specific token index
 replacement_activation = torch.randn(model.cfg.d_mlp)
 model.hooks.neuron_replace["layer_2_mlp_pre_out"].add_token(token_index=1, value=replacement_activation)
+
+# Replace activations for multiple tokens
+for i in range(3):
+    replacement = torch.randn(model.cfg.d_mlp)
+    model.hooks.neuron_replace["layer_2_mlp_pre_out"].add_token(token_index=i, value=replacement)
+
+# Reset all neuron replacements
+model.hooks.neuron_replace["layer_2_mlp_pre_out"].reset()
+
+# Restart the token counter
+model.hooks.neuron_replace["layer_2_mlp_pre_out"].restart()
+
+# Reset all neuron replace hooks across the model
+model.hooks.reset_neuron_replace()
 ```
+
+### Neuron Masking
+
+Neuron Masking allows you to selectively zero out certain neurons.
+
+```python
+# Create a mask for MLP neurons in layer 2
+neurons_to_keep = torch.ones(model.cfg.d_mlp)
+neurons_to_keep[:10] = 0  # Mask the first 10 neurons
+
+model.hooks["mlp_pre_out"][2].delete_neurons(keep_indices=neurons_to_keep)
+
+# Manually set the mask
+new_mask = torch.randint(0, 2, (model.cfg.d_mlp,)).float()
+model.hooks["mlp_pre_out"][2]["mask"].set_mask(new_mask)
+
+# Set an offset for masked neurons
+offset = torch.randn(model.cfg.d_mlp)
+model.hooks["mlp_pre_out"][2]["mask"].set_offset(offset)
+```
+
+### Neuron Offsetting
+
+Neuron Offsetting allows you to add a constant offset to neuron activations.
+
+```python
+# Set an offset for all neurons in a layer
+offset = torch.randn(model.cfg.d_mlp)
+model.hooks["mlp_pre_out"][2]["offset"].set_offset(offset)
+
+# Set offsets for all layers at once
+all_layer_offsets = torch.randn(model.cfg.n_layers, model.cfg.d_mlp)
+model.hooks["mlp_pre_out"].set_offsets(all_layer_offsets)
+```
+
+### Collecting Activations
+
+You can use hooks to collect activations from specific parts of the model.
+
+```python
+# Enable collection for specific components and layers
+model.hooks.enable_collect_hooks(components=["mlp_pre_out", "attn_pre_out"], layers=[0, 1, 2])
+
+# Run a forward pass
+_ = model.get_logits("Hello, world!")
+
+# Retrieve collected activations
+mlp_activations = model.hooks["mlp_pre_out"]["collect"]
+attn_activations = model.hooks["attn_pre_out"]["collect"]
+
+# Disable all collect hooks
+model.hooks.disable_all_collect_hooks()
+```
+
+### Global Hook Operations
+
+You can perform operations on all hooks of a certain type across the model.
+
+```python
+# Delete neurons across all MLP layers
+remove_indices = torch.randint(0, 2, (model.cfg.n_layers, model.cfg.d_mlp)).bool()
+model.hooks.delete_mlp_neurons(remove_indices)
+
+# Delete neurons in attention layers
+attn_remove_indices = torch.randint(0, 2, (model.cfg.n_layers, model.cfg.n_heads * model.cfg.d_head)).bool()
+model.hooks.delete_attn_neurons(attn_remove_indices)
+```
+
+These advanced hook operations provide fine-grained control over the model's
+behavior, allowing for detailed analysis and manipulation of the model's
+internal representations.
 
 ## Example: Pruning Based on Capabilities
 
