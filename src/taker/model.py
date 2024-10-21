@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List
+from typing import List, Tuple
 import torch
 import torch.nn as nn
 from torch import Tensor as TT
@@ -20,7 +20,7 @@ class Model:
             device_map: str = None, # transformers device map config ["auto", "cuda"]
             use_accelerator: bool = True, # Allow multigpu
             dtype: str = "bfp16", # See DtypeConfig. ["bfp16", "fp32", "fp16", "hqq8", "int8", "hqq4", "int4", "nf4"]
-            compile: bool = True, # whether to use compiled backend. Prevents "training/backprop", adds speed
+            compile: bool = False, # whether to use compiled backend. Prevents "training/backprop", adds speed
             torch_dtype: torch.dtype = None, # manual torch.dtype
             svd_attn: bool = False, # whether to modify attention weights with SVD (TODO: reimplement)
             tokenizer_repo: str = None, # huggingface tokenizer to load (defaults to model_repo)
@@ -63,6 +63,8 @@ class Model:
         self.tokenizer: AutoTokenizer = None
         self.processor: AutoImageProcessor = None
         self.predictor: AutoModelForCausalLM | AutoModelForImageClassification = None
+        self.orig_predictor: AutoModelForCausalLM | AutoModelForImageClassification = None
+        self.peft_predictor = None
         self.map: ModelMap = None
         self.model: PreTrainedModel = None
         self.layers: list = None
@@ -72,12 +74,8 @@ class Model:
         self.hooks: HookMap = HookMap(self.hook_config)
 
         # Initialize the model
-        self.init_model(add_hooks=add_hooks)
         self.compile = compile
-        if self.compile:
-            from torch import _dynamo
-            torch._dynamo.config.suppress_errors = True
-            self.predictor = self.dtype_map.compile(self.predictor)
+        self.init_model(add_hooks=add_hooks)
         self.run_example_input()
 
     @staticmethod
@@ -122,7 +120,7 @@ class Model:
                 self.model_repo, device_map=device_map, **model_args) \
                 if predictor is None else predictor
         elif self.cfg.model_modality == "language":
-            self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_repo, legacy=False) \
+            self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_repo, legacy=False, padding_side='left') \
                 if tokenizer is None else tokenizer
             self.processor = None \
                 if processor is None else processor
@@ -132,7 +130,7 @@ class Model:
 
         else:
             raise NotImplementedError(f"Model modality {self.cfg.model_modality} not implemented.")
-
+        self.orig_predictor = self.predictor
         print(f"Loaded model '{self.model_repo}' with {self.dtype_map.str_dtype}:")
 
     def init_model(self, do_model_import=True, add_hooks=True):
@@ -144,6 +142,40 @@ class Model:
         self.layers = self.map.layers
         if add_hooks:
             self.init_hooks()
+        if self.compile:
+            self.init_compile()
+
+    def init_peft(self, peft_config_or_path, reinit_hooks=False):
+        """
+        Initialize PEFT for the model.
+
+        Args:
+            peft_config_or_path (PeftConfig or str):
+                Either a PeftConfig object or a string path to a PEFT model repository.
+        """
+        try:
+            from peft import get_peft_model, PeftModel, PeftConfig
+        except ImportError:
+            raise ImportError("PEFT is not installed. Please install it with 'pip install peft'.")
+
+        if reinit_hooks:
+            self.remove_hooks()
+        if isinstance(peft_config_or_path, str): # load from repo
+            self.peft_predictor = PeftModel.from_pretrained(self.orig_predictor, peft_config_or_path)
+        else: # create from config
+            self.peft_predictor = get_peft_model(self.orig_predictor, peft_config_or_path)
+        self.predictor = self.peft_predictor.base_model.model
+        # Reinitialize the model
+        self.init_model(do_model_import=False, add_hooks=False)
+        print(f"Initialized PEFT model")
+        self.peft_predictor.print_trainable_parameters()
+        if reinit_hooks:
+            self.init_hooks()
+
+    def init_compile(self):
+        from torch import _dynamo
+        torch._dynamo.config.suppress_errors = True
+        self.predictor = self.dtype_map.compile(self.predictor)
 
     def __getitem__(self, key):
         return self.map[key]
