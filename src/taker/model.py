@@ -406,6 +406,69 @@ class Model:
             skip_special_tokens=True, clean_up_tokenization_spaces=False )[0]
         return text_before, text_after
 
+    def generate_batch(self,
+            batch_prompts: List[str],
+            num: int = 10,
+            max_length: int = None,
+            temperature: float = 0.7,
+            do_sample: bool = True,
+            **kwargs
+        ) -> Tuple[List[str], List[str]]:
+        """
+        Generate the next {num} tokens for a batch of input prompts.
+
+        Args:
+            batch_prompts (List[str]): A list of input prompts.
+            num (int, optional): Number of new tokens to generate per prompt. Defaults to 10.
+            max_length (int, optional): Maximum length of the generated sequences. If None, it will be set to
+                                         the length of the input plus `num`. Defaults to None.
+            temperature (float, optional): Sampling temperature. Defaults to 0.7.
+            do_sample (bool, optional): Whether to use sampling; use greedy decoding otherwise. Defaults to True.
+            **kwargs: Additional generation parameters.
+
+        Returns:
+            Tuple[List[str], List[str]]: A tuple containing the original prompts and their generated continuations.
+        """
+        # Ensure the tokenizer has a pad_token
+        if self.tokenizer.pad_token is not None:
+            pass
+        elif self.tokenizer.eos_token is not None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+        else:
+            raise ValueError("Tokenizer has neither pad_token nor eos_token defined.")
+
+        # Tokenize all prompts in the batch
+        batch_encodings = self.tokenizer(
+            batch_prompts,
+            padding=True,
+            truncation=False,
+            max_length=1000,
+            return_tensors="pt"
+        )
+        orig_len = batch_encodings.input_ids.shape[1]
+
+        # Determine the new maximum length
+        new_length = orig_len + num if max_length is None else max_length
+
+        # Generate outputs
+        generate_ids = self.predictor.generate(
+            input_ids=batch_encodings.input_ids.to(self.device),
+            attention_mask=batch_encodings.attention_mask.to(self.device),
+            max_length=new_length,
+            do_sample=do_sample,
+            temperature=temperature,
+            pad_token_id=self.tokenizer.pad_token_id,
+            **kwargs,
+        )
+
+        # Decode all generated sequences at once
+        batch_text_after = self.tokenizer.batch_decode(
+            [ids[orig_len:] for ids in generate_ids],
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=False
+        )
+
+        return batch_prompts, batch_text_after
 
     # Get intermediate activaitons (using HOOKS!!!)
     def get_midlayer_activations(self, text=None, input_ids=None, raw_img=None, pixel_values=None):
