@@ -156,7 +156,7 @@ ones. For this, see `src/taker/model_maps.py`.
 
 The Neuron Replacement hook in `taker` allows you to completely replace neuron activations at specific token positions. This powerful feature is useful for studying how changes in intermediate activations affect the model's output.
 
-** Implementation and Usage **
+**Implementation and Usage**
 
 The `NeuronReplace` class stores its state in a `torch.nn.ParameterDict` called `param`. Each key in this dictionary is a string representation of a token index, and the corresponding value is a `torch.nn.Parameter` containing the replacement activation for that token.
 
@@ -221,7 +221,7 @@ for layer in range(model.cfg.n_layers):
 model.hooks.reset_neuron_replace()
 ```
 
-** Key Features and Concepts **
+**Key Features and Concepts**
 
 1. **State Storage**: The state is stored in `self.param`, a `ParameterDict` where keys are token indices (as strings) and values are replacement activations.
 
@@ -239,7 +239,7 @@ model.hooks.reset_neuron_replace()
 
 8. **Global Reset**: Use `model.hooks.reset_neuron_replace()` to reset all neuron replacement hooks across the entire model.
 
-** Use Cases and Considerations **
+**Use Cases and Considerations**
 
 - **Activation Study**: Replace activations at specific positions to study their impact on model output.
 - **Ablation Experiments**: Systematically replace activations to identify critical neurons or patterns.
