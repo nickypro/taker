@@ -152,9 +152,108 @@ ones. For this, see `src/taker/model_maps.py`.
 
 `taker` provides powerful hooks for manipulating model behavior. Here's an in-depth look at Activation Addition, Neuron Replacement, and related operations.
 
+### Neuron Replacement Hook
+
+The Neuron Replacement hook in `taker` allows you to completely replace neuron activations at specific token positions. This powerful feature is useful for studying how changes in intermediate activations affect the model's output.
+
+** Implementation and Usage **
+
+The `NeuronReplace` class stores its state in a `torch.nn.ParameterDict` called `param`. Each key in this dictionary is a string representation of a token index, and the corresponding value is a `torch.nn.Parameter` containing the replacement activation for that token.
+
+```python
+from taker import Model
+import torch
+
+model = Model("facebook/opt-125m")
+
+# Basic usage: Replace neuron activations at a specific token index
+replacement_activation = torch.randn(model.cfg.d_mlp)
+model.hooks.neuron_replace["layer_2_mlp_pre_out"].add_token(token_index=1, value=replacement_activation)
+
+# Access the NeuronReplace instance for a specific layer
+neuron_replace_hook = model.hooks.neuron_replace["layer_2_mlp_pre_out"]
+
+# View the current state
+print(neuron_replace_hook.param)
+
+# Manually add or modify a replacement
+token_index = 3
+new_replacement = torch.randn(model.cfg.d_mlp)
+neuron_replace_hook.param[str(token_index)] = torch.nn.Parameter(new_replacement)
+
+# Remove a replacement
+del neuron_replace_hook.param[str(token_index)]
+
+# Modify an existing replacement
+existing_index = "1"  # Note: keys are stored as strings
+if existing_index in neuron_replace_hook.param:
+    neuron_replace_hook.param[existing_index].data += 0.1  # Add a small perturbation
+
+# Clear all replacements
+neuron_replace_hook.param.clear()
+
+# Set multiple replacements at once
+replacements = {
+    "0": torch.randn(model.cfg.d_mlp),
+    "2": torch.randn(model.cfg.d_mlp),
+    "4": torch.randn(model.cfg.d_mlp)
+}
+for idx, replacement in replacements.items():
+    neuron_replace_hook.param[idx] = torch.nn.Parameter(replacement)
+
+# Update max_tokens if necessary
+neuron_replace_hook.max_tokens = max(neuron_replace_hook.max_tokens, max(int(idx) for idx in neuron_replace_hook.param.keys()) + 1)
+
+# Reset the hook (clear all replacements and reset counters)
+neuron_replace_hook.reset()
+
+# Restart the token counter
+# Note: This is typically handled automatically during generation tasks
+# Manual restart is only necessary in specific scenarios
+neuron_replace_hook.restart()
+
+# Apply neuron replacements across multiple layers
+for layer in range(model.cfg.n_layers):
+    hook_name = f"layer_{layer}_mlp_pre_out"
+    model.hooks.neuron_replace[hook_name].add_token(token_index=0, value=torch.randn(model.cfg.d_mlp))
+
+# Reset all neuron replace hooks across the model
+model.hooks.reset_neuron_replace()
+```
+
+** Key Features and Concepts **
+
+1. **State Storage**: The state is stored in `self.param`, a `ParameterDict` where keys are token indices (as strings) and values are replacement activations.
+
+2. **Adding Replacements**: Use `add_token(token_index, value)` to add a replacement for a specific token.
+
+3. **Manual Modification**: Access and modify the `param` dictionary directly for fine-grained control.
+
+4. **Resetting**: The `reset()` method clears all replacements and resets internal counters.
+
+5. **Restarting**: The `restart()` method resets the token counter. This is typically handled automatically during generation tasks but can be called manually if needed.
+
+6. **Automatic Behavior**: The hook uses an "autorestart" feature, which automatically resets the token counter when it detects a new sequence (inferred from input size).
+
+7. **Multi-layer Application**: You can apply replacements to multiple layers independently.
+
+8. **Global Reset**: Use `model.hooks.reset_neuron_replace()` to reset all neuron replacement hooks across the entire model.
+
+** Use Cases and Considerations **
+
+- **Activation Study**: Replace activations at specific positions to study their impact on model output.
+- **Ablation Experiments**: Systematically replace activations to identify critical neurons or patterns.
+- **Intervention Analysis**: Modify intermediate representations to test hypotheses about model behavior.
+- **Generation Tasks**: The autorestart feature ensures proper handling of multiple generated sequences without manual intervention in most cases.
+
+By leveraging the Neuron Replacement hook, researchers and developers can conduct detailed analyses of neural network behavior, test interventions, and gain insights into the model's internal representations and decision-making processes.
+
 ### Activation Addition
 
-Activation Addition allows you to modify neuron activations at specific positions in the input sequence.
+Activation Addition allows you to modify neuron activations at specific
+positions in the input sequence. This is otherwise the same as Neuron Replacement,
+except that the replacement is added to the original activation rather than
+replacing it.
 
 ```python
 from taker import Model
@@ -180,30 +279,6 @@ model.hooks["mlp_pre_out"][2].set_actadd(all_token_activations)
 
 # Restart the token counter (useful for processing multiple sequences)
 model.hooks["mlp_pre_out"][2].restart()
-```
-
-### Neuron Replacement
-
-Neuron Replacement allows you to completely replace neuron activations at specific positions.
-
-```python
-# Replace neuron activations at a specific token index
-replacement_activation = torch.randn(model.cfg.d_mlp)
-model.hooks.neuron_replace["layer_2_mlp_pre_out"].add_token(token_index=1, value=replacement_activation)
-
-# Replace activations for multiple tokens
-for i in range(3):
-    replacement = torch.randn(model.cfg.d_mlp)
-    model.hooks.neuron_replace["layer_2_mlp_pre_out"].add_token(token_index=i, value=replacement)
-
-# Reset all neuron replacements
-model.hooks.neuron_replace["layer_2_mlp_pre_out"].reset()
-
-# Restart the token counter
-model.hooks.neuron_replace["layer_2_mlp_pre_out"].restart()
-
-# Reset all neuron replace hooks across the model
-model.hooks.reset_neuron_replace()
 ```
 
 ### Neuron Masking
