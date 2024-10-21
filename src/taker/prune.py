@@ -155,7 +155,13 @@ def score_and_prune( opt: Model,
     }})
 
     # Save removals and scores to history
-    _numpify = lambda x: x.cpu().numpy() if x is not None else None
+    def _numpify(x):
+        if x is None:
+            return None
+        if x.dtype == torch.bfloat16:
+            return x.float().cpu().numpy()
+        return x.cpu().numpy()
+
     data.update({'raw': {
         k: _numpify(v) for k,v in tensor_data.items()
     }})

@@ -79,6 +79,8 @@ def get_midlayer_data(opt: Model,
         random_subset_frac: float = None,
         eval_config: EvalConfig = None,
         masked_mode: bool = False,
+        ff_peak: Tensor = None,
+        attn_peak: Tensor = None,
         ):
     """
     Gets the activations of the midlayer ('key' layer) of MLPs and the pre_out layer of attention for each layer.
@@ -106,12 +108,16 @@ def get_midlayer_data(opt: Model,
         ff_shape = (opt.cfg.n_layers, opt.cfg.d_mlp)
         ff_data = ActivationCollector( ff_shape, opt.output_device, collect_ff )
         opt.hooks.enable_collect_hooks(["mlp_pre_out"])
+        if ff_peak is not None:
+            ff_data_peak_centered = ActivationCollector(ff_shape, opt.output_device)
 
     # self-attention activation collector
     if do_attn:
         attn_shape = (opt.cfg.n_layers, opt.cfg.n_heads, opt.cfg.d_head)
         attn_data = ActivationCollector( attn_shape, opt.output_device, collect_attn )
         opt.hooks.enable_collect_hooks(["attn_pre_out"])
+        if attn_peak is not None:
+            attn_data_peak_centered = ActivationCollector(attn_shape, opt.output_device)
 
     if do_collect:
         criteria_raw = []
@@ -169,8 +175,13 @@ def get_midlayer_data(opt: Model,
                 criteria_indices = criteria.nonzero().flatten()
                 if do_ff:
                     ff_data.add_all(ff_acts[criteria_indices])
+                    if ff_peak is not None:
+                        ff_data_peak_centered.add_all((ff_acts - ff_peak)[criteria_indices])
+
                 if do_attn:
                     attn_data.add_all(attn_acts[criteria_indices])
+                    if attn_peak is not None:
+                        attn_data_peak_centered.add_all((attn_acts - attn_peak)[criteria_indices])
                 if do_collect:
                     for criterion in criteria:
                         criteria_raw.append(criterion.cpu())
@@ -190,10 +201,12 @@ def get_midlayer_data(opt: Model,
     if calculate_ff:
         output["mlp"] = ActivationSummaryHolder(
             orig=ff_data.summary(dtype=opt.dtype),
+            peak_centered = ff_data_peak_centered.summary(dtype=opt.dtype, allow_nan=True) if ff_peak is not None else None,
         )
     if calculate_attn:
         output["attn"] = ActivationSummaryHolder(
             orig=attn_data.summary(dtype=opt.dtype),
+            peak_centered = attn_data_peak_centered.summary(dtype=opt.dtype, allow_nan=True) if attn_peak is not None else None,
         )
 
     if do_collect:
