@@ -1,188 +1,213 @@
-![Tools for Lanugage Model Activations](https://github.com/nickypro/taker)
-
 # taker
 
-My basic library for studying LLMs, with support for Multi-GPU inference and
-editing, as well as quantilised inference (not editing yet).
-This includes functions for analysing the activations of the models for
-different inputs, and for pruning different parts of the model based on those
-activations.
+`taker` is a Python library for studying and manipulating Language Models (LLMs), with support for multi-GPU inference, editing, and quantized inference. It provides tools for analyzing model activations and pruning different parts of the model based on those activations.
 
-The currently tested list of models is:
-- EleutherAI's Pythia
-- EleutherAI's GPT-NeoX
-- Meta Opt
-- Meta Galactica
-- Meta Llama / Llama 2
-- MistralAI Mistral 7B
-- GPT-2
+## Features
+
+- Support for various popular LLM architectures
+- Multi-GPU inference and editing
+- Quantized inference
+- Activation analysis and model pruning
+- Hooks for manipulating model behavior
+
+## Installation
+
+```bash
+pip install taker
+```
+
+## Supported Models
+
+- EleutherAI's Pythia and GPT-NeoX
+- Meta's OPT, Galactica, Llama, Llama 2, and Llama 3 models
+- MistralAI's Mistral 7B
+- OpenAI's GPT-2
 - RoBERTa
 - Google's Vision Transformer (ViT)
+- Google's Gemma and Gemma 2 models
 
-For check out the [examples folder](https://github.com/nickypro/separability/blob/main/examples) to see in more detail how the library can be used.
+## Quick Start
 
-## Using the Model
+### Loading a Model
 
-To load up the model, simply do:
-```
+```python
 from taker import Model
 
-# choose any model from huggingface, though note that not all will be supported
-# dtype can be anything from int4, int8, fp16, fp32, fp64
-m = Model("nickypro/tinyllama-15m", dtype="fp16")
+# Load a model from Hugging Face
+# You can choose your level of quantization
+# Note that some do not support multi-GPU, so use device_map='cuda:0'
+dtype = "fp16" # "fp32", "bf16", "hqq8", "int8", "hqq4", "nf4", "int4"
+model = Model("facebook/opt-125m", dtype=dtype)
 
-# You can access different attributes of the model
-print(m.cfg.n_layer) # model has 6 layers
-print(m.cfg.d_model) # 288 model width
-print(m.cfg.d_mlp)   # 768 mlp width
-print(m.cfg.n_heads) # 6 heads
-print(m.cfg.d_head)  # 48 head size
-print(m.cfg.d_vocab) # 32000 token options
+# Access model attributes
+print(f"Number of layers: {model.cfg.n_layer}")
+print(f"Model width: {model.cfg.d_model}")
+print(f"MLP width: {model.cfg.d_mlp}")
+print(f"Number of heads: {model.cfg.n_heads}")
+print(f"Head size: {model.cfg.d_head}")
+print(f"Vocabulary size: {model.cfg.d_vocab}")
 ```
 
-Once the model is loaded, you can try using it for some generative tasks:
-```
-output = m.generate("I am hungry and want to", num=10)
+### Text Generation
+
+```python
+prompt = "I am hungry and want to"
+output = model.generate(prompt, num=10)
 print(output)
-# ('I am hungry and want to', ' eat something." I said, "I am sorry')
 ```
 
-If you want to inspect the activations, you can try to look at it's residual stream activations:
-```
-m.get_residual_stream("I am hungry")
-print(m.shape)
-# torch.Size([13, 5, 288])
-# formatted as [n_layer, n_tokens, d_model]
-# where n_layers is [input], [attn_0_output], [mlp_0_output], [attn_1_input], ...
+### Analyzing Residual Stream Activations
+
+```python
+residual_stream = model.get_residual_stream("I am hungry")
+print(residual_stream.shape)
+# Output: torch.Size([13, 5, 288])
+# Format: [n_layer, n_tokens, d_model]
+# Layers: [input], [attn_0_output], [mlp_0_output], [attn_1_input], ...
+
+residual_stream_decoder = model.get_residual_stream_decoder("I am hungry")
+print(residual_stream_decoder.shape)
+# Output: torch.Size([7, 5, 288])
+# Format: [n_layer, n_tokens, d_model]
+# Layers: [decoder_0_input], [decoder_1_input], ..., [decoder_n_output]
 ```
 
-If you want to manipulate the model, you can use one of the implemented hooks:
-- `NeuronMask`, used to set neuron activations to zero (or some other constant).
-- `NeuronActAdd`, used to do "activation addition" to different tokens.
-- `NeuronPostBias`, used to add a bias to the ouputs when the huggingface model does not otherwise support it.
+## Model Maps
+## Model Maps
 
-For example, you can set the masks of some mlp neurons in layer 2 to zero:
-```
+Model maps in `taker` provide a unified interface for interacting with different model architectures, abstracting away implementation details and allowing consistent access across various models.
+
+### Example Usage
+
+Here's an expanded look at how you can use model maps in `taker`:
+
+```python
+from taker import Model
+
+# Initialize a model
+model = Model("facebook/opt-125m")
+
+# Accessing high-level model components
+embedding = model["embed"]
+unembed = model["unembed"]
+ln_final = model["ln_final"]
+
+# Working with layers
+layer_0 = model.layers[0]
+layer_1 = model.layers[1]
+
+# Accessing attention components
+attn_weights_q = layer_0["attn.W_Q"]
+attn_weights_k = layer_0["attn.W_K"]
+attn_weights_v = layer_0["attn.W_V"]
+attn_weights_o = layer_0["attn.W_O"]
+
+# Accessing MLP components
+mlp_in_weights = layer_0["mlp.W_in"]
+mlp_out_weights = layer_0["mlp.W_out"]
+
+# Accessing normalization layers
+attn_ln = layer_0["attn.ln_in"]
+mlp_ln = layer_0["mlp.ln_in"]
+
+# Modifying model components
 import torch
-neurons_to_keep = torch.ones(m.cfg.d_mlp)
-neurons_to_keep[:10] = 0
 
-m.masks["mlp_pre_out"][2].delete_neurons(keep_indices=neurons_to_keep)
+# Change the embedding for a specific token
+model["embed.W_E"][1000] = torch.randn_like(model["embed.W_E"][1000])
+
+# Zero out some attention weights
+layer_0["attn.W_Q"][:, :10] = 0
+
+# Print model configuration
+print(f"Model has {len(model.layers)} layers")
+print(f"Hidden size: {model.cfg.d_model}")
+print(f"Number of attention heads: {model.cfg.n_heads}")
+
+# Accessing and modifying biases (if present in the model)
+if "attn.b_Q" in layer_0:
+    attn_bias_q = layer_0["attn.b_Q"]
+    layer_0["attn.b_Q"] += 0.1  # Add a small bias
+
+# Iterating over all layers
+for i, layer in enumerate(model.layers):
+    print(f"Layer {i} attention output shape: {layer['attn.W_O'].shape}")
 ```
 
-You can also make it so that the neurons are not set to zero, but rather some other value
+This example demonstrates how to access and modify various components of the model using the model map interface. It shows operations on embeddings, attention weights, MLP weights, and layer normalization parameters.
+
+### Types of Model Maps
+
+`taker` uses two types of model maps:
+
+1. **Model-level maps**: For high-level model components.
+2. **Layer-level maps**: For the internal structure of individual layers.
+
+### Customization
+
+Advanced users can extend model maps for new architectures or modify existing
+ones. For this, see `src/taker/model_maps.py`.
+
+## Advanced Usage: Hooks
+
+Taker provides various hooks for manipulating model behavior:
+
+### Neuron Masking
+
+```python
+import torch
+
+# Create a mask for MLP neurons in layer 2
+neurons_to_keep = torch.ones(model.cfg.d_mlp)
+neurons_to_keep[:10] = 0  # Mask the first 10 neurons
+
+model.hooks["mlp_pre_out"][2].delete_neurons(keep_indices=neurons_to_keep)
 ```
-neuron_cenetering_vector = torch.randn(m.cfg.d_mlp)
 
+### Activation Addition
 
-m.masks["mlp_pre_out"][2].set_offset(neuron_centering_vector)
+```python
+# Add a custom activation to a specific token position
+custom_activation = torch.randn(model.cfg.d_mlp)
+model.hooks["mlp_pre_out"][2].add_token(token_index=0, value=custom_activation)
 ```
 
+### Neuron Replacement
 
-## Model Map
-
-Taker works by using a map, `ModelMap` which converts a standardised query like `mlp.W_out` to
-the rekevant saved component. For example:
-```
-mlp_weights = m.layers[2]["mlp.W_out"]
-
-mlp_weights[..., 0] = 3.14159
-
-m.layers[2]["mlp.W_out"] = mlp_weights
+```python
+# Replace neuron activations at a specific token index
+replacement_activation = torch.randn(model.cfg.d_mlp)
+model.hooks.neuron_replace["layer_2_mlp_pre_out"].add_token(token_index=1, value=replacement_activation)
 ```
 
+## Example: Pruning Based on Capabilities
 
-## Pruning based on Capabilities
-
-For a full example, see `src/examples/prune_30.py`.
-
-The simple example is:
-```
+```python
 from taker.data_classes import PruningConfig
-from taker.parser import cli_parser
 from taker.prune import run_pruning
 
-# Configure initial model and tests
-c = PruningConfig(
-    wandb_project = "testing",
-    model_repo   = "facebook/opt-125m",
-    token_limit  = 1000,
-    run_pre_test = True,
-
-    # Removals parameters
-    ff_scoring = "abs"
-    ff_frac   = 0.02,
-    ff_eps    = 0.001,
-    attn_scoring = "abs",
-    attn_frac = 0.00,
-    attn_eps  = 1e-4,
-
-    # Eval
-    focus     = "pile_codeless",
-    cripple   = "code",
-    additional_datasets=tuple(),
+config = PruningConfig(
+    wandb_project="my_project",
+    model_repo="facebook/opt-125m",
+    token_limit=1000,
+    run_pre_test=True,
+    ff_scoring="abs",
+    ff_frac=0.02,
+    ff_eps=0.001,
+    attn_scoring="abs",
+    attn_frac=0.00,
+    attn_eps=1e-4,
+    focus="pile_codeless",
+    cripple="code",
 )
 
-# optionally, use parser to get CLI arguments.
-# c, args = cli_parser(c)
-
-# Run the iterated pruning
-model, history = run_pruning(c)
-
+pruned_model, history = run_pruning(config)
 ```
 
-## model.py
-This defines a wrapper function that encapsulates the HuggingFace implementation of Meta OPT.
-To get the model, simply run:
+## Contributing
 
-```
-from taker import Model
+Contributions to `taker` are welcome! Please check out our [contributing guidelines](CONTRIBUTING.md) for more information.
 
-m = Model("facebook/opt-125m", limit=1000)
-```
+## License
 
-Where you can provide any of the model sizes that are pre-trained for OPT, and the token limit must be smaller than the max token length that the model is able to handle.
-
-Next, you can run the model to do 2 tokens of predictions, by, for example, running:
-```
-text = 'Hello, my name is'
-inpt, output = opt.predict( text, num=2 )
-```
-
-We can look at the residual stream of how the output changes over time.
-```
-residual_stream = opt.get_residual_stream( text )
-```
-This will return a tensor of size `2 + 2*n_layers`.
-i.e:
-- the input (w/ positional encoding)
-- n attention layer outputs
-- n feed forward layer outputs
-- the final output
-
-If we want just the output of the attention / feed forward layers, we can instead look at the activations:
-```
-inpt, attn_out, ff_out, output = opt.get_text_activations( text )
-```
-or alternatively:
-```
-inpt, attn_out, ff_out, output = opt.get_text_activations( residual_stream=residual_stream )
-```
-
-To get the activations for the input text at all of the MLP mid layers, we can look at:
-`opt.get_ff_key_activations( text )` or `opt.get_ff_key_activations( residual_stream=residual_stream )`.
-
-## texts.py
-Has some basic tools for loading the text datasets I am using:
-- 'pile', ( EleutherAI's 'The Pile' dataset)
-- 'pile-codeless' (Pile without GitHub)
-- 'code' (CodeParrot's 'github-code' dataset)
-- 'python', (Subset of only python)
-- 'wiki', (WikiText)
-- 'civil', (Civil comments with toxicity < 0.2)
-- 'toxic', (Civil comments with toxicity > 0.8)
-- ...
-
-## activations.py
-Has code specific to the datasets I am using to analyze and attempt to remove capabilities from the models.
-
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
