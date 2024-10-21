@@ -152,11 +152,70 @@ ones. For this, see `src/taker/model_maps.py`.
 
 `taker` provides powerful hooks for manipulating model behavior. Here's an in-depth look at Activation Addition, Neuron Replacement, and related operations.
 
+### Hook Points in taker
+
+The `taker` library provides several hook points for manipulating and analyzing model behavior. Here's a comprehensive list of the hook points available:
+
+1. **pre_attn**: Before the attention mechanism
+   - Applied to the input of the attention layer
+
+2. **attn_pre_out**: Before the attention output projection
+   - Applied to the output of the attention mechanism before the final projection
+
+3. **post_attn**: After the attention mechanism
+   - Applied to the output of the attention layer
+
+4. **pre_mlp**: Before the MLP (feedforward) layer
+   - Applied to the input of the MLP layer
+
+5. **mlp_pre_out**: Before the MLP output projection
+   - Applied to the intermediate output of the MLP before the final projection
+
+6. **post_mlp**: After the MLP layer
+   - Applied to the output of the MLP layer
+
+7. **pre_decoder**: Before the entire decoder block
+   - Applied to the input of a full decoder layer (including attention and MLP)
+
+8. **post_decoder**: After the entire decoder block
+   - Applied to the output of a full decoder layer
+
+- These hook points can be used with various hook types such as `collect`, `mask`, `actadd`, `postbias`, `offset`, `replace`, and `whiten`.
+- Hook points can be applied to specific layers or to all layers using the `'all'` specifier.
+- The exact behavior and effect of each hook point may vary depending on the specific model architecture.
+
+**Example Configuration**
+
+Here's the default configuration of how these hook points might be configured.
+
+```python
+config_string = """
+pre_decoder: collect
+post_decoder: collect
+pre_attn: collect
+attn_pre_out: offset, mask, replace, collect, unoffset
+post_attn: collect
+pre_mlp: collect
+mlp_pre_out: offset, mask, replace, collect, unoffset
+post_mlp: collect
+"""
+hook_config = HookConfig().from_string(config_string)
+```
+
+This can be loaded into the model at initialisation, or after the fact.
+
+```
+model = Model("nickypro/tinyllama-15m", hook_config=config_string)
+model.set_hook_config(config_string) # this clears any existing hooks
+```
+
+This configuration sets up various hook types at different hook points throughout the model.
+
 ### Neuron Replacement Hook
 
 The Neuron Replacement hook in `taker` allows you to completely replace neuron activations at specific token positions. This powerful feature is useful for studying how changes in intermediate activations affect the model's output.
 
-** Implementation and Usage **
+**Implementation and Usage**
 
 The `NeuronReplace` class stores its state in a `torch.nn.ParameterDict` called `param`. Each key in this dictionary is a string representation of a token index, and the corresponding value is a `torch.nn.Parameter` containing the replacement activation for that token.
 
@@ -221,7 +280,7 @@ for layer in range(model.cfg.n_layers):
 model.hooks.reset_neuron_replace()
 ```
 
-** Key Features and Concepts **
+**Key Features and Concepts**
 
 1. **State Storage**: The state is stored in `self.param`, a `ParameterDict` where keys are token indices (as strings) and values are replacement activations.
 
@@ -239,7 +298,7 @@ model.hooks.reset_neuron_replace()
 
 8. **Global Reset**: Use `model.hooks.reset_neuron_replace()` to reset all neuron replacement hooks across the entire model.
 
-** Use Cases and Considerations **
+**Use Cases and Considerations**
 
 - **Activation Study**: Replace activations at specific positions to study their impact on model output.
 - **Ablation Experiments**: Systematically replace activations to identify critical neurons or patterns.
