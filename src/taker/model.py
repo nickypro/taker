@@ -72,6 +72,7 @@ class Model:
         # Hooking into the model
         self.hook_config: HookConfig = hook_config or self.default_config()
         self.hooks: HookMap = HookMap(self.hook_config)
+        self.hook_config = self.hooks.hook_config
 
         # Initialize the model
         self.compile = compile
@@ -532,7 +533,7 @@ class Model:
         return attn_activations
 
     def get_residual_stream_decoder(self, text):
-        self.hooks.disable_all_collect_hooks()
+        self.hooks.collect_hooks()
         self.hooks.enable_collect_hooks(["post_decoder"])
         # Forward pass
         inputs_embeds = self.get_inputs_embeds(text)

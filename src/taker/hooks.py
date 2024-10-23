@@ -4,6 +4,7 @@
 from typing import Dict
 import torch
 from torch import Tensor
+import warnings
 
 ######################################################################################
 # Define Hooks on Neuron Activations we can use. EG: Neuron Mask Class
@@ -75,6 +76,8 @@ class HookMap:
     """Class that holds all hooks."""
     def __init__(self, hook_config):
         self.hook_config: HookConfig = hook_config
+        if isinstance(hook_config, str):
+            self.hook_config = HookConfig().from_string(hook_config)
         self.collects = {}
         self.neuron_masks = {}
         self.neuron_actadds = {}
@@ -84,6 +87,8 @@ class HookMap:
         self.neuron_replace = {}
         self.neuron_whiten = {}
         self.neuron_unwhiten = {}
+        self.neuron_sae_encode = {}
+        self.neuron_sae_decode = {}
         self.handles: list = []
 
     def __str__(self):
@@ -108,6 +113,8 @@ class HookMap:
             "replace":  self.neuron_replace,
             "whiten":   self.neuron_whiten,
             "unwhiten": self.neuron_unwhiten,
+            "sae_encode": self.neuron_sae_encode,
+            "sae_decode": self.neuron_sae_decode,
         }
 
     @property
@@ -141,12 +148,21 @@ class HookMap:
             elif hook_type == "unwhiten":
                 assert name in self.neuron_whiten
                 _hooks[name] = self.neuron_whiten[name]
+            elif hook_type == "sae_encode":
+                _hooks[name] = NeuronSAE(device, dtype)
+            elif hook_type == "sae_decode":
+                assert name in self.neuron_sae_encode
+                _hooks[name] = self.neuron_sae_encode[name]
 
         curr_hook = _hooks[name]
         if hook_type == "unoffset":
             return curr_hook.undo
         if hook_type == "unwhiten":
             return curr_hook.undo
+        if hook_type == "sae_encode":
+            return curr_hook.encode
+        if hook_type == "sae_decode":
+            return curr_hook.decode
         return curr_hook
 
     # Generic Helper functions for get/set hook data
@@ -576,3 +592,46 @@ class NeuronWhiten(torch.nn.Module):
         x = x.reshape(x.shape[:2] + self.shape)
         x = x - self.offset
         return x
+
+class NeuronSAE(torch.nn.Module):
+    def __init__(self, device, dtype):
+        super(NeuronSAE, self).__init__()
+        self.device = device
+        self.dtype = dtype
+        self.sae = None
+        self.sae_config = None
+
+    def load_sae(self, sae, sae_config=None):
+        self.sae = sae.to(self.device, self.dtype)
+        self.sae_config = sae_config
+
+    def load_sae_from_pretrained(self, release, sae_id):
+        try:
+            from sae_lens import SAE
+        except ImportError:
+            raise ImportError("sae_lens not installed. Please install it with `pip install sae-lens`.")
+
+        sae, cfg_dict, sparsity = SAE.from_pretrained(
+            release = release,
+            sae_id =  sae_id,
+            device = self.device,
+        )
+        self.load_sae(sae, cfg_dict)
+
+    def forward(self, x):
+        return self.encode(x)
+
+    def encode(self, x):
+        if self.sae is None:
+            warnings.warn("SAE not loaded. Call load_sae() first.")
+            return x
+        return self.sae.encode(x)
+
+    def decode(self, x):
+        if self.sae is None:
+            return x
+        return self.sae.decode(x)
+
+    def reset(self):
+        self.sae = None
+        self.sae_config = None
