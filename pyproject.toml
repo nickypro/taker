@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "taker"
-version = "1.0.10"
+version = "1.1.0"
 description = "Tools for Transformer Activations Knowledge ExtRaction"
 authors = ["Nicky Pochinkov"]
 readme = "README.md"
