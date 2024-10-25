@@ -234,6 +234,9 @@ class HookMap:
     def reset_neuron_replace(self):
         [h.reset() for h in self.neuron_replace.values()]
 
+    def reset(self):
+        [h.reset() for h in self.all_hooks]
+
 class HookMapComponent:
     def __init__(self, hooks, component):
         self.hooks = hooks
@@ -319,6 +322,9 @@ class NeuronSave(torch.nn.Module):
             self.activation = x.detach()
         return x
 
+    def reset(self):
+        self.activation = None
+
 # Neuron Mask. EG: [a, b, c] -> [a, 0, c]
 class NeuronMask(torch.nn.Module):
     """Class for creating a mask for a single layer of a neural network."""
@@ -391,6 +397,10 @@ class NeuronMask(torch.nn.Module):
         param: {self.param}
         offset: {self.offset}
         )"""
+
+    def reset(self):
+        self.param.data = torch.ones_like(self.param)
+        self.offset.data = torch.zeros_like(self.offset)
 
 # Positional Neuron Activation Addition.
 class NeuronActAdd(torch.nn.Module):
@@ -534,6 +544,9 @@ class NeuronOffset(torch.nn.Module):
     def undo(self, x):
         return x - self.param
 
+    def reset(self):
+        self.param.data = torch.zeros_like(self.param)
+
 # Neuron Post Bias (EG: For SVD and stuff) out -> out + bias
 class NeuronPostBias(torch.nn.Module):
     """Container for holding after-the-fact biases in the model."""
@@ -557,6 +570,9 @@ class NeuronPostBias(torch.nn.Module):
 
     def forward(self, x):
         return x + self.get_bias(x)
+
+    def reset(self):
+        self.param.data = torch.zeros_like(self.param)
 
 class NeuronWhiten(torch.nn.Module):
     def __init__(self, shape):
