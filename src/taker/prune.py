@@ -204,7 +204,7 @@ def prune_random( opt: Model,
             ff_pruned[layer][random_indices] = 1
 
         # Prune the model
-        opt.delete_ff_keys( ff_pruned )
+        opt.hooks.delete_mlp_neurons( torch.tensor(ff_pruned) )
 
     if not attn_frac == 0:
         for layer in range( opt.cfg.n_layers ):
@@ -214,7 +214,7 @@ def prune_random( opt: Model,
             attn_pruned[layer][random_indices] = 1
 
         # Prune the model
-        opt.delete_attn_pre_out( attn_pruned )
+        opt.hooks.delete_attn_neurons( torch.tensor(attn_pruned) )
 
     data_out = {
         "ff_del": n_ff_to_prune*opt.cfg.n_layers,
