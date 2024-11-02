@@ -180,6 +180,7 @@ class EvalConfig:
     mia_test_split: str = None
     dataset_custom_load_fn: callable = None
     misc: Optional[Dict[str, any]] = None
+    batch_size: int = None
 
     def to_dict(self):
         _dict = {}
@@ -639,6 +640,7 @@ class PruningConfig:
 
     save: bool = False
     save_subdirectory: str = None
+    eval_on_collected_datasets: bool = True
 
     @property
     def model_size(self): # legacy code
@@ -646,10 +648,12 @@ class PruningConfig:
 
     @property
     def datasets(self):
-        _datasets = list(set([
+        if not self.eval_on_collected_datasets:
+            return self.additional_datasets
+        _datasets = [
             *list(sorted([self.focus, self.cripple])),
-            *self.additional_datasets
-        ]))
+            *self.additional_datasets,
+        ]
         return _datasets
 
     def to_dict(self):
