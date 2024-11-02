@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import wandb
 import copy
+import gc
 
 from .model import Model
 from .data_classes import PruningConfig, RunDataHistory, \
@@ -62,8 +63,12 @@ def prune_and_evaluate(
 
     # Evaluate the model
     with torch.no_grad():
+        opt.hooks.disable_all_collect_hooks()
+        gc.collect()
+        torch.cuda.empty_cache()
         eval_out = evaluate_all(opt, c.eval_sample_size, c.datasets,
-                                dataset_tokens_to_skip=c.collection_sample_size)
+                                dataset_tokens_to_skip=c.collection_sample_size,
+                                config_args={'batch_size': 4})
         data.update(eval_out)
 
     return data
