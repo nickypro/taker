@@ -423,12 +423,47 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_text_key = "poem content",
             dataset_has_test_split = False,
         ),
+        EvalConfig("wmdp",
+            dataset_type = "lm_eval",
+            dataset_repo = "wmdp",
+        ),
+        EvalConfig("wmdp-cyber",
+            dataset_type = "lm_eval",
+            dataset_repo = "wmdp_cyber",
+        ),
+        EvalConfig("minerva_math_algebra",
+            dataset_type = "lm_eval",
+            dataset_repo = "minerva_math_algebra",
+        ),
+        EvalConfig("wmdp-cyber-corpus-forget",
+            dataset_repo = "cais/wmdp-corpora",
+            dataset_text_key = "text",
+            dataset_subset = "cyber-forget-corpus",
+            dataset_split = "train",
+            dataset_has_test_split=False,
+        ),
+        EvalConfig("wmdp-cyber-corpus-retain",
+            dataset_repo = "cais/wmdp-corpora",
+            dataset_text_key = "text",
+            dataset_subset = "cyber-retain-corpus",
+            dataset_split = "train",
+            dataset_has_test_split=False,
+        ),
+
     ]
     eval_configs += get_cifar_dataset_configs()
     eval_configs += get_pile_dataset_configs()
 
     # Convert into searchable dict
     labeled_eval_configs = dict([(c.dataset_name, c) for c in eval_configs])
+
+    if dataset_name == "lm_eval":
+        conf = EvalConfig(dataset_subset,
+            dataset_type="lm_eval",
+            dataset_repo=dataset_subset,
+        )
+        print(conf)
+        return conf
 
     # Search the dict for config
     if dataset_name in labeled_eval_configs:
