@@ -1289,11 +1289,8 @@ def evaluate_all( opt: Model,
         datasets = ['pile', 'code']
 
     out = EvalAllOutput()
-    for dataset in datasets:
-        _d_c = dataset.split(":")
-        dataset_name   = _d_c[0]
-        dataset_subset = _d_c[1] if len(_d_c) >= 2 else None
-        eval_config: EvalConfig  = infer_dataset_config(dataset_name, dataset_subset)
+    for dataset_str in datasets:
+        eval_config: EvalConfig  = infer_dataset_config(dataset_str)
         if config_args is not None:
             for k, v in config_args.items():
                 setattr(eval_config, k, v)
@@ -1303,6 +1300,6 @@ def evaluate_all( opt: Model,
         eval_config.verbose      = verbose
 
         dataset_out = run_evaluation(opt, eval_config)
-        out.add(dataset, dataset_out)
+        out.add(eval_config.dataset_name, dataset_out)
 
     return out.to_dict()

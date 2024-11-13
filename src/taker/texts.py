@@ -183,7 +183,11 @@ def get_pile_dataset_configs():
         ) for subset in PILE_SUBSETS
     ]
 
-def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
+def infer_dataset_config(dataset_str:str):
+    _d_c = dataset_str.split(":")
+    dataset_name   = _d_c[0]
+    dataset_subset = _d_c[1] if len(_d_c) >= 2 else None
+
     eval_configs = [
         EvalConfig("pytest-pile-local",
             dataset_custom_load_fn=lambda:DatasetDict.load_from_disk(script_path('data/pytest-pile-local')),
@@ -431,6 +435,10 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_type = "lm_eval",
             dataset_repo = "wmdp_cyber",
         ),
+        EvalConfig("wmdp-bio",
+            dataset_type = "lm_eval",
+            dataset_repo = "wmdp_bio",
+        ),
         EvalConfig("minerva_math_algebra",
             dataset_type = "lm_eval",
             dataset_repo = "minerva_math_algebra",
@@ -449,7 +457,13 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_split = "train",
             dataset_has_test_split=False,
         ),
-
+        EvalConfig("wmdp-bio-corpus-retain",
+            dataset_repo = "cais/wmdp-corpora",
+            dataset_text_key = "text",
+            dataset_subset = "bio-retain-corpus",
+            dataset_split = "train",
+            dataset_has_test_split=False,
+        ),
     ]
     eval_configs += get_cifar_dataset_configs()
     eval_configs += get_pile_dataset_configs()
@@ -462,7 +476,16 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_type="lm_eval",
             dataset_repo=dataset_subset,
         )
-        print(conf)
+        return conf
+
+    if dataset_name == "jsonl":
+        conf = EvalConfig(dataset_subset,
+            dataset_type="jsonl",
+            dataset_repo=dataset_subset,
+            dataset_has_test_split=False,
+            num_tokens_to_skip=0,
+            is_train_mode=True,
+        )
         return conf
 
     # Search the dict for config
@@ -485,6 +508,15 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
 def __load_dataset_from_eval_config(eval_config: EvalConfig):
     if eval_config.dataset_custom_load_fn is not None:
         _dataset = eval_config.dataset_custom_load_fn()
+    elif eval_config.dataset_type == "jsonl":
+        _dataset = load_dataset(
+            "json",
+            data_files=eval_config.dataset_repo,
+            trust_remote_code=True,
+            streaming=eval_config.streaming,
+        )
+        return _dataset
+        # return {"train": _dataset}
     else:
         _dataset = load_dataset(
             eval_config.dataset_repo,
