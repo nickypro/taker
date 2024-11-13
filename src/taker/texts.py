@@ -278,10 +278,13 @@ def infer_dataset_config(dataset_str:str):
             dataset_split="train",
         ),
         EvalConfig("mmlu",
-            dataset_repo = "tasksource/mmlu",
-            dataset_type = "mmlu",
-            dataset_subset = "all", # Overwritten if use "mmlu:subject_name"
-            skip_token_strings = most_common_pile_tokens,
+            # dataset_repo = "tasksource/mmlu",
+            # dataset_type = "mmlu",
+            # dataset_subset = "all", # Overwritten if use "mmlu:subject_name"
+            # skip_token_strings = most_common_pile_tokens,
+            dataset_repo = "mmlu",
+            dataset_type = "lm_eval",
+            n_shot = 5,
         ),
         EvalConfig("imagenet-1k",
             dataset_split = "validation",
