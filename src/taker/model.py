@@ -348,15 +348,17 @@ class Model:
         return None
 
     # inputs_embeds  --[model.model]---> outputs_embeds
-    def get_outputs_embeds(self, text:str=None, input_ids:TT=None, raw_img=None, pixel_values=None, inputs_embeds:TT=None):
+    def get_outputs_embeds(self, text:str=None, input_ids:TT=None, raw_img=None, pixel_values=None, inputs_embeds:TT=None, attention_mask=None, **kwargs):
         """Get output logits from input text/image"""
+        if attention_mask is not None: # in order for attention to work right need to do this ???
+            kwargs["output_attentions"] = True
         if self.cfg.model_modality == "vision":
             pixel_values = self.get_pixel_values(raw_img) if pixel_values is None else pixel_values
-            return self.model(pixel_values, output_hidden_states=False ).last_hidden_state
+            return self.model(pixel_values, output_hidden_states=False, attention_mask=attention_mask, **kwargs ).last_hidden_state
 
         inputs_embeds = self.get_inputs_embeds(text, input_ids) \
             if inputs_embeds is None else inputs_embeds
-        return self.model( inputs_embeds=inputs_embeds, output_hidden_states=False ).last_hidden_state
+        return self.model( inputs_embeds=inputs_embeds, output_hidden_states=False, attention_mask=attention_mask, **kwargs ).last_hidden_state
 
     def get_attn_weights(self, text=None, input_ids=None, inputs_embeds=None):
         inputs_embeds = inputs_embeds if inputs_embeds is not None \
@@ -376,8 +378,8 @@ class Model:
             lm_head = self.predictor.get_output_embeddings()
         return lm_head( embedded_outputs.to(self.device) )
 
-    def get_logits(self, text:str=None, input_ids:TT=None, raw_img=None, pixel_values=None, inputs_embeds:TT=None, outputs_embeds:TT=None):
-        outputs_embeds = self.get_outputs_embeds(text, input_ids, raw_img, pixel_values, inputs_embeds) \
+    def get_logits(self, text:str=None, input_ids:TT=None, raw_img=None, pixel_values=None, inputs_embeds:TT=None, outputs_embeds:TT=None, attention_mask=None, **kwargs):
+        outputs_embeds = self.get_outputs_embeds(text, input_ids, raw_img, pixel_values, inputs_embeds, attention_mask, **kwargs) \
             if outputs_embeds is None else outputs_embeds
         logits = self.unembed(outputs_embeds)
         return logits
