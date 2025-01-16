@@ -72,9 +72,11 @@ def get_midlayer_data(opt: Model,
         skip_input_or_output: str = "output",
         calculate_ff: bool = True,
         calculate_attn: bool = True,
+        calculate_sae: bool = False,
         collect_ff: bool = False,
         collect_attn: bool = False,
         collect_ids: bool = False,
+        collect_sae: bool = False,
         dataset_texts_to_skip: int = None,
         random_subset_frac: float = None,
         eval_config: EvalConfig = None,
@@ -100,6 +102,7 @@ def get_midlayer_data(opt: Model,
     do_ff      = calculate_ff or collect_ff
     do_attn    = calculate_attn or collect_attn
     do_collect = collect_ff or collect_attn or collect_ids
+    do_sae     = calculate_sae or collect_sae
 
     # Get things ready for collection
     opt.hooks.disable_all_collect_hooks()
@@ -118,6 +121,16 @@ def get_midlayer_data(opt: Model,
         opt.hooks.enable_collect_hooks(["attn_pre_out"])
         if attn_peak is not None:
             attn_data_peak_centered = ActivationCollector(attn_shape, opt.output_device)
+    
+    if do_sae:
+        sae_hook_points = [point for point, layers in opt.hooks.hook_config.hook_points.items() 
+                        if 'all' in layers and any('sae' in hook for hook in layers['all'])]
+        sae_data = dict.fromkeys(sae_hook_points)
+        for sae_hook in sae_hook_points:
+            #assuming all layers have the hook
+            sae_shape = (opt.cfg.n_layers, opt.hooks.neuron_sae_encode[f"layer_0_{sae_hook}"].sae_config["d_sae"])
+            sae_data[sae_hook] = ActivationCollector(sae_shape, opt.output_device, collect_sae)
+        opt.hooks.enable_collect_hooks([sae_hook_points]) 
 
     if do_collect:
         criteria_raw = []
@@ -143,10 +156,25 @@ def get_midlayer_data(opt: Model,
 
                 if do_ff:
                     ff_acts = opt.collect_recent_mlp_pre_out()
+                    #FIXME: delete
+                    print("ff_acts shape before ",ff_acts.shape)
                     ff_acts = einops.rearrange(ff_acts, "b l t d -> (b t) l d")
+                    #FIXME: delete
+                    print("ff_acts shape after ",ff_acts.shape)
                 if do_attn:
                     attn_acts = opt.collect_recent_attn_pre_out()
                     attn_acts = einops.rearrange(attn_acts, "b l t nh dh -> (b t) l nh dh")
+                if do_sae:
+                    sae_acts = {}
+                    for sae_hook in sae_hook_points:
+                        acts = [opt.hooks.collects[f"layer_{i}_{sae_hook}"].activation.to(opt.device) for i in range(opt.cfg.n_layers)]
+                        #FIXME: delete
+                        #TODO: rearrange
+                        print("sae act shape ",acts[0].shape)
+                        sae_acts[sae_hook] = torch.stack(acts)
+                        print("sae acts before shape ",sae_acts[sae_hook].shape)
+                        sae_acts[sae_hook] = einops.rearrange(sae_acts[sae_hook], "l b t d -> (b t) l d")
+                        print("sae acts after shape ",sae_acts[sae_hook].shape)
 
                 # set up criteria for filtering which activations we actually want
                 ids = einops.rearrange(input_ids, "b t -> (b t)")
@@ -175,6 +203,11 @@ def get_midlayer_data(opt: Model,
                 criteria_indices = criteria.nonzero().flatten()
                 if do_ff:
                     ff_data.add_all(ff_acts[criteria_indices])
+                    #FIXME: delete
+                    copy_acts = ff_acts[criteria_indices].clone()
+                    print("copy_acts shape ",copy_acts.shape)
+                    print("ff_data raw shape", ff_data.shape)
+                    print("ff_acts criteria shape ",(ff_acts[criteria_indices]).shape)
                     if ff_peak is not None:
                         ff_data_peak_centered.add_all((ff_acts - ff_peak)[criteria_indices])
 
@@ -182,6 +215,9 @@ def get_midlayer_data(opt: Model,
                     attn_data.add_all(attn_acts[criteria_indices])
                     if attn_peak is not None:
                         attn_data_peak_centered.add_all((attn_acts - attn_peak)[criteria_indices])
+                if do_sae:
+                    for sae_hook in sae_hook_points:
+                        sae_data[sae_hook].add_all(sae_acts[sae_hook])
                 if do_collect:
                     for criterion in criteria:
                         criteria_raw.append(criterion.cpu())
@@ -208,13 +244,20 @@ def get_midlayer_data(opt: Model,
             orig=attn_data.summary(dtype=opt.dtype),
             peak_centered = attn_data_peak_centered.summary(dtype=opt.dtype, allow_nan=True) if attn_peak is not None else None,
         )
-
+    if calculate_sae:
+        output["sae"] = {}
+        for sae_hook in sae_hook_points:
+            output["sae"][sae_hook] = ActivationSummaryHolder(
+                orig=sae_data[sae_hook].summary(dtype=opt.dtype),
+            )
     if do_collect:
         output["raw"] = {"criteria": torch.stack(criteria_raw)}
     if collect_ff:
         output["raw"]["mlp"] = ff_data.get_raw()
     if collect_attn:
         output["raw"]["attn"] = attn_data.get_raw()
+    if collect_sae:
+        output["raw"]["sae"] = {sae_hook: sae_data[sae_hook].get_raw() for sae_hook in sae_hook_points}
     if collect_ids:
         output["raw"]["input_ids"] = torch.stack(input_id_data)
         if len(output_id_data):
