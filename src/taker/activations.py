@@ -156,11 +156,7 @@ def get_midlayer_data(opt: Model,
 
                 if do_ff:
                     ff_acts = opt.collect_recent_mlp_pre_out()
-                    #FIXME: delete
-                    print("ff_acts shape before ",ff_acts.shape)
                     ff_acts = einops.rearrange(ff_acts, "b l t d -> (b t) l d")
-                    #FIXME: delete
-                    print("ff_acts shape after ",ff_acts.shape)
                 if do_attn:
                     attn_acts = opt.collect_recent_attn_pre_out()
                     attn_acts = einops.rearrange(attn_acts, "b l t nh dh -> (b t) l nh dh")
@@ -168,13 +164,8 @@ def get_midlayer_data(opt: Model,
                     sae_acts = {}
                     for sae_hook in sae_hook_points:
                         acts = [opt.hooks.collects[f"layer_{i}_{sae_hook}"].activation.to(opt.device) for i in range(opt.cfg.n_layers)]
-                        #FIXME: delete
-                        #TODO: rearrange
-                        print("sae act shape ",acts[0].shape)
                         sae_acts[sae_hook] = torch.stack(acts)
-                        print("sae acts before shape ",sae_acts[sae_hook].shape)
                         sae_acts[sae_hook] = einops.rearrange(sae_acts[sae_hook], "l b t d -> (b t) l d")
-                        print("sae acts after shape ",sae_acts[sae_hook].shape)
 
                 # set up criteria for filtering which activations we actually want
                 ids = einops.rearrange(input_ids, "b t -> (b t)")
@@ -203,11 +194,6 @@ def get_midlayer_data(opt: Model,
                 criteria_indices = criteria.nonzero().flatten()
                 if do_ff:
                     ff_data.add_all(ff_acts[criteria_indices])
-                    #FIXME: delete
-                    copy_acts = ff_acts[criteria_indices].clone()
-                    print("copy_acts shape ",copy_acts.shape)
-                    print("ff_data raw shape", ff_data.shape)
-                    print("ff_acts criteria shape ",(ff_acts[criteria_indices]).shape)
                     if ff_peak is not None:
                         ff_data_peak_centered.add_all((ff_acts - ff_peak)[criteria_indices])
 
