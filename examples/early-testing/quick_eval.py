@@ -22,5 +22,5 @@ wandb.init(m.model_repo, entity="seperability", project="SAE_tests")
 from taker.eval import evaluate_all
 gc.collect()
 torch.cuda.empty_cache()
-data = evaluate_all(m, 1e5, ["pile", "lm_eval:mmlu"])
+data = evaluate_all(m, 1e5, ["pile", "mmlu"])
 history.add(data)
