@@ -155,7 +155,7 @@ class EvalConfig:
     is_train_mode: bool = False
     dataset_image_key: str = "image"
     dataset_image_label_key: str = "label"
-    n_shot: int = 0
+    n_shot: int = None
     masked_model: bool = False
     masked_token_str: str = "<mask>"
     masked_token_id: int = None
@@ -418,7 +418,6 @@ class RunDataHistory:
             self.calculate_areas()
         except:
             pass
-            # print("adding areas didn't work")
         item = self.history[-1]
 
         # Log to wandb
