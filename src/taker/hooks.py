@@ -1,7 +1,7 @@
 """ This file cointains hook modules which are attached to the model.
 """
 
-from typing import Dict
+from typing import Dict, List
 import torch
 from torch import Tensor
 import warnings
@@ -203,7 +203,7 @@ class HookMap:
             self.set_hook_parameter(name, param_type, value)
 
     # Methods for specific hook types
-    def get_all_layer_activations(self, component, layers=None):
+    def get_all_layer_activations(self, component: str, layers: List[int] | None =None):
         layer_names = self.get_layer_names(component, layers)
         return [self.get_data(name, "collect") for name in layer_names]
 
@@ -214,6 +214,8 @@ class HookMap:
     def enable_collect_hooks(self, components=None, layers=None):
         if components is None:
             components = self.hook_config.hook_points.keys()
+        if isinstance(components, str):
+            components = [components]
         if layers is None:
             layers = range(self.hook_config.n_layers)
         if isinstance(layers, int):
@@ -238,9 +240,9 @@ class HookMap:
         [h.reset() for h in self.all_hooks]
 
 class HookMapComponent:
-    def __init__(self, hooks, component):
-        self.hooks = hooks
-        self.component = component
+    def __init__(self, hooks: HookMap, component: str):
+        self.hooks: HookMap = hooks
+        self.component: str = component
 
     def __getitem__(self, data_type):
         layers = None
@@ -316,10 +318,13 @@ class NeuronSave(torch.nn.Module):
         super().__init__()
         self.activation = None
         self.enabled = False
+        self.concat_mode = False
 
     def forward(self, x: Tensor):
-        if self.enabled:
-            self.activation = x.detach()
+        if self.enabled and self.concat_mode and self.activation is not None:
+            self.activation = torch.concat([self.activation, x], dim=1) # batch token *dims
+        elif self.enabled:
+            self.activation = x
         return x
 
     def reset(self):
