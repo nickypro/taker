@@ -1,4 +1,4 @@
-from separability import Model
+from taker import Model
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,12 +17,12 @@ def plot_model(model_name):
     norms = []
     with torch.no_grad():
         for layer in range(model.cfg.n_layers):
-            print(f"L{layer:2} pre  LN",    res[layer].norm(dim=-1).cpu().numpy())
+            print(f"L{layer:2} pre  LN",    res[0][layer].norm(dim=-1).cpu().float().numpy())
 
     with torch.no_grad():
         for layer in range(model.cfg.n_layers):
             LN = model.layers[layer]["attn.ln_in"]
-            norms.append( LN(res[layer]).norm(dim=-1).cpu().numpy() )
+            norms.append( LN(res[0][layer]).norm(dim=-1).cpu().float().numpy() )
             print(f"L{layer:2} post LN", norms[-1])
 
     plt.semilogy(np.array(norms).mean(axis=-1), "o-", label=model_name)
@@ -34,9 +34,9 @@ for model_name in [
             "EleutherAI/pythia-160m",
             "facebook/opt-125m",
             "facebook/galactica-125m",
-            "EleutherAI/pythia-1.4B",
-            "facebook/opt-1.3b",
-            "facebook/galactica-1.3b",
+            # "EleutherAI/pythia-1.4B",
+            # "facebook/opt-1.3b",
+            # "facebook/galactica-1.3b",
         ]:
     plot_model(model_name)
 
