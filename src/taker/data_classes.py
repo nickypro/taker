@@ -500,6 +500,7 @@ class ActivationOverview:
     """Output from activation collection on multiple possible parts"""
     texts_viewed: int
     mlp: Optional[ActivationSummaryHolder] = None
+    sae: Optional[Dict[str, ActivationSummaryHolder]] = None
     attn: Optional[ActivationSummaryHolder] = None
     raw: Optional[dict] = None
     misc_data: Optional[dict] = None
