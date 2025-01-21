@@ -1,15 +1,19 @@
 from collections import defaultdict
 from typing import List, Tuple
+
+import einops
 import torch
 import torch.nn as nn
-from torch import Tensor as TT
-import einops
 from accelerate import Accelerator
-from transformers import AutoTokenizer, AutoModelForCausalLM, PreTrainedModel
-from transformers import AutoImageProcessor, AutoModelForImageClassification
-from .model_maps import convert_hf_model_config, ModelMap, ConfigClass
-from .hooks import HookMap, HookConfig
+from torch import Tensor as TT
+from transformers import (AutoImageProcessor, AutoModelForCausalLM,
+                          AutoModelForImageClassification, AutoTokenizer,
+                          PreTrainedModel)
+
 from .data_classes import DtypeMap
+from .hooks import HookConfig, HookMap
+from .model_maps import ConfigClass, ModelMap, convert_hf_model_config
+
 
 class Model:
     def __init__(self,
@@ -28,6 +32,7 @@ class Model:
             eval_mode: bool = True, # set model to model.eval(), not sure what this does
             hook_config: str = None, # See HookConfig. hook configuration string.
             add_hooks: bool = True, # whether to add hooks from the start or not [True, False]
+            model_kwargs: dict = None, # additional kwargs for the model
         ):
         # Handle devices and multi-gpu stuff
         self.use_accelerator = False
@@ -76,6 +81,7 @@ class Model:
 
         # Initialize the model
         self.compile = compile
+        self.model_kwargs = model_kwargs or {}
         self.init_model(add_hooks=add_hooks)
         self.run_example_input()
 
@@ -110,7 +116,7 @@ class Model:
         ):
         # Import model components (Default: Causal Language Models)
         device_map = self.device_map
-        model_args = {**self.dtype_args}
+        model_args = {**self.dtype_args, **self.model_kwargs}
 
         if self.cfg.model_modality == "vision":
             self.tokenizer = None \
@@ -155,7 +161,7 @@ class Model:
                 Either a PeftConfig object or a string path to a PEFT model repository.
         """
         try:
-            from peft import get_peft_model, PeftModel, PeftConfig
+            from peft import PeftConfig, PeftModel, get_peft_model
         except ImportError:
             raise ImportError("PEFT is not installed. Please install it with 'pip install peft'.")
 
