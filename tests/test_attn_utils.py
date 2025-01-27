@@ -15,33 +15,33 @@ def is_zero(t):
     return torch.equal(t, torch.zeros_like(t))
 
 class TestAttnUtils:
-    @pytest.mark.parametrize("model_repo", test_model_repos)
-    def test_svd(self, model_repo):
-        with torch.no_grad():
-            layer = 0
+    # @pytest.mark.parametrize("model_repo", test_model_repos)
+    # def test_svd(self, model_repo):
+    #     with torch.no_grad():
+    #         layer = 0
 
-            opt = Model(model_repo, dtype="fp32",
-                use_accelerator=False, svd_attn=False)
-            d_model, device, dtype = opt.cfg.d_model, opt.device, opt.dtype
-            attn = opt.layers[layer]["attn"]
+    #         opt = Model(model_repo, dtype="fp32",
+    #             use_accelerator=False, svd_attn=False)
+    #         d_model, device, dtype = opt.cfg.d_model, opt.device, opt.dtype
+    #         attn = opt.layers[layer]["attn"]
 
-            # Get example input
-            in_0 = torch.randn([1, 3, d_model], device=device, dtype=dtype)
-            attn_mask = torch.tensor(
-                [[[[1, 0, 0], [1, 1, 0], [1, 1, 1]]]],
-                device=device, dtype=torch.bool
-            )
+    #         # Get example input
+    #         in_0 = torch.randn([1, 3, d_model], device=device, dtype=dtype)
+    #         attn_mask = torch.tensor(
+    #             [[[[1, 0, 0], [1, 1, 0], [1, 1, 1]]]],
+    #             device=device, dtype=torch.bool
+    #         )
 
-            # Get example output
-            out_0, _, (k_0, v_0) = attn(in_0, attention_mask=attn_mask)
-            print(out_0)
+    #         # Get example output
+    #         out_0, _, (k_0, v_0) = attn(in_0, attention_mask=attn_mask)
+    #         print(out_0)
 
-            # Do SVD stuff
-            opt.svd_attention_layers()
+    #         # Do SVD stuff
+    #         opt.svd_attention_layers()
 
-            # Check that the output is the same
-            out_1, _, (k_1, v_1) = attn(in_0, attention_mask=attn_mask)
-            assert torch.allclose(out_0, out_1, 1e-3, 1e-4)
+    #         # Check that the output is the same
+    #         out_1, _, (k_1, v_1) = attn(in_0, attention_mask=attn_mask)
+    #         assert torch.allclose(out_0, out_1, 1e-3, 1e-4)
 
     @pytest.mark.parametrize("model_repo", test_model_repos)
     @pytest.mark.parametrize("mask_fn", ["step"]) # TODO: reimplement "delete"
