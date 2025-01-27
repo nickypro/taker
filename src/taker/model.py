@@ -360,7 +360,7 @@ class Model:
             kwargs["output_attentions"] = True
         if self.cfg.model_modality == "vision":
             pixel_values = self.get_pixel_values(raw_img) if pixel_values is None else pixel_values
-            return self.model(pixel_values, output_hidden_states=False, attention_mask=attention_mask, **kwargs ).last_hidden_state
+            return self.model(pixel_values, output_hidden_states=False, **kwargs ).last_hidden_state
 
         inputs_embeds = self.get_inputs_embeds(text, input_ids) \
             if inputs_embeds is None else inputs_embeds
