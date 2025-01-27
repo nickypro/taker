@@ -1599,13 +1599,12 @@ def get_attrs(obj, attr_string):
     return current_attr
 
 def set_attrs(obj, attr_string, value, override=True):
-    nested_attributes = attr_string.split('.')
-    current_attr = obj
-    for attr_name in nested_attributes[:-1]:
-        if not override and hasattr(current_attr, attr_name):
-            continue
-        current_attr = getattr(current_attr, attr_name)
-    setattr(current_attr, nested_attributes[-1], value)
+    nested_attrs = attr_string.split('.')
+    nested_attrs, final_attr = nested_attrs[:-1], nested_attrs[-1]
+    current_attr = get_attrs(obj, ".".join(nested_attrs)) if len(nested_attrs) > 0 else obj
+    if not override and hasattr(current_attr, final_attr):
+        return
+    setattr(current_attr, final_attr, value)
 
 def get_model_key_map(config: ConfigClass):
     architecture = config.architecture
@@ -1752,15 +1751,9 @@ class ModelLayerMap:
     def __getattr__(self, __name):
         key = self.key_map[__name]
 
-        remaining_names = []
-        for n in self.names:
-            if not n[:len(__name)] == __name:
-                continue
-            if len(n) <= len(__name):
-                continue
-            if n[len(__name)+1] == 0:
-                continue
-            remaining_names.append( n[len(__name)+1:] )
+        # Find all names that start with __name followed by a dot
+        prefix = __name + "."
+        remaining_names = sorted([n.split(prefix, 1)[1] for n in self.names if n.startswith(prefix)])
 
         if isinstance(key, str):
             mod = get_attrs(self.layer, key)
