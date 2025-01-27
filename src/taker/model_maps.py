@@ -1,5 +1,7 @@
 # Code mostly from TransformerLens
 # https://github.com/neelnanda-io/TransformerLens/blob/main/transformer_lens/loading_from_pretrained.py
+import types
+import copy
 from typing import Callable, Any, Optional, Dict
 from dataclasses import dataclass
 import einops
@@ -1596,6 +1598,15 @@ def get_attrs(obj, attr_string):
         current_attr = getattr(current_attr, attr_name)
     return current_attr
 
+def set_attrs(obj, attr_string, value, override=True):
+    nested_attributes = attr_string.split('.')
+    current_attr = obj
+    for attr_name in nested_attributes[:-1]:
+        if not override and hasattr(current_attr, attr_name):
+            continue
+        current_attr = getattr(current_attr, attr_name)
+    setattr(current_attr, nested_attributes[-1], value)
+
 def get_model_key_map(config: ConfigClass):
     architecture = config.architecture
     if architecture == "OPTForCausalLM":
@@ -1685,6 +1696,10 @@ class ModelLayerMap:
         self.layer = layer
         self.key_map = get_layer_key_map(cfg)
 
+    @property
+    def names(self):
+        return list(self.key_map.keys())
+
     def __contains__(self, __name):
         return (__name in self.key_map)
 
@@ -1694,6 +1709,8 @@ class ModelLayerMap:
         if isinstance(key, str):
             if key == "layer":
                 return self.layer
+            if "inv_out_proj" in key:
+                return NotImplementedError()
             return get_attrs(self.layer, key)
 
         if isinstance(key, Callable):
@@ -1731,3 +1748,25 @@ class ModelLayerMap:
         out_str += "\nOriginal Layer Structure:\n"
         out_str += self.layer.__str__()
         return out_str
+
+    def __getattr__(self, __name):
+        key = self.key_map[__name]
+
+        remaining_names = []
+        for n in self.names:
+            if not n[:len(__name)] == __name:
+                continue
+            if len(n) <= len(__name):
+                continue
+            if n[len(__name)+1] == 0:
+                continue
+            remaining_names.append( n[len(__name)+1:] )
+
+        if isinstance(key, str):
+            mod = get_attrs(self.layer, key)
+            for n in remaining_names:
+                set_attrs(mod, n, self[f"{__name}.{n}"], override=False)
+            return mod
+
+        if isinstance(key, Callable):
+            return key(self.layer)
