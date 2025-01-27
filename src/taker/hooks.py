@@ -267,7 +267,7 @@ class HookMapComponent:
 
     # Hook-specific functions
     def delete_neurons(self, remove_indices, layer: int = None):
-        def delete_layer_neurons(nn_mask, rm_idx):
+        def delete_layer_neurons(nn_mask: NeuronMask, rm_idx):
             device, dtype = nn_mask.param.device, bool
             rm_idx = rm_idx.to(device, dtype).reshape(nn_mask.param.shape)
             keep_indices = torch.logical_not(rm_idx)
