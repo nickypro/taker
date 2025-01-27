@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "taker"
-version = "1.1.5"
+version = "1.1.6"
 description = "Tools for Transformer Activations Knowledge ExtRaction"
 authors = ["Nicky Pochinkov"]
 readme = "README.md"
@@ -15,7 +15,7 @@ repository = "https://github.com/nickypro/taker"
 python = ">=3.9"
 torch = "^2.0.0"
 numpy = "^1.23"
-pandas = "^1.5.3"
+pandas = "^2.0.0"
 scipy = "^1.11.1"
 welford-torch = "^0.2.4"
 numexpr = "^2.7.0"
