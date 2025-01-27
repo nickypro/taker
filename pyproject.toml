@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "taker"
-version = "1.1.6"
+version = "1.2.0"
 description = "Tools for Transformer Activations Knowledge ExtRaction"
 authors = ["Nicky Pochinkov"]
 readme = "README.md"
@@ -12,7 +12,7 @@ classifiers = [
 repository = "https://github.com/nickypro/taker"
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.9,<4.0"
 torch = "^2.0.0"
 numpy = "^1.23"
 pandas = "^2.0.0"
@@ -20,8 +20,8 @@ scipy = "^1.11.1"
 welford-torch = "^0.2.4"
 numexpr = "^2.7.0"
 accelerate = ">=1.2.0"
-transformers = "^4.41.0"
-tokenizers = "^0.19.1"
+transformers = ">=4.45.2"
+tokenizers = ">=0.21.0"
 sentencepiece = "^0.1.99"
 datasets = "^2.9.0"
 evaluate = "^0.4.0"
@@ -30,6 +30,8 @@ einops = "^0.6.0"
 wandb = "^0.17.6"
 lm-eval = "^0.4.3"
 antlr4-python3-runtime = "4.11.1" # required for lm-eval
+bitsandbytes = "^0.45.1"
+hqq = "^0.2.2"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.21.1"
@@ -48,8 +50,6 @@ ansible = "^8.4.0"
 phate = "^1.0.11"
 umap-learn = "^0.5.6"
 quanto = "^0.2.0"
-bitsandbytes = "^0.45.1"
-hqq = "^0.1.8"
 peft = ">=0.14.0"
 
 [build-system]
