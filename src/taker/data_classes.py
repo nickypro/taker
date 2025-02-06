@@ -19,6 +19,7 @@ except:
     BitsAndBytesConfig = NoneConfig
 try:
     from transformers import HqqConfig
+    HqqConfig(nbits=8, group_size=64)
 except:
     HqqConfig = NoneConfig
 
