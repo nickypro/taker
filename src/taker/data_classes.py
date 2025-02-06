@@ -11,8 +11,12 @@ class NoneConfig:
     def __init__(self, *args, **kwargs) -> None:
         pass
 
-from transformers import BitsAndBytesConfig
 from transformers import QuantoConfig
+try:
+    from transformers import BitsAndBytesConfig
+    BitsAndBytesConfig(load_in_4bit=True)
+except:
+    BitsAndBytesConfig = NoneConfig
 try:
     from transformers import HqqConfig
 except:

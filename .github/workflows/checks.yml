@@ -36,7 +36,7 @@ jobs:
           python-version: "3.12"
           cache: "poetry"
       - name: Install dependencies
-        run: poetry install --with dev
+        run: poetry install --with dev --extras cuda
       - name: Install pytorch with cuda
         run: poetry run pip install torch
       - name: Pytest
