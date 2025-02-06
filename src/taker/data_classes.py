@@ -41,7 +41,7 @@ class QDtypeConfigs:
     hqq4_0 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=0)
     hqq4_1 = HqqConfig(nbits=4, group_size=64, quant_zero=False, quant_scale=False, axis=1)
     hqq3   = HqqConfig(nbits=3, group_size=32, quant_zero=False, quant_scale=False)
-    qfp8   = QuantoConfig("float8")
+    qfp8   = QuantoConfig(weights="float8")
     qint8  = QuantoConfig(weights="int8")
     qint4  = QuantoConfig(weights="int4")
     qint2  = QuantoConfig(weights="int2")
