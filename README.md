@@ -13,10 +13,12 @@ The currently tested list of models is:
 - EleutherAI's GPT-NeoX
 - Meta Opt
 - Meta Galactica
-- Meta Llama / Llama 2
+- Meta Llama / Llama 2 / Llama 3
+- Microsoft Phi 3
 - MistralAI Mistral 7B
 - GPT-2
 - RoBERTa
+- Google Gemma / Gemma 2
 - Google's Vision Transformer (ViT)
 
 For check out the [examples folder](https://github.com/nickypro/separability/blob/main/examples) to see in more detail how the library can be used.
@@ -163,10 +165,6 @@ i.e:
 If we want just the output of the attention / feed forward layers, we can instead look at the activations:
 ```
 inpt, attn_out, ff_out, output = opt.get_text_activations( text )
-```
-or alternatively:
-```
-inpt, attn_out, ff_out, output = opt.get_text_activations( residual_stream=residual_stream )
 ```
 
 To get the activations for the input text at all of the MLP mid layers, we can look at:
