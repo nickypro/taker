@@ -1,4 +1,6 @@
 from typing import Optional, Tuple, Union, List, Callable
+from time import time
+import warnings
 import numpy as np
 import torch
 from torch import Tensor
@@ -671,6 +673,9 @@ def run_evaluation(model: Model,
     if model.cfg.architecture == 'RobertaForMaskedLM':
         eval_config.masked_model = True
 
+    if eval_config.dataset_type == "lm_eval":
+        return evaluate_lm_eval(model, eval_config)
+
     auto_generator, auto_evaluator = choose_functions(eval_config)
     if get_generator is None:
         get_generator = auto_generator
@@ -954,6 +959,56 @@ def evaluate_mmlu(
     return out
 
 ####################################################################################
+# Code for evaluating on LM-Eval tasks
+####################################################################################
+
+def evaluate_lm_eval(opt: Model, eval_config: EvalConfig):
+    from lm_eval import evaluator
+    from lm_eval.models.huggingface import HFLM
+
+    task = eval_config.dataset_repo
+
+    # Ignore the SHA warning
+    warnings.filterwarnings("ignore", message="Failed to get model SHA for")
+
+    print(eval_config.batch_size)
+
+    # Run evaluations
+    t0 = time()
+    results = evaluator.simple_evaluate(
+        model=HFLM(pretrained=opt.predictor, tokenizer=opt.tokenizer),
+        tasks=[task],
+        verbosity="WARNING",
+        batch_size=eval_config.batch_size,
+        num_fewshot=eval_config.n_shot,
+    )
+
+    # Extract results and format them
+    raw = results["results"]
+    base_acc = raw[task].get('acc,none', 0) * 100
+    stderr = raw[task].get('acc_stderr,none', 0) * 100
+
+    return EvalOutput(
+        loss_data={
+            "loss": 0,  # LM-eval doesn't provide loss metrics
+            "log_loss": 0,
+            "perplexity": 0
+        },
+        percent={
+            "base": base_acc,
+            "skip": base_acc,
+            "topk": base_acc,
+            "topk_skip": base_acc,
+            "stderr": stderr
+        },
+        misc={
+            "time": time() - t0,
+            "raw_results": raw,
+            "splits": {k: v for k, v in raw.items() if k != task}
+        }
+    )
+
+####################################################################################
 # Evaluate on Sliding Window Tasks
 ####################################################################################
 
@@ -1124,9 +1179,6 @@ def masked_generator(opt: Model, dataset, dataset_text_key):
         with torch.no_grad():
             logits = opt.get_logits(input_ids=masked_ids)[..., indices, :]
             expected_ids = orig_ids[..., indices]
-        #print(opt.tokenizer.batch_decode(masked_ids[0, indices]))
-        #print(opt.tokenizer.batch_decode(logits[0].argmax(-1)))
-        #print(opt.tokenizer.batch_decode(expected_ids[0]))
 
         yield (logits, expected_ids)
 
@@ -1229,23 +1281,23 @@ def evaluate_all( opt: Model,
         dataset_tokens_to_skip: int = 0,
         topk: int = 10,
         verbose: bool = False,
-
+        config_args: dict = None,
     ):
     if datasets is None:
         datasets = ['pile', 'code']
 
     out = EvalAllOutput()
-    for dataset in datasets:
-        _d_c = dataset.split(":")
-        dataset_name   = _d_c[0]
-        dataset_subset = _d_c[1] if len(_d_c) >= 2 else None
-        eval_config: EvalConfig  = infer_dataset_config(dataset_name, dataset_subset)
+    for dataset_str in datasets:
+        eval_config: EvalConfig  = infer_dataset_config(dataset_str)
+        if config_args is not None:
+            for k, v in config_args.items():
+                setattr(eval_config, k, v)
         eval_config.num_tokens_to_skip = dataset_tokens_to_skip
         eval_config.sample_size  = sample_size
         eval_config.topk         = topk
         eval_config.verbose      = verbose
 
         dataset_out = run_evaluation(opt, eval_config)
-        out.add(dataset, dataset_out)
+        out.add(eval_config.dataset_name, dataset_out)
 
     return out.to_dict()

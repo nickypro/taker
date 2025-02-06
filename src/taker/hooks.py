@@ -1,9 +1,10 @@
 """ This file cointains hook modules which are attached to the model.
 """
 
-from typing import Dict
+from typing import Dict, List
 import torch
 from torch import Tensor
+import warnings
 
 ######################################################################################
 # Define Hooks on Neuron Activations we can use. EG: Neuron Mask Class
@@ -75,6 +76,8 @@ class HookMap:
     """Class that holds all hooks."""
     def __init__(self, hook_config):
         self.hook_config: HookConfig = hook_config
+        if isinstance(hook_config, str):
+            self.hook_config = HookConfig().from_string(hook_config)
         self.collects = {}
         self.neuron_masks = {}
         self.neuron_actadds = {}
@@ -84,6 +87,8 @@ class HookMap:
         self.neuron_replace = {}
         self.neuron_whiten = {}
         self.neuron_unwhiten = {}
+        self.neuron_sae_encode = {}
+        self.neuron_sae_decode = {}
         self.handles: list = []
 
     def __str__(self):
@@ -108,6 +113,8 @@ class HookMap:
             "replace":  self.neuron_replace,
             "whiten":   self.neuron_whiten,
             "unwhiten": self.neuron_unwhiten,
+            "sae_encode": self.neuron_sae_encode,
+            "sae_decode": self.neuron_sae_decode,
         }
 
     @property
@@ -141,12 +148,21 @@ class HookMap:
             elif hook_type == "unwhiten":
                 assert name in self.neuron_whiten
                 _hooks[name] = self.neuron_whiten[name]
+            elif hook_type == "sae_encode":
+                _hooks[name] = NeuronSAE(device, dtype)
+            elif hook_type == "sae_decode":
+                assert name in self.neuron_sae_encode
+                _hooks[name] = self.neuron_sae_encode[name]
 
         curr_hook = _hooks[name]
         if hook_type == "unoffset":
             return curr_hook.undo
         if hook_type == "unwhiten":
             return curr_hook.undo
+        if hook_type == "sae_encode":
+            return curr_hook.encode
+        if hook_type == "sae_decode":
+            return curr_hook.decode
         return curr_hook
 
     # Generic Helper functions for get/set hook data
@@ -187,7 +203,7 @@ class HookMap:
             self.set_hook_parameter(name, param_type, value)
 
     # Methods for specific hook types
-    def get_all_layer_activations(self, component, layers=None):
+    def get_all_layer_activations(self, component: str, layers: List[int] | None =None):
         layer_names = self.get_layer_names(component, layers)
         return [self.get_data(name, "collect") for name in layer_names]
 
@@ -198,6 +214,8 @@ class HookMap:
     def enable_collect_hooks(self, components=None, layers=None):
         if components is None:
             components = self.hook_config.hook_points.keys()
+        if isinstance(components, str):
+            components = [components]
         if layers is None:
             layers = range(self.hook_config.n_layers)
         if isinstance(layers, int):
@@ -218,10 +236,13 @@ class HookMap:
     def reset_neuron_replace(self):
         [h.reset() for h in self.neuron_replace.values()]
 
+    def reset(self):
+        [h.reset() for h in self.all_hooks]
+
 class HookMapComponent:
-    def __init__(self, hooks, component):
-        self.hooks = hooks
-        self.component = component
+    def __init__(self, hooks: HookMap, component: str):
+        self.hooks: HookMap = hooks
+        self.component: str = component
 
     def __getitem__(self, data_type):
         layers = None
@@ -246,7 +267,7 @@ class HookMapComponent:
 
     # Hook-specific functions
     def delete_neurons(self, remove_indices, layer: int = None):
-        def delete_layer_neurons(nn_mask, rm_idx):
+        def delete_layer_neurons(nn_mask: NeuronMask, rm_idx):
             device, dtype = nn_mask.param.device, bool
             rm_idx = rm_idx.to(device, dtype).reshape(nn_mask.param.shape)
             keep_indices = torch.logical_not(rm_idx)
@@ -297,11 +318,17 @@ class NeuronSave(torch.nn.Module):
         super().__init__()
         self.activation = None
         self.enabled = False
+        self.concat_mode = False
 
     def forward(self, x: Tensor):
-        if self.enabled:
-            self.activation = x.detach()
+        if self.enabled and self.concat_mode and self.activation is not None:
+            self.activation = torch.concat([self.activation, x], dim=1) # batch token *dims
+        elif self.enabled:
+            self.activation = x
         return x
+
+    def reset(self):
+        self.activation = None
 
 # Neuron Mask. EG: [a, b, c] -> [a, 0, c]
 class NeuronMask(torch.nn.Module):
@@ -364,6 +391,7 @@ class NeuronMask(torch.nn.Module):
         return x * inv_mask
 
     def forward(self, x):
+        self.to(x.device)
         mask = self.get_mask()
         offset = self.get_offset(x)
         return x * mask + offset
@@ -374,6 +402,10 @@ class NeuronMask(torch.nn.Module):
         param: {self.param}
         offset: {self.offset}
         )"""
+
+    def reset(self):
+        self.param.data = torch.ones_like(self.param)
+        self.offset.data = torch.zeros_like(self.offset)
 
 # Positional Neuron Activation Addition.
 class NeuronActAdd(torch.nn.Module):
@@ -511,10 +543,14 @@ class NeuronOffset(torch.nn.Module):
         self.load_state_dict(params)
 
     def forward(self, x):
+        self.to(x.device)
         return x + self.param
 
     def undo(self, x):
         return x - self.param
+
+    def reset(self):
+        self.param.data = torch.zeros_like(self.param)
 
 # Neuron Post Bias (EG: For SVD and stuff) out -> out + bias
 class NeuronPostBias(torch.nn.Module):
@@ -539,6 +575,9 @@ class NeuronPostBias(torch.nn.Module):
 
     def forward(self, x):
         return x + self.get_bias(x)
+
+    def reset(self):
+        self.param.data = torch.zeros_like(self.param)
 
 class NeuronWhiten(torch.nn.Module):
     def __init__(self, shape):
@@ -574,3 +613,46 @@ class NeuronWhiten(torch.nn.Module):
         x = x.reshape(x.shape[:2] + self.shape)
         x = x - self.offset
         return x
+
+class NeuronSAE(torch.nn.Module):
+    def __init__(self, device, dtype):
+        super(NeuronSAE, self).__init__()
+        self.device = device
+        self.dtype = dtype
+        self.sae = None
+        self.sae_config = None
+
+    def load_sae(self, sae, sae_config=None):
+        self.sae = sae.to(self.device, self.dtype)
+        self.sae_config = sae_config
+
+    def load_sae_from_pretrained(self, release, sae_id):
+        try:
+            from sae_lens import SAE
+        except ImportError:
+            raise ImportError("sae_lens not installed. Please install it with `pip install sae-lens`.")
+
+        sae, cfg_dict, sparsity = SAE.from_pretrained(
+            release = release,
+            sae_id =  sae_id,
+            device = self.device,
+        )
+        self.load_sae(sae, cfg_dict)
+
+    def forward(self, x):
+        return self.encode(x)
+
+    def encode(self, x):
+        if self.sae is None:
+            warnings.warn("SAE not loaded. Call load_sae() first.")
+            return x
+        return self.sae.encode(x)
+
+    def decode(self, x):
+        if self.sae is None:
+            return x
+        return self.sae.decode(x)
+
+    def reset(self):
+        self.sae = None
+        self.sae_config = None

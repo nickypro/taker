@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import wandb
 import copy
+import gc
 
 from .model import Model
 from .data_classes import PruningConfig, RunDataHistory, \
@@ -62,8 +63,12 @@ def prune_and_evaluate(
 
     # Evaluate the model
     with torch.no_grad():
+        opt.hooks.disable_all_collect_hooks()
+        gc.collect()
+        torch.cuda.empty_cache()
         eval_out = evaluate_all(opt, c.eval_sample_size, c.datasets,
-                                dataset_tokens_to_skip=c.collection_sample_size)
+                                dataset_tokens_to_skip=c.collection_sample_size,
+                                config_args={'batch_size': 4})
         data.update(eval_out)
 
     return data
@@ -155,7 +160,13 @@ def score_and_prune( opt: Model,
     }})
 
     # Save removals and scores to history
-    _numpify = lambda x: x.cpu().numpy() if x is not None else None
+    def _numpify(x):
+        if x is None:
+            return None
+        if x.dtype == torch.bfloat16:
+            return x.float().cpu().numpy()
+        return x.cpu().numpy()
+
     data.update({'raw': {
         k: _numpify(v) for k,v in tensor_data.items()
     }})
@@ -198,7 +209,7 @@ def prune_random( opt: Model,
             ff_pruned[layer][random_indices] = 1
 
         # Prune the model
-        opt.delete_ff_keys( ff_pruned )
+        opt.hooks.delete_mlp_neurons( torch.tensor(ff_pruned) )
 
     if not attn_frac == 0:
         for layer in range( opt.cfg.n_layers ):
@@ -208,7 +219,7 @@ def prune_random( opt: Model,
             attn_pruned[layer][random_indices] = 1
 
         # Prune the model
-        opt.delete_attn_pre_out( attn_pruned )
+        opt.hooks.delete_attn_neurons( torch.tensor(attn_pruned) )
 
     data_out = {
         "ff_del": n_ff_to_prune*opt.cfg.n_layers,

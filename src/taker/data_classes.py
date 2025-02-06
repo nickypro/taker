@@ -155,7 +155,7 @@ class EvalConfig:
     is_train_mode: bool = False
     dataset_image_key: str = "image"
     dataset_image_label_key: str = "label"
-    n_shot: int = 0
+    n_shot: int = None
     masked_model: bool = False
     masked_token_str: str = "<mask>"
     masked_token_id: int = None
@@ -180,6 +180,7 @@ class EvalConfig:
     mia_test_split: str = None
     dataset_custom_load_fn: callable = None
     misc: Optional[Dict[str, any]] = None
+    batch_size: int = None
 
     def to_dict(self):
         _dict = {}
@@ -417,7 +418,6 @@ class RunDataHistory:
             self.calculate_areas()
         except:
             pass
-            # print("adding areas didn't work")
         item = self.history[-1]
 
         # Log to wandb
@@ -488,6 +488,7 @@ class ActivationSummaryHolder:
     orig: ActivationSummary
     loss_normed: ActivationSummary = None
     log_loss_normed: ActivationSummary = None
+    peak_centered: ActivationSummary = None
     misc: dict = None
 
     def __getitem__(self, key):
@@ -498,6 +499,7 @@ class ActivationOverview:
     """Output from activation collection on multiple possible parts"""
     texts_viewed: int
     mlp: Optional[ActivationSummaryHolder] = None
+    sae: Optional[Dict[str, ActivationSummaryHolder]] = None
     attn: Optional[ActivationSummaryHolder] = None
     raw: Optional[dict] = None
     misc_data: Optional[dict] = None
@@ -539,6 +541,8 @@ class ActivationCollector:
 
     def add(self, data_point: Tensor):
         # Add mean and variance of data_point to all_activation
+        assert data_point.shape == self.shape, \
+            f"Data point shape {data_point.shape} does not match collector shape {self.shape}"
         self.n_points += 1
         self.all.add(data_point)
         self.sqrt.add(data_point.abs().sqrt())
@@ -557,6 +561,8 @@ class ActivationCollector:
 
     def add_all(self, data_points):
         # TODO: reimplement with ".add_all()" methods
+        assert data_points.shape[1:] == self.shape, \
+            f"Data points shape {data_points.shape} do not match collector shape {self.shape}"
         for data_point in data_points:
             self.add(data_point)
 
@@ -634,6 +640,7 @@ class PruningConfig:
 
     save: bool = False
     save_subdirectory: str = None
+    eval_on_collected_datasets: bool = True
 
     @property
     def model_size(self): # legacy code
@@ -641,10 +648,12 @@ class PruningConfig:
 
     @property
     def datasets(self):
-        _datasets = list(set([
+        if not self.eval_on_collected_datasets:
+            return self.additional_datasets
+        _datasets = [
             *list(sorted([self.focus, self.cripple])),
-            *self.additional_datasets
-        ]))
+            *self.additional_datasets,
+        ]
         return _datasets
 
     def to_dict(self):

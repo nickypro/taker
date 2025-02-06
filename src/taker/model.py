@@ -1,16 +1,19 @@
 from collections import defaultdict
-from typing import List
-import torch
-import torch._dynamo
-import torch.nn as nn
-from torch import Tensor as TT
+from typing import List, Tuple
+
 import einops
+import torch
+import torch.nn as nn
 from accelerate import Accelerator
-from transformers import AutoTokenizer, AutoModelForCausalLM, PreTrainedModel
-from transformers import AutoImageProcessor, AutoModelForImageClassification
-from .model_maps import convert_hf_model_config, ModelMap, ConfigClass
-from .hooks import HookMap, HookConfig
+from torch import Tensor as TT
+from transformers import (AutoImageProcessor, AutoModelForCausalLM,
+                          AutoModelForImageClassification, AutoTokenizer,
+                          PreTrainedModel)
+
 from .data_classes import DtypeMap
+from .hooks import HookConfig, HookMap
+from .model_maps import ConfigClass, ModelMap, convert_hf_model_config
+
 
 class Model:
     def __init__(self,
@@ -21,7 +24,7 @@ class Model:
             device_map: str = None, # transformers device map config ["auto", "cuda"]
             use_accelerator: bool = True, # Allow multigpu
             dtype: str = "bfp16", # See DtypeConfig. ["bfp16", "fp32", "fp16", "hqq8", "int8", "hqq4", "int4", "nf4"]
-            compile: bool = True, # whether to use compiled backend. Prevents "training/backprop", adds speed
+            compile: bool = False, # whether to use compiled backend. Prevents "training/backprop", adds speed
             torch_dtype: torch.dtype = None, # manual torch.dtype
             svd_attn: bool = False, # whether to modify attention weights with SVD (TODO: reimplement)
             tokenizer_repo: str = None, # huggingface tokenizer to load (defaults to model_repo)
@@ -29,6 +32,7 @@ class Model:
             eval_mode: bool = True, # set model to model.eval(), not sure what this does
             hook_config: str = None, # See HookConfig. hook configuration string.
             add_hooks: bool = True, # whether to add hooks from the start or not [True, False]
+            model_kwargs: dict = None, # additional kwargs for the model
         ):
         # Handle devices and multi-gpu stuff
         self.use_accelerator = False
@@ -64,6 +68,8 @@ class Model:
         self.tokenizer: AutoTokenizer = None
         self.processor: AutoImageProcessor = None
         self.predictor: AutoModelForCausalLM | AutoModelForImageClassification = None
+        self.orig_predictor: AutoModelForCausalLM | AutoModelForImageClassification = None
+        self.peft_predictor = None
         self.map: ModelMap = None
         self.model: PreTrainedModel = None
         self.layers: list = None
@@ -71,13 +77,12 @@ class Model:
         # Hooking into the model
         self.hook_config: HookConfig = hook_config or self.default_config()
         self.hooks: HookMap = HookMap(self.hook_config)
+        self.hook_config = self.hooks.hook_config
 
         # Initialize the model
-        self.init_model(add_hooks=add_hooks)
         self.compile = compile
-        if self.compile:
-            torch._dynamo.config.suppress_errors = True
-            self.predictor = self.dtype_map.compile(self.predictor)
+        self.model_kwargs = model_kwargs or {}
+        self.init_model(add_hooks=add_hooks)
         self.run_example_input()
 
     @staticmethod
@@ -111,7 +116,7 @@ class Model:
         ):
         # Import model components (Default: Causal Language Models)
         device_map = self.device_map
-        model_args = {**self.dtype_args}
+        model_args = {**self.dtype_args, **self.model_kwargs}
 
         if self.cfg.model_modality == "vision":
             self.tokenizer = None \
@@ -122,7 +127,7 @@ class Model:
                 self.model_repo, device_map=device_map, **model_args) \
                 if predictor is None else predictor
         elif self.cfg.model_modality == "language":
-            self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_repo, legacy=False) \
+            self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_repo, legacy=False, padding_side='left') \
                 if tokenizer is None else tokenizer
             self.processor = None \
                 if processor is None else processor
@@ -132,7 +137,7 @@ class Model:
 
         else:
             raise NotImplementedError(f"Model modality {self.cfg.model_modality} not implemented.")
-
+        self.orig_predictor = self.predictor
         print(f"Loaded model '{self.model_repo}' with {self.dtype_map.str_dtype}:")
 
     def init_model(self, do_model_import=True, add_hooks=True):
@@ -144,6 +149,40 @@ class Model:
         self.layers = self.map.layers
         if add_hooks:
             self.init_hooks()
+        if self.compile:
+            self.init_compile()
+
+    def init_peft(self, peft_config_or_path, reinit_hooks=False):
+        """
+        Initialize PEFT for the model.
+
+        Args:
+            peft_config_or_path (PeftConfig or str):
+                Either a PeftConfig object or a string path to a PEFT model repository.
+        """
+        try:
+            from peft import PeftConfig, PeftModel, get_peft_model
+        except ImportError:
+            raise ImportError("PEFT is not installed. Please install it with 'pip install peft'.")
+
+        if reinit_hooks:
+            self.remove_hooks()
+        if isinstance(peft_config_or_path, str): # load from repo
+            self.peft_predictor = PeftModel.from_pretrained(self.orig_predictor, peft_config_or_path)
+        else: # create from config
+            self.peft_predictor = get_peft_model(self.orig_predictor, peft_config_or_path)
+        self.predictor = self.peft_predictor.base_model.model
+        # Reinitialize the model
+        self.init_model(do_model_import=False, add_hooks=False)
+        print(f"Initialized PEFT model")
+        self.peft_predictor.print_trainable_parameters()
+        if reinit_hooks:
+            self.init_hooks()
+
+    def init_compile(self):
+        from torch import _dynamo
+        torch._dynamo.config.suppress_errors = True
+        self.predictor = self.dtype_map.compile(self.predictor)
 
     def __getitem__(self, key):
         return self.map[key]
@@ -315,15 +354,17 @@ class Model:
         return None
 
     # inputs_embeds  --[model.model]---> outputs_embeds
-    def get_outputs_embeds(self, text:str=None, input_ids:TT=None, raw_img=None, pixel_values=None, inputs_embeds:TT=None):
+    def get_outputs_embeds(self, text:str=None, input_ids:TT=None, raw_img=None, pixel_values=None, inputs_embeds:TT=None, attention_mask=None, **kwargs):
         """Get output logits from input text/image"""
+        if attention_mask is not None: # in order for attention to work right need to do this ???
+            kwargs["output_attentions"] = True
         if self.cfg.model_modality == "vision":
             pixel_values = self.get_pixel_values(raw_img) if pixel_values is None else pixel_values
-            return self.model(pixel_values, output_hidden_states=False ).last_hidden_state
+            return self.model(pixel_values, output_hidden_states=False, **kwargs ).last_hidden_state
 
         inputs_embeds = self.get_inputs_embeds(text, input_ids) \
             if inputs_embeds is None else inputs_embeds
-        return self.model( inputs_embeds=inputs_embeds, output_hidden_states=False ).last_hidden_state
+        return self.model( inputs_embeds=inputs_embeds, output_hidden_states=False, attention_mask=attention_mask, **kwargs ).last_hidden_state
 
     def get_attn_weights(self, text=None, input_ids=None, inputs_embeds=None):
         inputs_embeds = inputs_embeds if inputs_embeds is not None \
@@ -343,8 +384,8 @@ class Model:
             lm_head = self.predictor.get_output_embeddings()
         return lm_head( embedded_outputs.to(self.device) )
 
-    def get_logits(self, text:str=None, input_ids:TT=None, raw_img=None, pixel_values=None, inputs_embeds:TT=None, outputs_embeds:TT=None):
-        outputs_embeds = self.get_outputs_embeds(text, input_ids, raw_img, pixel_values, inputs_embeds) \
+    def get_logits(self, text:str=None, input_ids:TT=None, raw_img=None, pixel_values=None, inputs_embeds:TT=None, outputs_embeds:TT=None, attention_mask=None, **kwargs):
+        outputs_embeds = self.get_outputs_embeds(text, input_ids, raw_img, pixel_values, inputs_embeds, attention_mask, **kwargs) \
             if outputs_embeds is None else outputs_embeds
         logits = self.unembed(outputs_embeds)
         return logits
@@ -406,6 +447,69 @@ class Model:
             skip_special_tokens=True, clean_up_tokenization_spaces=False )[0]
         return text_before, text_after
 
+    def generate_batch(self,
+            batch_prompts: List[str],
+            num: int = 10,
+            max_length: int = None,
+            temperature: float = 0.7,
+            do_sample: bool = True,
+            **kwargs
+        ) -> Tuple[List[str], List[str]]:
+        """
+        Generate the next {num} tokens for a batch of input prompts.
+
+        Args:
+            batch_prompts (List[str]): A list of input prompts.
+            num (int, optional): Number of new tokens to generate per prompt. Defaults to 10.
+            max_length (int, optional): Maximum length of the generated sequences. If None, it will be set to
+                                         the length of the input plus `num`. Defaults to None.
+            temperature (float, optional): Sampling temperature. Defaults to 0.7.
+            do_sample (bool, optional): Whether to use sampling; use greedy decoding otherwise. Defaults to True.
+            **kwargs: Additional generation parameters.
+
+        Returns:
+            Tuple[List[str], List[str]]: A tuple containing the original prompts and their generated continuations.
+        """
+        # Ensure the tokenizer has a pad_token
+        if self.tokenizer.pad_token is not None:
+            pass
+        elif self.tokenizer.eos_token is not None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+        else:
+            raise ValueError("Tokenizer has neither pad_token nor eos_token defined.")
+
+        # Tokenize all prompts in the batch
+        batch_encodings = self.tokenizer(
+            batch_prompts,
+            padding=True,
+            truncation=False,
+            max_length=1000,
+            return_tensors="pt"
+        )
+        orig_len = batch_encodings.input_ids.shape[1]
+
+        # Determine the new maximum length
+        new_length = orig_len + num if max_length is None else max_length
+
+        # Generate outputs
+        generate_ids = self.predictor.generate(
+            input_ids=batch_encodings.input_ids.to(self.device),
+            attention_mask=batch_encodings.attention_mask.to(self.device),
+            max_length=new_length,
+            do_sample=do_sample,
+            temperature=temperature,
+            pad_token_id=self.tokenizer.pad_token_id,
+            **kwargs,
+        )
+
+        # Decode all generated sequences at once
+        batch_text_after = self.tokenizer.batch_decode(
+            [ids[orig_len:] for ids in generate_ids],
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=False
+        )
+
+        return batch_prompts, batch_text_after
 
     # Get intermediate activaitons (using HOOKS!!!)
     def get_midlayer_activations(self, text=None, input_ids=None, raw_img=None, pixel_values=None):
@@ -423,13 +527,13 @@ class Model:
         }
 
     def collect_recent_mlp_pre_out(self):
-        mlp_activations = torch.stack(self.hooks["mlp_pre_out"]["collect"])
+        mlp_activations = torch.stack([x.to(self.device) for x in self.hooks["mlp_pre_out"]["collect"]])
         mlp_activations = einops.rearrange(mlp_activations,
             "layer batch token dim -> batch layer token dim")
         return mlp_activations
 
     def collect_recent_attn_pre_out(self):
-        attn_activations = torch.stack(self.hooks["attn_pre_out"]["collect"])
+        attn_activations = torch.stack([x.to(self.device) for x in self.hooks["attn_pre_out"]["collect"]])
         attn_activations = einops.rearrange(attn_activations,
             "layer batch token n_heads d_head -> batch layer token n_heads d_head",
             n_heads=self.cfg.n_heads, d_head=self.cfg.d_head
@@ -437,7 +541,7 @@ class Model:
         return attn_activations
 
     def get_residual_stream_decoder(self, text):
-        self.hooks.disable_all_collect_hooks()
+        self.hooks.collect_hooks()
         self.hooks.enable_collect_hooks(["post_decoder"])
         # Forward pass
         inputs_embeds = self.get_inputs_embeds(text)

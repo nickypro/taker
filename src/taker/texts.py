@@ -183,7 +183,11 @@ def get_pile_dataset_configs():
         ) for subset in PILE_SUBSETS
     ]
 
-def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
+def infer_dataset_config(dataset_str:str):
+    _d_c = dataset_str.split(":")
+    dataset_name   = _d_c[0]
+    dataset_subset = _d_c[1] if len(_d_c) >= 2 else None
+
     eval_configs = [
         EvalConfig("pytest-pile-local",
             dataset_custom_load_fn=lambda:DatasetDict.load_from_disk(script_path('data/pytest-pile-local')),
@@ -274,10 +278,13 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_split="train",
         ),
         EvalConfig("mmlu",
-            dataset_repo = "tasksource/mmlu",
-            dataset_type = "mmlu",
-            dataset_subset = "all", # Overwritten if use "mmlu:subject_name"
-            skip_token_strings = most_common_pile_tokens,
+            # dataset_repo = "tasksource/mmlu",
+            # dataset_type = "mmlu",
+            # dataset_subset = "all", # Overwritten if use "mmlu:subject_name"
+            # skip_token_strings = most_common_pile_tokens,
+            dataset_repo = "mmlu",
+            dataset_type = "lm_eval",
+            n_shot = 5,
         ),
         EvalConfig("imagenet-1k",
             dataset_split = "validation",
@@ -423,12 +430,66 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
             dataset_text_key = "poem content",
             dataset_has_test_split = False,
         ),
+        EvalConfig("wmdp",
+            dataset_type = "lm_eval",
+            dataset_repo = "wmdp",
+        ),
+        EvalConfig("wmdp-cyber",
+            dataset_type = "lm_eval",
+            dataset_repo = "wmdp_cyber",
+        ),
+        EvalConfig("wmdp-bio",
+            dataset_type = "lm_eval",
+            dataset_repo = "wmdp_bio",
+        ),
+        EvalConfig("minerva_math_algebra",
+            dataset_type = "lm_eval",
+            dataset_repo = "minerva_math_algebra",
+        ),
+        EvalConfig("wmdp-cyber-corpus-forget",
+            dataset_repo = "cais/wmdp-corpora",
+            dataset_text_key = "text",
+            dataset_subset = "cyber-forget-corpus",
+            dataset_split = "train",
+            dataset_has_test_split=False,
+        ),
+        EvalConfig("wmdp-cyber-corpus-retain",
+            dataset_repo = "cais/wmdp-corpora",
+            dataset_text_key = "text",
+            dataset_subset = "cyber-retain-corpus",
+            dataset_split = "train",
+            dataset_has_test_split=False,
+        ),
+        EvalConfig("wmdp-bio-corpus-retain",
+            dataset_repo = "cais/wmdp-corpora",
+            dataset_text_key = "text",
+            dataset_subset = "bio-retain-corpus",
+            dataset_split = "train",
+            dataset_has_test_split=False,
+        ),
     ]
     eval_configs += get_cifar_dataset_configs()
     eval_configs += get_pile_dataset_configs()
 
     # Convert into searchable dict
     labeled_eval_configs = dict([(c.dataset_name, c) for c in eval_configs])
+
+    if dataset_name == "lm_eval":
+        conf = EvalConfig(dataset_subset,
+            dataset_type="lm_eval",
+            dataset_repo=dataset_subset,
+        )
+        return conf
+
+    if dataset_name == "jsonl":
+        conf = EvalConfig(dataset_subset,
+            dataset_type="jsonl",
+            dataset_repo=dataset_subset,
+            dataset_has_test_split=False,
+            num_tokens_to_skip=0,
+            is_train_mode=True,
+        )
+        return conf
 
     # Search the dict for config
     if dataset_name in labeled_eval_configs:
@@ -450,6 +511,15 @@ def infer_dataset_config(dataset_name:str, dataset_subset:str=None):
 def __load_dataset_from_eval_config(eval_config: EvalConfig):
     if eval_config.dataset_custom_load_fn is not None:
         _dataset = eval_config.dataset_custom_load_fn()
+    elif eval_config.dataset_type == "jsonl":
+        _dataset = load_dataset(
+            "json",
+            data_files=eval_config.dataset_repo,
+            trust_remote_code=True,
+            streaming=eval_config.streaming,
+        )
+        return _dataset
+        # return {"train": _dataset}
     else:
         _dataset = load_dataset(
             eval_config.dataset_repo,
