@@ -211,7 +211,7 @@ class HookMap:
         for name, hook in self.collects.items():
             hook.enabled = False
 
-    def enable_collect_hooks(self, components=None, layers=None):
+    def enable_collect_hooks(self, components=None, layers=None, run_assert=False):
         if components is None:
             components = self.hook_config.hook_points.keys()
         if isinstance(components, str):
@@ -224,6 +224,8 @@ class HookMap:
         for component in components:
             for layer in layers:
                 hook_name = f"layer_{layer}_{component}"
+                if run_assert:
+                    assert hook_name in self.collects
                 if hook_name in self.collects:
                     self.collects[hook_name].enabled = True
 
