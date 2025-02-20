@@ -23,6 +23,7 @@ pip install taker
 - MistralAI's Mistral 7B
 - OpenAI's GPT-2
 - RoBERTa
+- Google Gemma / Gemma 2
 - Google's Vision Transformer (ViT)
 - Google's Gemma and Gemma 2 models
 

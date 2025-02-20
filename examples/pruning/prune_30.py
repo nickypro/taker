@@ -5,6 +5,7 @@ import torch
 
 # Configure initial model and tests
 c = PruningConfig(
+    wandb_entity = "seperability",
     wandb_project = "testing",
     model_repo   = "facebook/opt-1.3b",
     token_limit  = 1000,
@@ -22,6 +23,9 @@ c = PruningConfig(
 
 # Parse CLI for arguments
 c, args = cli_parser(c)
+
+import torch
+torch.set_grad_enabled(False)
 
 # Run the iterated pruning
 with torch.no_grad():

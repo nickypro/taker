@@ -980,6 +980,7 @@ def evaluate_lm_eval(opt: Model, eval_config: EvalConfig):
         tasks=[task],
         verbosity="WARNING",
         batch_size=eval_config.batch_size,
+        num_fewshot=eval_config.n_shot,
     )
 
     # Extract results and format them
@@ -1178,9 +1179,6 @@ def masked_generator(opt: Model, dataset, dataset_text_key):
         with torch.no_grad():
             logits = opt.get_logits(input_ids=masked_ids)[..., indices, :]
             expected_ids = orig_ids[..., indices]
-        #print(opt.tokenizer.batch_decode(masked_ids[0, indices]))
-        #print(opt.tokenizer.batch_decode(logits[0].argmax(-1)))
-        #print(opt.tokenizer.batch_decode(expected_ids[0]))
 
         yield (logits, expected_ids)
 

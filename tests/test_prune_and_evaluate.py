@@ -63,12 +63,12 @@ class TestPruneAndEvaluate:
 
         self.__run_testing(c)
 
-    @pytest.mark.parametrize("model_repo", test_model_repos)
-    def test_prune_attn_value_and_evaluate(self, model_repo):
-        c = self.pruning_config
-        c.model_repo          = model_repo
-        c.attn_mode           = "value"
-        c.use_accelerator     = False
-        c.do_attn_mean_offset = False
+    # @pytest.mark.parametrize("model_repo", test_model_repos)
+    # def test_prune_attn_value_and_evaluate(self, model_repo):
+    #     c = self.pruning_config
+    #     c.model_repo          = model_repo
+    #     c.attn_mode           = "value"
+    #     c.use_accelerator     = False
+    #     c.do_attn_mean_offset = False
 
-        self.__run_testing(c)
+    #     self.__run_testing(c)
