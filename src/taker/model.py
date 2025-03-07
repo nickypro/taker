@@ -433,7 +433,7 @@ class Model:
         # Generate from input_ids if available, seems to work more reliably (eg gemma2)
         if input_ids is not None:
             generate_ids = self.predictor.generate(input_ids=input_ids, max_length=new_length,
-                do_sample=do_sample, temperature=temperature,
+                do_sample=do_sample, temperature=temperature, pad_token_id=self.tokenizer.pad_token_ids,
                 attention_mask=attn_mask, **kwargs)
             text_after = self.tokenizer.batch_decode( generate_ids[:, len(input_ids[0]):],
                 skip_special_tokens=True, clean_up_tokenization_spaces=False )[0]
