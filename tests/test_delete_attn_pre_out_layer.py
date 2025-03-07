@@ -5,7 +5,7 @@ import copy
 from torch import Tensor
 import torch
 import numpy as np
-
+import einops
 # pylint: disable=import-error
 import pytest
 from taker.model_repos import test_model_repos
@@ -22,16 +22,18 @@ class TestDeleteAttnPreOutLayer:
         opt = Model(model_repo, limit=1000, dtype="fp32", mask_fn=mask_fn)
 
         with torch.no_grad():
-            n_heads, d_head, d_model = \
-                opt.cfg.n_heads, opt.cfg.d_head, opt.cfg.d_model
+            n_batch, n_tok, n_heads, d_head, d_model = \
+                1, 1, opt.cfg.n_heads, opt.cfg.d_head, opt.cfg.d_model
 
             # Define vectors for testing
             #vec_in: Tensor  = torch.tensor(
             #    np.random.random(d_model), dtype=torch.float32
             #).to( device )
             vec_mid: Tensor = torch.tensor(
-                np.random.random((n_heads, d_head)), dtype=torch.float32
+                np.random.random((n_batch, n_tok, n_heads, d_head)), dtype=torch.float32
             ).to( device )
+
+            convert = lambda x: einops.rearrange(x, "... n_heads d_head -> ... (n_heads d_head)")
 
             # Define a vector that is changed at certain indices
             vec_mid_d0 : Tensor = copy.deepcopy( vec_mid )
@@ -39,15 +41,15 @@ class TestDeleteAttnPreOutLayer:
             removed_indices   = [(0, 0), (0, 10), (1, 10), (5, 31)]
             unremoved_indices = [(0, 1), (1, 0),  (5, 30)]
 
-            removal_tensor = torch.zeros_like(vec_mid_d0, dtype=torch.bool)
-            keep_tensor    = torch.ones_like(vec_mid_d1, dtype=torch.bool)
+            removal_tensor = torch.zeros((n_heads, d_head), dtype=torch.bool)
+            keep_tensor    = torch.ones((n_heads, d_head), dtype=torch.bool)
             for (i_head, i_pos) in removed_indices:
-                vec_mid_d0[i_head][i_pos] = 100
-                removal_tensor[i_head][i_pos] = True
-                keep_tensor[i_head][i_pos] = False
+                vec_mid_d0[..., i_head, i_pos] = 100
+                removal_tensor[i_head, i_pos] = True
+                keep_tensor[i_head, i_pos] = False
 
             for i_head, i_pos in unremoved_indices:
-                vec_mid_d1[i_head][i_pos] = 100
+                vec_mid_d1[..., i_head, i_pos] = 100
 
             # Start tests
             for add_mean in [False]: # TODO: add True again
@@ -61,10 +63,10 @@ class TestDeleteAttnPreOutLayer:
                 out_proj_orig_weight = out_proj.weight.detach().clone()
 
                 # Test that the old outputs do care about changes to all indices
-                old_vec_out = out_proj(vec_mid.flatten()[None, :])
-                old_vec_out_d0 = out_proj(vec_mid_d0.flatten()[None, :])
-                print( '- vec      :', old_vec_out[:5] )
-                print( '- vec+ (1) :', old_vec_out_d0[:5] )
+                old_vec_out = out_proj(convert(vec_mid))
+                old_vec_out_d0 = out_proj(convert(vec_mid_d0))
+                print( '- vec      :', old_vec_out[..., :5] )
+                print( '- vec+ (1) :', old_vec_out_d0[..., :5] )
                 assert not torch.equal( old_vec_out, old_vec_out_d0 )
 
                 # Run the deletion
@@ -80,12 +82,12 @@ class TestDeleteAttnPreOutLayer:
 
                 # Test that new outputs do not care about changes to deleted indices
                 # but still care about changes to undeleted indices.
-                new_vec_out = out_proj(vec_mid.flatten()[None, :])
-                new_vec_out_d0 = out_proj(vec_mid_d0.flatten()[None, :])
-                new_vec_out_d1 = out_proj(vec_mid_d1.flatten()[None, :])
-                print( '- vec      :', new_vec_out[:5] )
-                print( '- vec+ (1) :', new_vec_out_d0[:5] )
-                print( '- vec+ (2) :', new_vec_out_d1[:5] )
+                new_vec_out = out_proj(convert(vec_mid))
+                new_vec_out_d0 = out_proj(convert(vec_mid_d0))
+                new_vec_out_d1 = out_proj(convert(vec_mid_d1))
+                print( '- vec      :', new_vec_out[..., :5] )
+                print( '- vec+ (1) :', new_vec_out_d0[..., :5] )
+                print( '- vec+ (2) :', new_vec_out_d1[..., :5] )
                 assert torch.equal( new_vec_out, new_vec_out_d0 )
                 assert not torch.equal( new_vec_out_d0, new_vec_out_d1 )
 
@@ -110,14 +112,14 @@ class TestDeleteAttnPreOutLayer:
         v_proj = opt.layers[LAYER]["attn.v_proj"]
         v_proj_orig_weight = v_proj.weight.detach().clone()
 
-        n_heads, d_head, d_model = \
-            opt.cfg.n_heads, opt.cfg.d_head, opt.cfg.d_model
+        n_batch, n_tok, n_heads, d_head, d_model = \
+            1, 1, opt.cfg.n_heads, opt.cfg.d_head, opt.cfg.d_model
 
         # Start test
         with torch.no_grad():
             # Define vec in
             vec_in: Tensor = torch.tensor(
-                np.random.random(d_model), dtype=torch.float32
+                np.random.random((n_batch, n_tok, d_model)), dtype=torch.float32
             ).to( device )
 
             # Choose indices (head, pos) to delete
@@ -127,13 +129,13 @@ class TestDeleteAttnPreOutLayer:
             keep_tensor     = \
                 torch.ones((n_heads, d_head), dtype=torch.bool, device=device)
             for (i_head, i_pos) in removed_indices:
-                removal_tensor[i_head][i_pos] = True
-                keep_tensor[i_head][i_pos]    = False
+                removal_tensor[i_head, i_pos] = True
+                keep_tensor[i_head, i_pos]    = False
 
 
             # Get output vector before deletion
-            old_vec_mid = v_proj(vec_in).reshape((n_heads, d_head))
-            print( '- old vec  :', old_vec_mid[:5] )
+            old_vec_mid = v_proj(vec_in).reshape((n_batch, n_tok, n_heads, d_head))
+            print( '- old vec  :', old_vec_mid[..., :5] )
 
             # Run the deletion
             print('deleting indices:', removed_indices)
@@ -141,8 +143,8 @@ class TestDeleteAttnPreOutLayer:
             v_proj = opt.layers[LAYER]["attn.v_proj"]
 
             # Get output vector after deletion
-            new_vec_mid = v_proj(vec_in).reshape((n_heads, d_head))
-            print( '- new vec  :', new_vec_mid[:5] )
+            new_vec_mid = v_proj(vec_in).reshape((n_batch, n_tok, n_heads, d_head))
+            print( '- new vec  :', new_vec_mid[..., :5] )
 
             # Test that new outputs do not care about changes to deleted indices
             # Check weight changes

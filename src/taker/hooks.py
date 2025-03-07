@@ -338,14 +338,33 @@ class NeuronMask(torch.nn.Module):
 
     def __init__(self, shape, act_fn: str = "step"):
         super(NeuronMask, self).__init__()
-        self.shape = shape
         self.act_fn = act_fn
+        self.shape: torch.Size = None
+        self.param: torch.nn.Parameter = None
+        self.offset: torch.nn.Parameter = None
+        self.reinit_hook(shape=shape)
+
+    def check_shapes_match(self, x):
+        curr_shape  = torch.Size(self.shape)
+        input_shape = torch.Size(x.shape[-len(curr_shape):])
+        return curr_shape == input_shape, f"{curr_shape} vs {input_shape} (from {x.shape})"
+
+    def reinit_hook(self, x=None, shape=None):
+        # batch, token, (d_model or otherwise)
+        if x is not None:
+            new_shape, new_dtype = x.shape[2:], x.dtype
+        elif shape is not None:
+            new_shape, new_dtype = shape, torch.float32
+        else:
+            raise ValueError("Either x or shape must be provided to init NeuronMask")
+
+        self.shape = new_shape
+        vec = torch.ones(new_shape, dtype=new_dtype)
         # initialize mask as nn.Parameter of ones
-        _vec = torch.ones(shape, dtype=torch.float32)
         if self.act_fn == "sigmoid":
-            _vec[...] = torch.inf
-        self.param = torch.nn.Parameter(_vec)
-        self.offset = torch.nn.Parameter(torch.zeros_like(_vec))
+            vec[...] = torch.inf
+        self.param = torch.nn.Parameter(vec)
+        self.offset = torch.nn.Parameter(torch.zeros_like(vec))
 
     def get_mask(self):
         # if step, we want heaviside step function. ie: mask = mask > 0
@@ -393,6 +412,10 @@ class NeuronMask(torch.nn.Module):
         return x * inv_mask
 
     def forward(self, x):
+        is_match, msg = self.check_shapes_match(x)
+        if not is_match:
+            print(f"Shape mismatch: {msg}, reinitialising mask hook")
+            self.reinit_hook(x)
         self.to(x.device)
         mask = self.get_mask()
         offset = self.get_offset(x)
