@@ -606,6 +606,8 @@ class PruningConfig:
     token_limit: int = None
     ff_frac: float = 0.1
     ff_eps: float = 0.001
+    sae_frac: float = 0.0
+    sae_eps: float = 0.001
     attn_frac: float = 0.0
     attn_eps: float = 1e-4
     dtype: str = "fp16"
@@ -622,6 +624,8 @@ class PruningConfig:
 
     attn_offset_mode: str = "zero"
     ff_offset_mode:   str = "zero"
+
+    sae_scoring: str = "abs"
 
     attn_scoring: str = "abs"
     attn_mode: str = "pre-out"
