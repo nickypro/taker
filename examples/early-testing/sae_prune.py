@@ -11,13 +11,13 @@ from taker.data_classes import PruningConfig
 # 3. grab the sae activations
 
 hook_config = """
-pre_decoder: mask, sae_encode, collect, sae_decode
+pre_decoder: sae_encode, mask, collect, sae_decode
 mlp_pre_out: collect
 """
 c = PruningConfig("nickypro/tinyllama-15m",
     attn_mode="pre-out", do_attn_mean_offset=False, use_accelerator=False,
     ff_frac=0.0, attn_frac=0.0, sae_frac=0.1,
-    token_limit=1000, focus="pile", cripple="code", wandb_entity="seperability", recalculate_activations=False,
+    token_limit=100, focus="civil", cripple="toxic", wandb_entity="seperability", recalculate_activations=False,
     wandb_project="bens-tests", wandb_run_name="test notebook2", n_steps=10, scoring_normalization="peak_centered")
 m = Model("gpt2", hook_config=hook_config)
 
@@ -33,4 +33,5 @@ cripple_data = get_midlayer_data( m, "toxic", 10, collect_sae=True, calculate_sa
 
 with torch.no_grad():
     for i in range(c.n_steps):
+        print(f"Step {i}")
         data = prune_and_evaluate(m, c, focus_data, cripple_data, i)
