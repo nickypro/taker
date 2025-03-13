@@ -5903,4 +5903,4 @@ cuda = []
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<4.0"
-content-hash = "aa3af5cd34c5fd38a9e1a155447193dc8c9dd7c5d94378808adc8d64804a6f88"
+content-hash = "2a75271de60e5067175b8f9f4d0e98e3717983032b3ace5f638cc349a2ed7d0a"
