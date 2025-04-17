@@ -137,12 +137,72 @@ def convert_hf_model_config(official_model_name: str):
             "use_local_attn": True, #
             "window_size": hf_config.sliding_window, # 4096
             #"initializer_range": hf_config.initializer_range,
-            "attn_types": ["global", "local"] * 21,  # Alternate global and local attn
+            "attn_types": ["global", "local"] * (hf_config.num_hidden_layers//2),  # Alternate global and local attn
             "attn_scores_soft_cap": hf_config.attn_logit_softcapping,
             "output_logits_soft_cap": hf_config.final_logit_softcapping,
             "gated_mlp": True,
             "final_rms": True,
             "pre_layernorm": True, # before and after!
+            "post_layernorm": True,
+        }
+    elif architecture == "Gemma3ForCausalLM":
+        cfg_dict = {
+            "d_model": hf_config.hidden_size,
+            "d_head": hf_config.head_dim,
+            "n_heads": hf_config.num_attention_heads,
+            "d_mlp": hf_config.intermediate_size,
+            "n_layers": hf_config.num_hidden_layers,
+            "n_ctx": hf_config.max_position_embeddings,
+            "eps": hf_config.rms_norm_eps,
+            "d_vocab": hf_config.vocab_size,
+            "act_fn": hf_config.hidden_activation,
+            "normalization_type": "RMS",
+            "positional_embedding_type": "rotary",
+            "rotary_base": hf_config.rope_theta,
+            "n_key_value_heads": hf_config.num_key_value_heads,
+            "rotary_dim": hf_config.head_dim,
+            "use_attn_scale": True,
+            "attn_scale": hf_config.query_pre_attn_scalar**-0.5,
+            "use_local_attn": True,
+            "window_size": hf_config.sliding_window,
+            "attn_types": ["global", "local"] * (hf_config.num_hidden_layers//2),  # Alternate global and local attn
+            "attn_scores_soft_cap": hf_config.attn_logit_softcapping,
+            "output_logits_soft_cap": hf_config.final_logit_softcapping,
+            "gated_mlp": True,
+            "final_rms": True,
+            "pre_layernorm": True,
+            "post_layernorm": True,
+
+        }
+    elif architecture == "Gemma3ForConditionalGeneration":
+        # Architecture for Gemma-3 models
+        # Get the text config from the model config
+        text_config = hf_config.text_config
+        cfg_dict = {
+            "d_model": text_config.hidden_size,
+            "d_head": text_config.head_dim,
+            "n_heads": text_config.num_attention_heads,
+            "d_mlp": text_config.intermediate_size,
+            "n_layers": text_config.num_hidden_layers,
+            "n_ctx": text_config.max_position_embeddings,
+            "eps": text_config.rms_norm_eps,
+            "d_vocab": text_config.vocab_size,
+            "act_fn": text_config.hidden_activation,
+            "normalization_type": "RMS",
+            "positional_embedding_type": "rotary",
+            "rotary_base": text_config.rope_theta,
+            "n_key_value_heads": text_config.num_key_value_heads,
+            "rotary_dim": text_config.head_dim,
+            "use_attn_scale": True,
+            "attn_scale": text_config.query_pre_attn_scalar**-0.5,
+            "use_local_attn": True,
+            "window_size": text_config.sliding_window,
+            "attn_types": ["global", "local"] * (text_config.num_hidden_layers//2),  # Alternate global and local attn
+            "attn_scores_soft_cap": text_config.attn_logit_softcapping,
+            "output_logits_soft_cap": text_config.final_logit_softcapping,
+            "gated_mlp": True,
+            "final_rms": True,
+            "pre_layernorm": True,
             "post_layernorm": True,
         }
     elif architecture == "GPTNeoForCausalLM":
@@ -877,6 +937,152 @@ def build_gemma2_layer_map(cfg: ConfigClass):
 
     return gemma2_layer_map
 
+# Gemma 3
+#########
+
+gemma3_textonly_model_map = {
+    "model"           : "model",
+    "layers"          : "model.layers",
+    "embed"           : "model.embed_tokens",
+    "embed.W_E"       : "model.embed_tokens.weight",
+    "ln_final"        : "model.norm",
+    "ln_final.w"      : "model.norm.weight",
+    "unembed"         : "lm_head",
+}
+
+gemma3_model_map = {
+    "model"           : "language_model.model", # In Gemma3ForCausalLM, it's self.model = Gemma3TextModel(config)
+    "layers"          : "language_model.model.layers",
+    "embed"           : "language_model.model.embed_tokens",
+    "embed.W_E"       : "language_model.model.embed_tokens.weight", # Uses Gemma3TextScaledWordEmbedding
+    # Positional embedding handled by rotary_emb / rotary_emb_local inside the model/layers
+    "ln_final"        : "language_model.model.norm",
+    "ln_final.w"      : "language_model.model.norm.weight",
+    "unembed"         : "language_model.lm_head", # In Gemma3ForCausalLM
+    "unembed.W_U"     : "language_model.lm_head.weight.T", # lm_head is Linear with bias=False
+    "unembed.b_U"     : None,
+}
+
+def build_gemma3_layer_map(cfg: ConfigClass):
+    attn_proj_map = {"q": "q_proj", "k": "k_proj", "v": "v_proj", "o": "o_proj"}
+    mlp_proj_map = {"mlp.gate_proj": "gate_proj", "mlp.up_proj": "up_proj", "mlp.down_proj": "down_proj"}
+
+    def gemma3_qkv_weight(layer, key: str, inpt: Optional[Any]=None):
+        # Prepare shape changing - handle MQA/GQA like Mistral/Gemma2
+        is_kv = key in ['k', 'v']
+        num_heads = cfg.n_key_value_heads if is_kv else cfg.n_heads
+        their_shape = f"({num_heads} d_head) d_model"
+        my_shape = f"{num_heads} d_head d_model"
+        sizes = generate_sizes_dict(my_shape, cfg)
+        sizes["n_heads"] = num_heads # Override n_heads for K/V GQA case
+
+        # Get attn proj module
+        attn = layer.self_attn
+        attn_proj = get_attrs(attn, attn_proj_map[key])
+
+        # Get mode
+        if inpt is None:
+            W = attn_proj.weight
+            W = einops.rearrange(W, f"{their_shape} -> {my_shape}", **sizes)
+            return W
+
+        # Set mode
+        W = einops.rearrange(inpt, f"{my_shape} -> {their_shape}", **sizes)
+        update_param(attn_proj, "weight", W)
+
+    def gemma3_attn_bias(layer, key: str, inpt: Optional[Any]=None):
+        # Check if attention bias is configured (assuming it might be)
+        # default in Gemma3TextConfig seems to be False for attention_bias
+        # For simplicity, let's assume bias=False based on the provided code's defaults.
+        # If attention_bias=True needs to be supported, check layer.self_attn.[qkv]_proj.bias
+        # attn = layer.self_attn
+        # attn_proj = get_attrs(attn, attn_proj_map[key])
+        # if attn_proj.bias is None:
+        #     return None
+        #
+        # # Prepare shape changing like gemma3_qkv_weight if bias exists
+        # is_kv = key in ['k', 'v']
+        # num_heads = cfg.n_key_value_heads if is_kv else cfg.n_heads
+        # their_shape = f"({num_heads} d_head)"
+        # my_shape = f"{num_heads} d_head"
+        # sizes = generate_sizes_dict(my_shape, cfg)
+        # sizes["n_heads"] = num_heads
+        #
+        # if inpt is None:
+        #     b = attn_proj.bias
+        #     b = einops.rearrange(b, f"{their_shape} -> {my_shape}", **sizes)
+        #     return b
+        #
+        # # Set mode
+        # b = einops.rearrange(inpt, f"{my_shape} -> {their_shape}", **sizes)
+        # update_param(attn_proj, "bias", b)
+        return None # Assuming bias=False based on provided code examples
+
+    def gemma3_mlp_weight(layer, key: str, inpt: Optional[Any]=None):
+        mlp = layer.mlp
+        proj = get_attrs(mlp, mlp_proj_map[key])
+
+        if inpt is None:
+            return proj.weight
+        update_param(proj, "weight", inpt)
+
+    def gemma3_mlp_bias(layer, key: str, _inpt: Optional[Any]=None):
+        # Gemma3 MLP uses bias=False
+        return None
+
+    # Maps internal names to Gemma3 HF names
+    gemma3_layer_map = {
+        # Input Norm (Before Attention)
+        "attn.ln_in"    : "input_layernorm",
+        "attn.ln_in.w"  : "input_layernorm.weight",
+        "attn.ln_in.b"  : None, # RMSNorm
+
+        # Attention Projections
+        "attn"          : "self_attn",
+        "attn.q_proj"   : "self_attn.q_proj",
+        "attn.k_proj"   : "self_attn.k_proj",
+        "attn.v_proj"   : "self_attn.v_proj",
+
+        **generate_attn_qkv_functions(gemma3_qkv_weight, gemma3_attn_bias),
+
+        # Attention Output Projection
+        "attn.out_proj" : "self_attn.o_proj",
+        "attn.W_O"      : "self_attn.o_proj.weight",
+        "attn.b_O"      : lambda layer, inpt=None: gemma3_attn_bias(layer, "o", inpt), # Use bias func
+
+        # Post-Attention Norm
+        "attn.ln_out"   : "post_attention_layernorm",
+        "attn.ln_out.w" : "post_attention_layernorm.weight",
+        "attn.ln_out.b" : None, # RMSNorm
+
+        # Pre-MLP Norm
+        "mlp.ln_in"     : "pre_feedforward_layernorm",
+        "mlp.ln_in.w"   : "pre_feedforward_layernorm.weight",
+        "mlp.ln_in.b"   : None, # RMSNorm
+
+        # MLP Layers
+        "mlp"           : "mlp",
+        "mlp.gate_proj" : "mlp.gate_proj",
+        "mlp.up_proj"   : "mlp.up_proj", # Maps to W_in conceptually
+        "mlp.out_proj"  : "mlp.down_proj", # Maps to W_out conceptually
+        "mlp.W_gate"    : lambda layer, inpt=None: gemma3_mlp_weight(layer, "mlp.gate_proj", inpt),
+        "mlp.W_in"      : lambda layer, inpt=None: gemma3_mlp_weight(layer, "mlp.up_proj", inpt), # W_in maps to up_proj
+        "mlp.W_out"     : lambda layer, inpt=None: gemma3_mlp_weight(layer, "mlp.down_proj", inpt),
+        "mlp.b_gate"    : lambda layer, _inpt=None: gemma3_mlp_bias(layer, "mlp.gate_proj", _inpt),
+        "mlp.b_in"      : lambda layer, _inpt=None: gemma3_mlp_bias(layer, "mlp.up_proj", _inpt), # b_in maps to up_proj
+        "mlp.b_out"     : lambda layer, _inpt=None: gemma3_mlp_bias(layer, "mlp.down_proj", _inpt),
+
+        # Activation Function
+        "activation_fn" : "mlp.act_fn",
+
+        # Post-MLP Norm
+        "mlp.ln_out"    : "post_feedforward_layernorm",
+        "mlp.ln_out.w"  : "post_feedforward_layernorm.weight",
+        "mlp.ln_out.b"  : None, # RMSNorm
+    }
+
+    return gemma3_layer_map
+
 # PHI 1 and 2 models
 ####################
 
@@ -1231,8 +1437,8 @@ def build_gpt2_layer_map(cfg: ConfigClass):
         return conv1d_weight(layer.mlp.c_proj, inpt)
 
     def get_attn_weight(attn_outputs):
-            # outputs # a, present, (attentions)
-            # TODO: make sure use_cache is true!
+            # outputs # a, present, (attentions)
+            # TODO: make sure use_cache is true!
             attn_out, key_value_cache, attn_weights = attn_outputs
             return attn_weights
 
@@ -1321,7 +1527,7 @@ def build_roberta_layer_map(cfg: ConfigClass):
         my_shape    = "n_heads d_head"
         sizes = generate_sizes_dict(my_shape, cfg)
 
-        # Get attn proj module
+        # Get attn proj module
         attn = layer.attention
         attn_proj = get_attrs(attn, attn_proj_map[key])
 
@@ -1428,7 +1634,7 @@ def build_vit_layer_map(cfg: ConfigClass):
         my_shape    = "n_heads d_head"
         sizes = generate_sizes_dict(my_shape, cfg)
 
-        # Get attn proj module
+        # Get attn proj module
         attn = layer.attention
         attn_proj = get_attrs(attn, attn_proj_map[key])
 
@@ -1618,6 +1824,10 @@ def get_model_key_map(config: ConfigClass):
         return gemma_model_map
     if architecture == "Gemma2ForCausalLM":
         return gemma2_model_map
+    if architecture == "Gemma3ForConditionalGeneration":
+        return gemma3_model_map
+    if architecture == "Gemma3ForCausalLM":
+        return gemma3_textonly_model_map
     if architecture == "PhiForCausalLM":
         return phi_model_map
     if architecture == "Phi3ForCausalLM":
@@ -1646,6 +1856,10 @@ def get_layer_key_map(config: ConfigClass):
         return build_gemma_layer_map(config)
     if architecture == "Gemma2ForCausalLM":
         return build_gemma2_layer_map(config)
+    if architecture == "Gemma3ForCausalLM":
+        return build_gemma3_layer_map(config)
+    if architecture == "Gemma3ForConditionalGeneration":
+        return build_gemma3_layer_map(config)
     if architecture == "PhiForCausalLM":
         return build_phi_layer_map(config)
     if architecture == "Phi3ForCausalLM":
