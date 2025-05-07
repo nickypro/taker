@@ -48,10 +48,14 @@ def prune_and_evaluate(
 
     # Get midlayer activations of FF and ATTN
     if pruning_config.recalculate_activations:
+        sae_enabled = False
+        if pruning_config.sae_frac > 0:
+            sae_enabled = True
+
         focus_out   = get_midlayer_data( opt, pruning_config.focus,
-            pruning_config.collection_sample_size, pruning_config.attn_mode )
+            pruning_config.collection_sample_size, pruning_config.attn_mode, calculate_sae=sae_enabled, collect_sae=sae_enabled )
         cripple_out = get_midlayer_data( opt, pruning_config.cripple,
-            pruning_config.collection_sample_size, pruning_config.attn_mode )
+            pruning_config.collection_sample_size, pruning_config.attn_mode, calculate_sae=sae_enabled, collect_sae=sae_enabled )
 
     # Otherwise, import activation data, and adjust the "pruning fraction"
     else:
