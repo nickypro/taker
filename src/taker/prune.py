@@ -105,9 +105,6 @@ def score_and_prune( opt: Model,
         sae_hook_points = [point for point, layers in opt.hooks.hook_config.hook_points.items() 
                         if 'all' in layers and any('sae' in hook for hook in layers['all'])]
         for sae_hook in sae_hook_points:
-            #FIXME: delete. work in progress
-            #print("sae activationOverview")
-            #print(focus_activations_data)
             sae_focus_data = focus_activations_data.sae[sae_hook]
             sae_cripple_data = cripple_activations_data.sae[sae_hook]
             sae_scoring_fn = score_indices_by(pruning_config.sae_scoring)
