@@ -22,3 +22,5 @@ dist
 *.ipynb
 # Same for saved pytorch tensor dicts
 *.pt
+*.pkl
+.qodo
