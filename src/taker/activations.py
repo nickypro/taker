@@ -130,7 +130,7 @@ def get_midlayer_data(opt: Model,
             #assuming all layers have the hook
             sae_shape = (opt.cfg.n_layers, opt.hooks.neuron_sae_encode[f"layer_0_{sae_hook}"].sae_config["d_sae"])
             sae_data[sae_hook] = ActivationCollector(sae_shape, opt.output_device, collect_sae)
-        opt.hooks.enable_collect_hooks([sae_hook_points]) 
+            opt.hooks.enable_collect_hooks([sae_hook])
 
     if do_collect:
         criteria_raw = []

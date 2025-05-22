@@ -40,17 +40,22 @@ def prune_and_evaluate(
     # Find out what we are doing
     do_ff   = pruning_config.ff_frac > 0
     do_attn = pruning_config.attn_frac > 0
-    if not do_ff and not do_attn:
-        raise ValueError("Must prune at least one of FF or Attention")
+    do_sae = pruning_config.sae_frac > 0
+    if not do_ff and not do_attn and not do_sae:
+        raise ValueError("Must prune at least one of FF or Attention or SAE")
     if do_attn and pruning_config.attn_mode not in ["pre-out", "value"]:
         raise NotImplementedError("attn_mode must be 'pre-out' or 'value'")
 
     # Get midlayer activations of FF and ATTN
     if pruning_config.recalculate_activations:
+        sae_enabled = False
+        if pruning_config.sae_frac > 0:
+            sae_enabled = True
+
         focus_out   = get_midlayer_data( opt, pruning_config.focus,
-            pruning_config.collection_sample_size, pruning_config.attn_mode )
+            pruning_config.collection_sample_size, pruning_config.attn_mode, calculate_sae=sae_enabled, collect_sae=sae_enabled )
         cripple_out = get_midlayer_data( opt, pruning_config.cripple,
-            pruning_config.collection_sample_size, pruning_config.attn_mode )
+            pruning_config.collection_sample_size, pruning_config.attn_mode, calculate_sae=sae_enabled, collect_sae=sae_enabled )
 
     # Otherwise, import activation data, and adjust the "pruning fraction"
     else:
@@ -81,9 +86,11 @@ def score_and_prune( opt: Model,
         ):
     # Get the top fraction FF activations and prune
     ff_frac, ff_eps     = pruning_config.ff_frac,   pruning_config.ff_eps
+    sae_frac, sae_eps     = pruning_config.sae_frac,   pruning_config.sae_eps
     attn_frac, attn_eps = pruning_config.attn_frac, pruning_config.attn_eps
     do_ff   = ff_frac > 0
     do_attn = attn_frac > 0
+    do_sae = sae_frac > 0
 
     act_subset = pruning_config.scoring_normalization
     if do_ff > 0:
@@ -94,6 +101,18 @@ def score_and_prune( opt: Model,
         ff_scores = ff_scoring_fn(opt, ff_focus_data, ff_cripple_data, ff_eps)
         ff_criteria, ff_threshold = get_top_frac(ff_scores, ff_frac)
         opt.hooks.delete_mlp_neurons(ff_criteria)
+    if do_sae > 0:
+        sae_hook_points = [point for point, layers in opt.hooks.hook_config.hook_points.items() 
+                        if 'all' in layers and any('sae' in hook for hook in layers['all'])]
+        for sae_hook in sae_hook_points:
+            sae_focus_data = focus_activations_data.sae[sae_hook]
+            sae_cripple_data = cripple_activations_data.sae[sae_hook]
+            sae_scoring_fn = score_indices_by(pruning_config.sae_scoring)
+
+            sae_scores = sae_scoring_fn(opt, sae_focus_data.orig, sae_cripple_data.orig, sae_eps)
+            sae_criteria, sae_threshold = get_top_frac(sae_scores, sae_frac)
+
+            opt.hooks[sae_hook].delete_neurons(sae_criteria)
 
     # Get the top fraction of Attention activations and prune
     if do_attn > 0:
