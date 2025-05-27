@@ -14,9 +14,10 @@ mlp_pre_out: collect
 """
 c = PruningConfig("doesnt matter",
     attn_mode="pre-out", do_attn_mean_offset=False, use_accelerator=False,
-    ff_frac=0.0, attn_frac=0.0, sae_frac=0.2,
-    token_limit=100, focus="civil", cripple="toxic", wandb_entity="seperability", recalculate_activations=False,
-    wandb_project="bens-tests", wandb_run_name="gemma-2b mlp sae prune test default scoring", n_steps=10)
+    collection_sample_size=1e3, eval_sample_size=1e3,
+    ff_frac=0.0, attn_frac=0.0, sae_frac=0.05,
+    token_limit=100, focus="pile", cripple="code", wandb_entity="seperability", recalculate_activations=False,
+    wandb_project="bens-tests", wandb_run_name="gemma-2b mlp sae prune test default scoring", n_steps=20)
 m = Model("google/gemma-2-2b", hook_config=hook_config)
 
 for layer in range(m.cfg.n_layers):
@@ -28,8 +29,8 @@ m.hooks.enable_collect_hooks(["mlp_pre_out"], run_assert=True)
 m.hooks.enable_collect_hooks(["post_mlp"], run_assert=True)
 
 #TODO: seems we have to have collect_ff=True to get the activations for sae
-focus_data = get_midlayer_data( m, "civil", 10, collect_sae=True, calculate_sae=True, collect_attn=False, collect_ff=True, calculate_attn=False, calculate_ff=False)
-cripple_data = get_midlayer_data( m, "toxic", 10, collect_sae=True, calculate_sae=True, collect_attn=False, collect_ff=True, calculate_attn=False, calculate_ff=False)
+focus_data = get_midlayer_data( m, "pile", 10, collect_sae=True, calculate_sae=True, collect_attn=False, collect_ff=True, calculate_attn=False, calculate_ff=False)
+cripple_data = get_midlayer_data( m, "code", 10, collect_sae=True, calculate_sae=True, collect_attn=False, collect_ff=True, calculate_attn=False, calculate_ff=False)
 
 history = RunDataHistory(c.datasets)
 wandb.init(
@@ -51,3 +52,7 @@ with torch.no_grad():
         print(f"Step {i}")
         data = prune_and_evaluate(m, c, focus_data, cripple_data, i)
         history.add(data)
+        
+        # Get activations after each pruning step
+        focus_data = get_midlayer_data(m, "pile", 10, collect_sae=True, calculate_sae=True, collect_attn=False, collect_ff=True, calculate_attn=False, calculate_ff=False)
+        cripple_data = get_midlayer_data(m, "code", 10, collect_sae=True, calculate_sae=True, collect_attn=False, collect_ff=True, calculate_attn=False, calculate_ff=False)
