@@ -101,7 +101,7 @@ def get_midlayer_data(opt: Model,
 
     do_ff      = calculate_ff or collect_ff
     do_attn    = calculate_attn or collect_attn
-    do_collect = collect_ff or collect_attn or collect_ids
+    do_collect = collect_ff or collect_attn or collect_ids or collect_sae
     do_sae     = calculate_sae or collect_sae
 
     # Get things ready for collection
