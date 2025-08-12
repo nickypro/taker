@@ -506,6 +506,7 @@ class ActivationOverview:
     mlp: Optional[ActivationSummaryHolder] = None
     sae: Optional[Dict[str, ActivationSummaryHolder]] = None
     attn: Optional[ActivationSummaryHolder] = None
+    residual: Optional[ActivationSummaryHolder] = None
     raw: Optional[dict] = None
     misc_data: Optional[dict] = None
 
@@ -610,6 +611,9 @@ class PruningConfig:
     sae_eps: float = 0.001
     attn_frac: float = 0.0
     attn_eps: float = 1e-4
+    residual_frac: float = 0.0
+    residual_eps: float = 0.001
+    residual_scoring: str = "abs"
     dtype: str = "fp16"
     use_accelerator: bool = True
     model_device: Optional[str] = None

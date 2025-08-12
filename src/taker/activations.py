@@ -73,10 +73,12 @@ def get_midlayer_data(opt: Model,
         calculate_ff: bool = True,
         calculate_attn: bool = True,
         calculate_sae: bool = False,
+        calculate_residual: bool = False,
         collect_ff: bool = False,
         collect_attn: bool = False,
         collect_ids: bool = False,
         collect_sae: bool = False,
+        collect_residual: bool = False,
         dataset_texts_to_skip: int = None,
         random_subset_frac: float = None,
         eval_config: EvalConfig = None,
@@ -101,8 +103,9 @@ def get_midlayer_data(opt: Model,
 
     do_ff      = calculate_ff or collect_ff
     do_attn    = calculate_attn or collect_attn
-    do_collect = collect_ff or collect_attn or collect_ids or collect_sae
+    do_collect = collect_ff or collect_attn or collect_ids or collect_sae or collect_residual
     do_sae     = calculate_sae or collect_sae
+    do_residual = calculate_residual or collect_residual
 
     # Get things ready for collection
     opt.hooks.disable_all_collect_hooks()
@@ -121,6 +124,12 @@ def get_midlayer_data(opt: Model,
         opt.hooks.enable_collect_hooks(["attn_pre_out"])
         if attn_peak is not None:
             attn_data_peak_centered = ActivationCollector(attn_shape, opt.output_device)
+    
+    # residual stream activation collector
+    if do_residual:
+        residual_shape = (opt.cfg.n_layers, opt.cfg.d_model)
+        residual_data = ActivationCollector(residual_shape, opt.output_device, collect_residual)
+        opt.hooks.enable_collect_hooks(["post_decoder"])
     
     if do_sae:
         sae_hook_points = [point for point, layers in opt.hooks.hook_config.hook_points.items() 
@@ -160,6 +169,11 @@ def get_midlayer_data(opt: Model,
                 if do_attn:
                     attn_acts = opt.collect_recent_attn_pre_out()
                     attn_acts = einops.rearrange(attn_acts, "b l t nh dh -> (b t) l nh dh")
+                if do_residual:
+                    residual_acts = opt.hooks.get_all_layer_data("post_decoder", "collect")
+                    # Stack across layers: (n_layers, batch, seq_len, d_model)
+                    residual_acts = torch.stack([act for act in residual_acts if act is not None])
+                    residual_acts = einops.rearrange(residual_acts, "l b t d -> (b t) l d")
                 if do_sae:
                     sae_acts = {}
                     for sae_hook in sae_hook_points:
@@ -201,6 +215,8 @@ def get_midlayer_data(opt: Model,
                     attn_data.add_all(attn_acts[criteria_indices])
                     if attn_peak is not None:
                         attn_data_peak_centered.add_all((attn_acts - attn_peak)[criteria_indices])
+                if do_residual:
+                    residual_data.add_all(residual_acts[criteria_indices])
                 if do_sae:
                     for sae_hook in sae_hook_points:
                         sae_data[sae_hook].add_all(sae_acts[sae_hook])
@@ -230,6 +246,10 @@ def get_midlayer_data(opt: Model,
             orig=attn_data.summary(dtype=opt.dtype),
             peak_centered = attn_data_peak_centered.summary(dtype=opt.dtype, allow_nan=True) if attn_peak is not None else None,
         )
+    if calculate_residual:
+        output["residual"] = ActivationSummaryHolder(
+            orig=residual_data.summary(dtype=opt.dtype),
+        )
     if calculate_sae:
         output["sae"] = {}
         for sae_hook in sae_hook_points:
@@ -242,6 +262,8 @@ def get_midlayer_data(opt: Model,
         output["raw"]["mlp"] = ff_data.get_raw()
     if collect_attn:
         output["raw"]["attn"] = attn_data.get_raw()
+    if collect_residual:
+        output["raw"]["residual"] = residual_data.get_raw()
     if collect_sae:
         output["raw"]["sae"] = {sae_hook: sae_data[sae_hook].get_raw() for sae_hook in sae_hook_points}
     if collect_ids:
