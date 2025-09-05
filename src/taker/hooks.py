@@ -235,6 +235,9 @@ class HookMap:
     def delete_attn_neurons(self, remove_indices, layer: int = None):
         return self["attn_pre_out"].delete_neurons(remove_indices, layer)
 
+    def delete_residual_dimensions(self, remove_indices, layer: int = None):
+        return self["post_decoder"].delete_neurons(remove_indices, layer)
+
     def reset_neuron_replace(self):
         [h.reset() for h in self.neuron_replace.values()]
 

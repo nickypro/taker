@@ -37,12 +37,13 @@ def prune_and_evaluate(
     """
     c = copy.deepcopy(pruning_config)
 
-    # Find out what we are doing
+    # Find out what we are doing
     do_ff   = pruning_config.ff_frac > 0
     do_attn = pruning_config.attn_frac > 0
     do_sae = pruning_config.sae_frac > 0
-    if not do_ff and not do_attn and not do_sae:
-        raise ValueError("Must prune at least one of FF or Attention or SAE")
+    do_residual = pruning_config.residual_frac > 0
+    if not do_ff and not do_attn and not do_sae and not do_residual:
+        raise ValueError("Must prune at least one of FF, Attention, SAE, or Residual")
     if do_attn and pruning_config.attn_mode not in ["pre-out", "value"]:
         raise NotImplementedError("attn_mode must be 'pre-out' or 'value'")
 
@@ -51,11 +52,16 @@ def prune_and_evaluate(
         sae_enabled = False
         if pruning_config.sae_frac > 0:
             sae_enabled = True
+        residual_enabled = pruning_config.residual_frac > 0
 
         focus_out   = get_midlayer_data( opt, pruning_config.focus,
-            pruning_config.collection_sample_size, pruning_config.attn_mode, calculate_sae=sae_enabled, collect_sae=sae_enabled )
+            pruning_config.collection_sample_size, pruning_config.attn_mode, 
+            calculate_sae=sae_enabled, collect_sae=sae_enabled,
+            calculate_residual=residual_enabled, collect_residual=residual_enabled )
         cripple_out = get_midlayer_data( opt, pruning_config.cripple,
-            pruning_config.collection_sample_size, pruning_config.attn_mode, calculate_sae=sae_enabled, collect_sae=sae_enabled )
+            pruning_config.collection_sample_size, pruning_config.attn_mode, 
+            calculate_sae=sae_enabled, collect_sae=sae_enabled,
+            calculate_residual=residual_enabled, collect_residual=residual_enabled )
 
     # Otherwise, import activation data, and adjust the "pruning fraction"
     else:
@@ -88,11 +94,19 @@ def score_and_prune( opt: Model,
     ff_frac, ff_eps     = pruning_config.ff_frac,   pruning_config.ff_eps
     sae_frac, sae_eps     = pruning_config.sae_frac,   pruning_config.sae_eps
     attn_frac, attn_eps = pruning_config.attn_frac, pruning_config.attn_eps
+    residual_frac, residual_eps = pruning_config.residual_frac, pruning_config.residual_eps
     do_ff   = ff_frac > 0
     do_attn = attn_frac > 0
     do_sae = sae_frac > 0
+    do_residual = residual_frac > 0
 
     act_subset = pruning_config.scoring_normalization
+    
+    # Initialize variables to avoid undefined variable issues
+    ff_scores, ff_criteria, ff_threshold = None, None, 0
+    attn_scores, attn_criteria, attn_threshold = None, None, 0
+    residual_scores, residual_criteria, residual_threshold = None, None, 0
+    
     if do_ff > 0:
         ff_focus_data   = focus_activations_data.mlp[act_subset]
         ff_cripple_data = cripple_activations_data.mlp[act_subset]
@@ -113,6 +127,22 @@ def score_and_prune( opt: Model,
             sae_criteria, sae_threshold = get_top_frac(sae_scores, sae_frac)
 
             opt.hooks[sae_hook].delete_neurons(sae_criteria)
+
+    # Residual stream pruning logic
+    if do_residual > 0:
+        # Get activation data for residual stream
+        residual_focus_data = focus_activations_data.residual.orig
+        residual_cripple_data = cripple_activations_data.residual.orig
+        
+        # Score residual stream dimensions
+        residual_scoring_fn = score_indices_by(pruning_config.residual_scoring)
+        residual_scores = residual_scoring_fn(opt, residual_focus_data, residual_cripple_data, residual_eps)
+        
+        # Determine which dimensions to prune
+        residual_criteria, residual_threshold = get_top_frac(residual_scores, residual_frac)
+        
+        # Perform the actual pruning
+        opt.hooks.delete_residual_dimensions(residual_criteria)
 
     # Get the top fraction of Attention activations and prune
     if do_attn > 0:
@@ -153,8 +183,10 @@ def score_and_prune( opt: Model,
         "ff_scores": ff_scores if do_ff else None,
         # FIXME: doesn't return attn_std_mean
         "attn_scores": attn_scores if do_attn else None,
+        "residual_scores": residual_scores if do_residual else None,
         "ff_criteria": ff_criteria if do_ff else None,
         "attn_criteria": attn_criteria if do_attn else None,
+        "residual_criteria": residual_criteria if do_residual else None,
     }
 
     if save:
@@ -169,13 +201,16 @@ def score_and_prune( opt: Model,
     data.update({'deletions': {
         "ff_threshold": ff_threshold if do_ff else 0,
         "attn_threshold": attn_threshold if do_attn else 0,
+        "residual_threshold": residual_threshold if do_residual else 0,
         "ff_del": float( torch.sum(ff_criteria) ) if do_ff else 0,
         "attn_del": float( torch.sum(attn_criteria) ) if do_attn else 0,
+        "residual_del": float( torch.sum(residual_criteria) ) if do_residual else 0,
     }})
 
     data.update({'deletions_per_layer': {
         'ff': ff_criteria.sum(dim=-1).tolist() if do_ff else [],
         'attn': attn_criteria.sum(dim=-1).tolist() if do_attn else [],
+        'residual': residual_criteria.sum(dim=-1).tolist() if do_residual else [],
     }})
 
     # Save removals and scores to history
@@ -338,10 +373,17 @@ def run_pruning(c: PruningConfig):
 
     # Non-iteratively get activations, then iteratively prune and evaluate
     else:
+        sae_enabled = c.sae_frac > 0
+        residual_enabled = c.residual_frac > 0
+        
         focus_out   = get_midlayer_data(opt, c.focus,
-                        c.collection_sample_size, c.attn_mode)
+                        c.collection_sample_size, c.attn_mode,
+                        calculate_sae=sae_enabled, collect_sae=sae_enabled,
+                        calculate_residual=residual_enabled, collect_residual=residual_enabled)
         cripple_out = get_midlayer_data(opt, c.cripple,
-                        c.collection_sample_size, c.attn_mode)
+                        c.collection_sample_size, c.attn_mode,
+                        calculate_sae=sae_enabled, collect_sae=sae_enabled,
+                        calculate_residual=residual_enabled, collect_residual=residual_enabled)
         for i in range(c.n_steps):
             data = prune_and_evaluate(opt, c, focus_out, cripple_out, i)
             history.add(data)
